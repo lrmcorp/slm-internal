@@ -1144,6 +1144,42 @@ paths:
           description: AUTH_INVALID
         "429":
           description: RATE_LIMITED
+  /api/integrations/mj/products/{id}/photo:
+    post:
+      summary: Unggah atau ganti foto barang dari MJ.
+      description: Foto disimpan di SLM (sumber tunggal foto) sehingga tampil di Master Barang SLM dan di MJ. {id} = ID barang SLM atau SKU. Multipart field `file`, JPG/PNG/WEBP. Header opsional `x-mj-actor` = nama pengguna MJ untuk audit.
+      security: [{ mjBearer: [] }]
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string }, description: "ID barang SLM atau SKU" }
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file: { type: string, format: binary }
+      responses:
+        "201":
+          description: Foto tersimpan; data.photoUrl = path /uploads/products/...
+        "400":
+          description: VALIDATION_FAILED (file tidak ada atau format salah)
+        "401":
+          description: AUTH_INVALID
+        "404":
+          description: Barang tidak ditemukan.
+    delete:
+      summary: Hapus foto barang dari MJ.
+      security: [{ mjBearer: [] }]
+      parameters:
+        - { in: path, name: id, required: true, schema: { type: string }, description: "ID barang SLM atau SKU" }
+      responses:
+        "200":
+          description: Foto dihapus.
+        "401":
+          description: AUTH_INVALID
+        "404":
+          description: Barang tidak ditemukan.
   /api/integrations/mj/products:
     get:
       summary: Membaca katalog master produk SLM untuk integrasi MJ.
