@@ -29,7 +29,7 @@ export const penjualanSchema = z.object({
   customerLocation: z.preprocess((value) => !String(value ?? "").trim() ? "Toko" : value, z.string().trim().max(200)),
   deliveryDate: z.string().optional(),
   shippingMethod: z.preprocess((value) => !String(value ?? "").trim() ? "di Tempat" : value, z.string().trim().max(100)),
-  paymentMethod: z.enum(["Cash", "TF", "Tempo", "Other", "Split"], { required_error: "Pilih metode pembayaran" }),
+  paymentMethod: z.enum(["Cash", "TF", "Tempo", "Other", "Split"], { message: "Pilih metode pembayaran" }),
   /** Split: nominal Cash; sisanya TF ke rekeningId. */
   splitCashAmount: z.preprocess((value) => value === "" || value === undefined || Number.isNaN(value) ? 0 : value, z.coerce.number().finite().min(0, "Nominal Cash tidak boleh negatif")).optional(),
   /** Diskon nota (form): dibagi ke barang sebelum dikirim ke server. */

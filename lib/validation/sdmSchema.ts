@@ -18,7 +18,7 @@ export const loanRepaymentSchema = z.object({
   paymentDate: z.string().refine((val) => !Number.isNaN(Date.parse(val)), "Tanggal pelunasan tidak valid"),
   amount: z.coerce.number().positive("Jumlah pelunasan harus lebih dari 0"),
   paymentMethod: z.enum(["TRANSFER", "CASH", "POTONG_GAJI"], {
-    errorMap: () => ({ message: "Metode pembayaran harus Transfer, Tunai, atau Potong Gaji" })
+    message: "Metode pembayaran harus Transfer, Tunai, atau Potong Gaji"
   }),
   rekeningId: z.string().trim().nullish().or(z.literal("")),
   rekeningNameSnapshot: z.string().trim().nullish().or(z.literal("")),

@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { DEFAULT_UNIT } from "./config";
 
-const optionalText = (max: number) => z.string().trim().max(max).optional().nullable().transform((v) => (v ? v : undefined));
+const optionalText = (max: number) => z.string().trim().max(max).nullable().transform((v) => (v ? v : undefined)).optional();
 const dateString = z.string().refine((v) => !Number.isNaN(Date.parse(v)), "Tanggal tidak valid");
 /** Angka opsional: null / "" dianggap tidak diisi (bukan 0). */
 const optNum = <T extends z.ZodTypeAny>(schema: T) => z.preprocess((v) => (v === null || v === "" ? undefined : v), schema.optional());

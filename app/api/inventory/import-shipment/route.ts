@@ -6,7 +6,7 @@ import { parseShipmentWorkbook, previewShipment, saveShipment } from "@/lib/inve
 export const maxDuration = 120;
 const MAX_BYTES = 10 * 1024 * 1024;
 
-const overridesSchema = z.record(z.object({
+const overridesSchema = z.record(z.string(), z.object({
   pcsPerUnit: z.number().int().positive().max(10000).optional(),
   name: z.string().trim().max(120).optional()
 }));

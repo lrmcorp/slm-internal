@@ -1,5 +1,5 @@
 "use client";
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { barangSchema, type BarangInput } from "@/lib/validation/barangSchema";
 import type { Product } from "@/lib/types/product";
@@ -14,7 +14,7 @@ import { useRouter } from "next/navigation";
 
 export function BarangForm({ product }: { product?: Product }) {
   const router = useRouter(); const [notice, setNotice] = useState<{ type: "success" | "error"; message: string }>();
-  const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = useForm<BarangInput>({ resolver: zodResolver(barangSchema), defaultValues: product ? { code: product.code, name: product.name, category: product.category ?? "", unit: product.unit ?? "PCS", sellingPrice: product.sellingPrice ?? 0, costPrice: product.costPrice ?? 0, brand: product.brand || "", initialStock: product.initialStock ?? 0, minimumStock: product.minimumStock ?? 0, warehouse: product.warehouse || "Toko", rack: product.rack || "", isActive: product.isActive ?? true, notes: product.notes || "" } : { unit: "PCS", sellingPrice: 0, costPrice: 0, initialStock: 0, minimumStock: 0, warehouse: "Toko", isActive: true } });
+  const { register, handleSubmit, watch, setValue, formState: { errors, isSubmitting } } = useForm<BarangInput>({ resolver: zodResolver(barangSchema) as Resolver<BarangInput>, defaultValues: product ? { code: product.code, name: product.name, category: product.category ?? "", unit: product.unit ?? "PCS", sellingPrice: product.sellingPrice ?? 0, costPrice: product.costPrice ?? 0, brand: product.brand || "", initialStock: product.initialStock ?? 0, minimumStock: product.minimumStock ?? 0, warehouse: product.warehouse || "Toko", rack: product.rack || "", isActive: product.isActive ?? true, notes: product.notes || "" } : { unit: "PCS", sellingPrice: 0, costPrice: 0, initialStock: 0, minimumStock: 0, warehouse: "Toko", isActive: true } });
   const sellingPrice = watch("sellingPrice");
   const costPrice = watch("costPrice");
   const submit = async (data: BarangInput) => {

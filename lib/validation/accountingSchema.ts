@@ -9,10 +9,10 @@ export const accountSchema = z.object({
     .regex(/^[0-9]+(-[0-9]+)*$/, "Format kode akun harus berupa angka atau dipisah tanda hubung (misal: 1-1001)"),
   name: z.string().trim().min(1, "Nama akun wajib diisi").max(120),
   category: z.enum(["ASSET", "LIABILITY", "EQUITY", "REVENUE", "EXPENSE"], {
-    errorMap: () => ({ message: "Kategori akun harus Aset, Kewajiban, Ekuitas, Pendapatan, atau Beban" })
+    message: "Kategori akun harus Aset, Kewajiban, Ekuitas, Pendapatan, atau Beban"
   }),
   normalBalance: z.enum(["DEBIT", "CREDIT"], {
-    errorMap: () => ({ message: "Saldo normal harus Debit atau Kredit" })
+    message: "Saldo normal harus Debit atau Kredit"
   }),
   description: z.string().trim().max(500).optional().or(z.literal("")),
   reportGroup: z.enum(["CURRENT_ASSET", "FIXED_ASSET", "CONTRA_FIXED_ASSET", "OTHER_ASSET", "CURRENT_LIABILITY", "LONG_TERM_LIABILITY"]).nullable().optional(),

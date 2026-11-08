@@ -74,7 +74,7 @@ const common = {
   discount: money.default(0),
   total: money,
   notes: z.string().max(1000).optional(),
-  metadata: z.record(z.unknown()).optional()
+  metadata: z.record(z.string(), z.unknown()).optional()
 };
 
 const slmProcessAjSchema = z.object({
@@ -179,7 +179,7 @@ export const mjPrintEventSchema = z.object({
   printer_name: z.string().max(200).optional(),
   format: z.string().max(50).optional(),
   notes: z.string().max(1000).optional(),
-  metadata: z.record(z.unknown()).optional()
+  metadata: z.record(z.string(), z.unknown()).optional()
 }).passthrough();
 
 export const mjStockReleaseItemSchema = z.object({

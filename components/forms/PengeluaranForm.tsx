@@ -2,7 +2,7 @@
 import { coaLabel, type ExpenseCoaOption } from "@/lib/expenses/coa";
 import { RETIRED_TIPE_CODES } from "@/lib/business/retiredTipes";
 import Link from "next/link";
-import { useForm } from "react-hook-form";
+import { useForm, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { pengeluaranSchema, type PengeluaranInput, EXPENSE_CATEGORIES, labelForCategoryCode, type ExpenseCategoryCode } from "@/lib/validation/pengeluaranSchema";
 import { Button } from "@/components/ui/Button";
@@ -115,7 +115,7 @@ export function PengeluaranForm({ tipes, rekenings, expense, employees = [], coa
     getValues,
     formState: { errors, isSubmitting }
   } = useForm<PengeluaranInput>({
-    resolver: zodResolver(pengeluaranSchema),
+    resolver: zodResolver(pengeluaranSchema) as Resolver<PengeluaranInput>,
     defaultValues: {
       expenseDate: expense?.expenseDate || todayJakarta(),
       tipeId: expense?.tipeId || defaultTipe.id,

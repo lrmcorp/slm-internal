@@ -4,6 +4,7 @@ import { RETIRED_TIPE_CODES } from "@/lib/business/retiredTipes";
 import {
   useFieldArray,
   useForm,
+  type Resolver,
   type FieldErrors,
   type UseFormRegister,
   type UseFormSetValue,
@@ -277,7 +278,7 @@ export function PenjualanForm({
     getValues,
     formState: { errors, isSubmitting },
   } = useForm<PenjualanInput>({
-    resolver: zodResolver(penjualanSchema),
+    resolver: zodResolver(penjualanSchema) as Resolver<PenjualanInput>,
     defaultValues: {
       isDraft: sale?.approvalStatus === "draft",
       saleDate: sale?.saleDate || today,
