@@ -314,7 +314,7 @@ export function EmployeeManager({ initialEmployees, initialOrgTree, canManage }:
                         <span
                           className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
                             emp.isActive
-                              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                              ? "border-brand-200 bg-brand-50 text-brand-700"
                               : "border-slate-200 bg-slate-100 text-slate-600"
                           }`}
                         >
@@ -327,7 +327,7 @@ export function EmployeeManager({ initialEmployees, initialOrgTree, canManage }:
                             <button
                               type="button"
                               onClick={() => openEditModal(emp)}
-                              className="rounded border border-emerald-200 px-2.5 py-1 text-xs font-medium text-emerald-700 hover:bg-emerald-50 transition-colors"
+                              className="rounded border border-brand-200 px-2.5 py-1 text-xs font-medium text-brand-700 hover:bg-brand-50 transition-colors"
                             >
                               Edit
                             </button>
@@ -559,7 +559,7 @@ function OrgTreeNodeView({ node, level }: { node: OrgNode; level: number }) {
         <div className="flex-1">
           <div className="flex flex-wrap items-center gap-2">
             <span className="font-bold text-slate-900 text-sm">{node.name}</span>
-            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700">
+            <span className="rounded-full border border-brand-200 bg-brand-50 px-2.5 py-0.5 text-xs font-semibold text-brand-700">
               {node.position}
             </span>
             <span className="rounded border border-slate-200 bg-slate-50 px-2 py-0.5 text-xs text-slate-600">

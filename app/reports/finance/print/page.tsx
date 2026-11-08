@@ -120,7 +120,7 @@ export default async function FinanceReportPrintPage({
           </div>
           <div>
             <span className="block text-slate-500">Pembayaran Tempo Bulan Ini</span>
-            <b className="text-base font-bold text-emerald-800">
+            <b className="text-base font-bold text-brand-800">
               {rupiah(summary.tempoPaymentTotal)}
             </b>
             <span className="block mt-0.5 text-[11px] text-slate-500">

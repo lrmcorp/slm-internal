@@ -36,7 +36,7 @@ export default async function ConsignmentReportPage({ searchParams }: { searchPa
         <label className="text-xs font-semibold text-slate-700">Dari<input type="date" name="from" defaultValue={from} className={`${input} mt-1 block`} /></label>
         <label className="text-xs font-semibold text-slate-700">Sampai<input type="date" name="to" defaultValue={to} className={`${input} mt-1 block`} /></label>
         <label className="min-w-48 flex-1 text-xs font-semibold text-slate-700">Cari<input name="keyword" defaultValue={p.keyword} placeholder="Customer / no transaksi / barang" className={`${input} mt-1 block w-full`} /></label>
-        <button className="min-h-10 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white">Terapkan</button>
+        <button className="min-h-10 rounded-lg bg-brand-700 px-4 text-sm font-semibold text-white">Terapkan</button>
       </form>
 
       <section className="aj-surface">
@@ -75,7 +75,7 @@ export default async function ConsignmentReportPage({ searchParams }: { searchPa
                           </li>
                         ))}
                       </ul>
-                      {s.saleId && <Link href={`/penjualan/${s.saleId}`} className="mt-1 inline-flex min-h-8 items-center text-xs font-semibold text-emerald-800 underline">Detail nota</Link>}
+                      {s.saleId && <Link href={`/penjualan/${s.saleId}`} className="mt-1 inline-flex min-h-8 items-center text-xs font-semibold text-brand-800 underline">Detail nota</Link>}
                     </div>
                   </details>
                 ))}

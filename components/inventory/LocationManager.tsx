@@ -41,11 +41,11 @@ export function LocationManager({ locations, canManage }: { locations: Location[
             {locations.map((l) => (
               <tr key={l.id} className="border-t border-slate-100">
                 <td className="px-3 py-2 font-mono font-semibold">{l.code}</td>
-                <td className="px-3 py-2">{l.name}{l.isDefault && <span className="ml-2 rounded bg-emerald-100 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700">DEFAULT</span>}<div className="text-xs text-slate-500">{l.address}</div></td>
+                <td className="px-3 py-2">{l.name}{l.isDefault && <span className="ml-2 rounded bg-brand-100 px-1.5 py-0.5 text-[10px] font-bold text-brand-700">DEFAULT</span>}<div className="text-xs text-slate-500">{l.address}</div></td>
                 <td className="px-3 py-2">{l.type === "STORE" ? "Toko" : "Gudang"}</td>
                 <td className="px-3 py-2">{l.erpWarehouseId ?? "-"}</td>
                 <td className="px-3 py-2">{l.isActive ? "Aktif" : "Nonaktif"}{l.allowNegative && " • boleh minus"}</td>
-                <td className="px-3 py-2 text-right">{canManage && <button className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold text-emerald-800 hover:bg-emerald-50" onClick={() => { setEditingId(l.id); setForm({ code: l.code, name: l.name, type: l.type, address: l.address ?? "", phone: l.phone ?? "", erpWarehouseId: l.erpWarehouseId ? String(l.erpWarehouseId) : "", allowNegative: l.allowNegative, isDefault: l.isDefault, isActive: l.isActive }); }}>Ubah</button>}</td>
+                <td className="px-3 py-2 text-right">{canManage && <button className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold text-brand-800 hover:bg-brand-50" onClick={() => { setEditingId(l.id); setForm({ code: l.code, name: l.name, type: l.type, address: l.address ?? "", phone: l.phone ?? "", erpWarehouseId: l.erpWarehouseId ? String(l.erpWarehouseId) : "", allowNegative: l.allowNegative, isDefault: l.isDefault, isActive: l.isActive }); }}>Ubah</button>}</td>
               </tr>
             ))}
             {!locations.length && <tr><td colSpan={6} className="px-3 py-6 text-center text-slate-500">Belum ada gudang/toko.</td></tr>}

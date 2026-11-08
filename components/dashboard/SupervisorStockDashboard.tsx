@@ -88,8 +88,8 @@ export function SupervisorStockDashboard({
         <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
           <div>
             <div className="flex items-center gap-2">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-700 border border-emerald-200">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-700 border border-brand-200">
+                <span className="h-2 w-2 rounded-full bg-brand-500 animate-pulse" />
                 Supervisor Dashboard
               </span>
               <span className="text-xs text-slate-500">
@@ -107,7 +107,7 @@ export function SupervisorStockDashboard({
           <div className="flex flex-wrap items-center gap-2.5">
             <Link
               href="/barang"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition cursor-pointer sm:text-sm"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs hover:bg-brand-700 transition cursor-pointer sm:text-sm"
             >
               Buka Master Stok Barang
             </Link>
@@ -119,9 +119,9 @@ export function SupervisorStockDashboard({
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <Link
           href="/penjualan/input"
-          className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-xs transition hover:border-emerald-400 hover:shadow-sm"
+          className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-xs transition hover:border-brand-400 hover:shadow-sm"
         >
-          <div className="font-bold text-slate-900 text-sm group-hover:text-emerald-700">
+          <div className="font-bold text-slate-900 text-sm group-hover:text-brand-700">
             Input Penjualan
           </div>
           <p className="mt-1 text-[11px] text-slate-500">Catat transaksi kasir</p>
@@ -129,9 +129,9 @@ export function SupervisorStockDashboard({
 
         <Link
           href="/pengeluaran/input"
-          className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-xs transition hover:border-emerald-400 hover:shadow-sm"
+          className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-xs transition hover:border-brand-400 hover:shadow-sm"
         >
-          <div className="font-bold text-slate-900 text-sm group-hover:text-emerald-700">
+          <div className="font-bold text-slate-900 text-sm group-hover:text-brand-700">
             Input Pengeluaran
           </div>
           <p className="mt-1 text-[11px] text-slate-500">Catat biaya operasional</p>
@@ -139,9 +139,9 @@ export function SupervisorStockDashboard({
 
         <Link
           href="/tempo"
-          className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-xs transition hover:border-emerald-400 hover:shadow-sm"
+          className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-xs transition hover:border-brand-400 hover:shadow-sm"
         >
-          <div className="font-bold text-slate-900 text-sm group-hover:text-emerald-700">
+          <div className="font-bold text-slate-900 text-sm group-hover:text-brand-700">
             Tempo & Piutang
           </div>
           <p className="mt-1 text-[11px] text-slate-500">Pantau jatuh tempo</p>
@@ -187,14 +187,14 @@ export function SupervisorStockDashboard({
           </p>
         </div>
 
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50/40 p-5 shadow-xs">
-          <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-700">
+        <div className="rounded-2xl border border-brand-200 bg-brand-50/40 p-5 shadow-xs">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-brand-700">
             Valuasi Barang Kritis
           </p>
-          <p className="mt-1 text-2xl font-black text-emerald-950 sm:text-3xl">
+          <p className="mt-1 text-2xl font-black text-brand-950 sm:text-3xl">
             {rupiah(totalCriticalValuation)}
           </p>
-          <p className="mt-1 text-xs text-emerald-700">
+          <p className="mt-1 text-xs text-brand-700">
             Nilai modal stok tersisa
           </p>
         </div>
@@ -230,7 +230,7 @@ export function SupervisorStockDashboard({
                   setSearchQuery(e.target.value);
                   setPage(1);
                 }}
-                className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs sm:text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 pr-8"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3.5 py-2 text-xs sm:text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 pr-8"
               />
               {searchQuery && (
                 <button
@@ -254,7 +254,7 @@ export function SupervisorStockDashboard({
                   setSelectedWarehouse(e.target.value);
                   setPage(1);
                 }}
-                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs sm:text-sm text-slate-800 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-xs sm:text-sm text-slate-800 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer"
               >
                 <option value="">Semua Lokasi Gudang</option>
                 {warehouses.map((wh) => (
@@ -277,7 +277,7 @@ export function SupervisorStockDashboard({
               }}
               className={`rounded-lg px-2.5 py-1 transition cursor-pointer ${
                 statusFilter === "ALL_CRITICAL"
-                  ? "bg-emerald-600 text-white shadow-xs"
+                  ? "bg-brand-600 text-white shadow-xs"
                   : "bg-white border border-slate-200 hover:bg-slate-100 text-slate-700"
               }`}
             >
@@ -417,7 +417,7 @@ export function SupervisorStockDashboard({
                   setPageSize(Number(e.target.value));
                   setPage(1);
                 }}
-                className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-800 focus:border-emerald-500 focus:outline-none"
+                className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-800 focus:border-brand-500 focus:outline-none"
               >
                 <option value={10}>10</option>
                 <option value={25}>25</option>
@@ -453,7 +453,7 @@ export function SupervisorStockDashboard({
                     onClick={() => setPage(pageNum)}
                     className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer ${
                       page === pageNum
-                        ? "bg-emerald-600 text-white shadow-xs"
+                        ? "bg-brand-600 text-white shadow-xs"
                         : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100"
                     }`}
                   >

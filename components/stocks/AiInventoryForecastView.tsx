@@ -191,8 +191,8 @@ export function AiInventoryForecastView({ initialData }: Props) {
       <div className="flex flex-col justify-between gap-4 rounded-2xl border border-slate-200 bg-white p-6 shadow-xs sm:flex-row sm:items-center sm:p-7">
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-emerald-700 border border-emerald-200">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-brand-700 border border-brand-200">
+              <span className="h-2 w-2 rounded-full bg-brand-500 animate-pulse" />
               Intelligence Engine
             </span>
             <span className="text-xs text-slate-500">
@@ -212,7 +212,7 @@ export function AiInventoryForecastView({ initialData }: Props) {
             type="button"
             onClick={handleRefresh}
             disabled={loading}
-            className="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-emerald-700 disabled:opacity-50 cursor-pointer sm:text-sm"
+            className="inline-flex items-center gap-2 rounded-xl bg-brand-600 px-4 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-brand-700 disabled:opacity-50 cursor-pointer sm:text-sm"
           >
             {loading ? "Menganalisis..." : "Perbarui Analisis"}
           </button>
@@ -227,15 +227,15 @@ export function AiInventoryForecastView({ initialData }: Props) {
       </div>
 
       {/* AI Executive Summary Card */}
-      <div className="rounded-2xl border border-emerald-200/90 bg-emerald-50/40 p-5 shadow-xs">
-        <div className="flex items-center justify-between border-b border-emerald-200/70 pb-3 mb-3">
+      <div className="rounded-2xl border border-brand-200/90 bg-brand-50/40 p-5 shadow-xs">
+        <div className="flex items-center justify-between border-b border-brand-200/70 pb-3 mb-3">
           <div className="flex items-center gap-2">
-            <h3 className="font-bold text-emerald-950 text-sm sm:text-base">Ringkasan Eksekutif Persediaan</h3>
+            <h3 className="font-bold text-brand-950 text-sm sm:text-base">Ringkasan Eksekutif Persediaan</h3>
           </div>
           <button
             type="button"
             onClick={handleCopyExecutiveSummary}
-            className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700 hover:text-emerald-900 cursor-pointer"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700 hover:text-brand-900 cursor-pointer"
           >
             {copied ? "Tersalin!" : "Salin Ringkasan"}
           </button>
@@ -255,7 +255,7 @@ export function AiInventoryForecastView({ initialData }: Props) {
           }}
           className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all cursor-pointer ${
             activeTab === "reorder"
-              ? "bg-emerald-600 text-white shadow-xs"
+              ? "bg-brand-600 text-white shadow-xs"
               : "bg-slate-100 text-slate-700 hover:bg-slate-200"
           }`}
         >
@@ -270,7 +270,7 @@ export function AiInventoryForecastView({ initialData }: Props) {
           }}
           className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all cursor-pointer ${
             activeTab === "deadstock"
-              ? "bg-emerald-600 text-white shadow-xs"
+              ? "bg-brand-600 text-white shadow-xs"
               : "bg-slate-100 text-slate-700 hover:bg-slate-200"
           }`}
         >
@@ -285,7 +285,7 @@ export function AiInventoryForecastView({ initialData }: Props) {
           }}
           className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all cursor-pointer ${
             activeTab === "podraft"
-              ? "bg-emerald-600 text-white shadow-xs"
+              ? "bg-brand-600 text-white shadow-xs"
               : "bg-slate-100 text-slate-700 hover:bg-slate-200"
           }`}
         >
@@ -315,8 +315,8 @@ export function AiInventoryForecastView({ initialData }: Props) {
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:col-span-2">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-600">Estimasi Anggaran Restock</p>
-              <p className="mt-1 text-2xl font-black text-emerald-950 sm:text-3xl">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-brand-600">Estimasi Anggaran Restock</p>
+              <p className="mt-1 text-2xl font-black text-brand-950 sm:text-3xl">
                 {rupiah(data.summary.estimatedRestockBudget)}
               </p>
               <p className="mt-1 text-xs text-slate-500">Estimasi total modal untuk kuantitas yang direkomendasikan</p>
@@ -336,7 +336,7 @@ export function AiInventoryForecastView({ initialData }: Props) {
                     setSearchQuery(e.target.value);
                     setReorderPage(1);
                   }}
-                  className="w-full rounded-xl border border-slate-300 bg-slate-50/60 px-3.5 py-2 text-xs sm:text-sm text-slate-900 focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 pr-8"
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50/60 px-3.5 py-2 text-xs sm:text-sm text-slate-900 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-500 pr-8"
                 />
                 {searchQuery && (
                   <button
@@ -360,7 +360,7 @@ export function AiInventoryForecastView({ initialData }: Props) {
                     setSelectedWarehouse(e.target.value);
                     setReorderPage(1);
                   }}
-                  className="w-full rounded-xl border border-slate-300 bg-slate-50/60 px-3 py-2 text-xs sm:text-sm text-slate-800 focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50/60 px-3 py-2 text-xs sm:text-sm text-slate-800 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer"
                 >
                   <option value="">Semua Lokasi Gudang</option>
                   {availableWarehouses.map((wh) => (
@@ -376,7 +376,7 @@ export function AiInventoryForecastView({ initialData }: Props) {
                 <select
                   value={sortByReorder}
                   onChange={(e) => setSortByReorder(e.target.value as any)}
-                  className="w-full rounded-xl border border-slate-300 bg-slate-50/60 px-3 py-2 text-xs sm:text-sm text-slate-800 focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50/60 px-3 py-2 text-xs sm:text-sm text-slate-800 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer"
                 >
                   <option value="CRITICAL">Urutkan: Paling Kritis (Sisa Hari Terkecil)</option>
                   <option value="BUDGET">Urutkan: Estimasi Modal Terbesar (Rp)</option>
@@ -398,7 +398,7 @@ export function AiInventoryForecastView({ initialData }: Props) {
                   }}
                   className={`rounded-lg px-2.5 py-1 transition cursor-pointer ${
                     filterUrgency === "ALL"
-                      ? "bg-emerald-600 text-white shadow-xs"
+                      ? "bg-brand-600 text-white shadow-xs"
                       : "bg-slate-100 hover:bg-slate-200 text-slate-700"
                   }`}
                 >
@@ -444,7 +444,7 @@ export function AiInventoryForecastView({ initialData }: Props) {
                     setActiveTab("podraft");
                     setPoPage(1);
                   }}
-                  className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 hover:text-emerald-800 cursor-pointer"
+                  className="inline-flex items-center gap-1 text-xs font-bold text-brand-700 hover:text-brand-800 cursor-pointer"
                 >
                   Lihat Draf PO Supplier →
                 </button>
@@ -495,7 +495,7 @@ export function AiInventoryForecastView({ initialData }: Props) {
                               ? "bg-rose-100 text-rose-800"
                               : item.urgency === "WARNING"
                               ? "bg-amber-100 text-amber-800"
-                              : "bg-emerald-100 text-emerald-800"
+                              : "bg-brand-100 text-brand-800"
                           }`}
                         >
                           {item.daysUntilStockout <= 0
@@ -538,7 +538,7 @@ export function AiInventoryForecastView({ initialData }: Props) {
                       setReorderPageSize(Number(e.target.value));
                       setReorderPage(1);
                     }}
-                    className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-800 focus:border-emerald-500 focus:outline-none"
+                    className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-800 focus:border-brand-500 focus:outline-none"
                   >
                     <option value={10}>10</option>
                     <option value={25}>25</option>
@@ -574,7 +574,7 @@ export function AiInventoryForecastView({ initialData }: Props) {
                         onClick={() => setReorderPage(pageNum)}
                         className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer ${
                           reorderPage === pageNum
-                            ? "bg-emerald-600 text-white shadow-xs"
+                            ? "bg-brand-600 text-white shadow-xs"
                             : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100"
                         }`}
                       >
@@ -633,7 +633,7 @@ export function AiInventoryForecastView({ initialData }: Props) {
                     setSearchQuery(e.target.value);
                     setDeadStockPage(1);
                   }}
-                  className="w-full rounded-xl border border-slate-300 bg-slate-50/60 px-3.5 py-2 text-xs sm:text-sm text-slate-900 focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 pr-8"
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50/60 px-3.5 py-2 text-xs sm:text-sm text-slate-900 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-500 pr-8"
                 />
                 {searchQuery && (
                   <button
@@ -657,7 +657,7 @@ export function AiInventoryForecastView({ initialData }: Props) {
                     setSelectedWarehouse(e.target.value);
                     setDeadStockPage(1);
                   }}
-                  className="w-full rounded-xl border border-slate-300 bg-slate-50/60 px-3 py-2 text-xs sm:text-sm text-slate-800 focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50/60 px-3 py-2 text-xs sm:text-sm text-slate-800 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer"
                 >
                   <option value="">Semua Lokasi Gudang</option>
                   {availableWarehouses.map((wh) => (
@@ -673,7 +673,7 @@ export function AiInventoryForecastView({ initialData }: Props) {
                 <select
                   value={sortByDeadStock}
                   onChange={(e) => setSortByDeadStock(e.target.value as any)}
-                  className="w-full rounded-xl border border-slate-300 bg-slate-50/60 px-3 py-2 text-xs sm:text-sm text-slate-800 focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50/60 px-3 py-2 text-xs sm:text-sm text-slate-800 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer"
                 >
                   <option value="CAPITAL">Urutkan: Modal Tertahan Terbesar (Rp)</option>
                   <option value="DAYS">Urutkan: Hari Tanpa Penjualan Terlama</option>
@@ -694,7 +694,7 @@ export function AiInventoryForecastView({ initialData }: Props) {
                   }}
                   className={`rounded-lg px-2.5 py-1 transition cursor-pointer ${
                     deadStockDaysFilter === "ALL"
-                      ? "bg-emerald-600 text-white shadow-xs"
+                      ? "bg-brand-600 text-white shadow-xs"
                       : "bg-slate-100 hover:bg-slate-200 text-slate-700"
                   }`}
                 >
@@ -798,9 +798,9 @@ export function AiInventoryForecastView({ initialData }: Props) {
                       </td>
                       <td className="px-4 py-3">
                         {item.suggestedBundlingWith ? (
-                          <div className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-2.5 py-1 text-xs text-emerald-900 border border-emerald-200/80">
+                          <div className="inline-flex items-center gap-1.5 rounded-lg bg-brand-50 px-2.5 py-1 text-xs text-brand-900 border border-brand-200/80">
                             <span>Pasangkan dg:</span>
-                            <b className="font-bold text-emerald-950">{item.suggestedBundlingWith.fastMovingName}</b>
+                            <b className="font-bold text-brand-950">{item.suggestedBundlingWith.fastMovingName}</b>
                           </div>
                         ) : (
                           <span className="text-slate-400">—</span>
@@ -830,7 +830,7 @@ export function AiInventoryForecastView({ initialData }: Props) {
                       setDeadStockPageSize(Number(e.target.value));
                       setDeadStockPage(1);
                     }}
-                    className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-800 focus:border-emerald-500 focus:outline-none"
+                    className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-800 focus:border-brand-500 focus:outline-none"
                   >
                     <option value={10}>10</option>
                     <option value={25}>25</option>
@@ -866,7 +866,7 @@ export function AiInventoryForecastView({ initialData }: Props) {
                         onClick={() => setDeadStockPage(pageNum)}
                         className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer ${
                           deadStockPage === pageNum
-                            ? "bg-emerald-600 text-white shadow-xs"
+                            ? "bg-brand-600 text-white shadow-xs"
                             : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100"
                         }`}
                       >
@@ -904,8 +904,8 @@ export function AiInventoryForecastView({ initialData }: Props) {
             </div>
 
             <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:col-span-2">
-              <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-600">Total Estimasi Anggaran Restock</p>
-              <p className="mt-1 text-2xl font-black text-emerald-950 sm:text-3xl">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-brand-600">Total Estimasi Anggaran Restock</p>
+              <p className="mt-1 text-2xl font-black text-brand-950 sm:text-3xl">
                 {rupiah(allPoItems.reduce((sum, item) => sum + item.estimatedReorderCost, 0))}
               </p>
               <p className="mt-1 text-xs text-slate-500">Estimasi total biaya restock untuk seluruh barang darurat</p>
@@ -924,7 +924,7 @@ export function AiInventoryForecastView({ initialData }: Props) {
                     setSearchQuery(e.target.value);
                     setPoPage(1);
                   }}
-                  className="w-full rounded-xl border border-slate-300 bg-slate-50/60 px-3.5 py-2 text-xs sm:text-sm text-slate-900 focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 pr-8"
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50/60 px-3.5 py-2 text-xs sm:text-sm text-slate-900 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-500 pr-8"
                 />
                 {searchQuery && (
                   <button
@@ -947,7 +947,7 @@ export function AiInventoryForecastView({ initialData }: Props) {
                     setSelectedWarehouse(e.target.value);
                     setPoPage(1);
                   }}
-                  className="w-full rounded-xl border border-slate-300 bg-slate-50/60 px-3 py-2 text-xs sm:text-sm text-slate-800 focus:border-emerald-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer"
+                  className="w-full rounded-xl border border-slate-300 bg-slate-50/60 px-3 py-2 text-xs sm:text-sm text-slate-800 focus:border-brand-500 focus:bg-white focus:outline-none focus:ring-1 focus:ring-brand-500 cursor-pointer"
                 >
                   <option value="">Semua Lokasi Gudang ({allPoItems.length} item)</option>
                   {availableWarehouses.map((wh) => {
@@ -978,7 +978,7 @@ export function AiInventoryForecastView({ initialData }: Props) {
                     <th className="px-4 py-3 text-center w-12">No</th>
                     <th className="px-4 py-3">Produk & Lokasi</th>
                     <th className="px-4 py-3 text-center">Stok Saat Ini</th>
-                    <th className="px-4 py-3 text-right text-emerald-700">Jumlah Pesan</th>
+                    <th className="px-4 py-3 text-right text-brand-700">Jumlah Pesan</th>
                     <th className="px-4 py-3 text-right">Estimasi Biaya</th>
                     <th className="px-4 py-3 text-center">Status</th>
                   </tr>
@@ -1005,7 +1005,7 @@ export function AiInventoryForecastView({ initialData }: Props) {
                         <span className="text-[10px] text-slate-400 block">Min: {item.minStock}</span>
                       </td>
                       <td className="px-4 py-3 text-right">
-                        <span className="rounded-lg bg-emerald-50 px-2.5 py-1 font-extrabold text-emerald-700 text-sm">
+                        <span className="rounded-lg bg-brand-50 px-2.5 py-1 font-extrabold text-brand-700 text-sm">
                           +{item.recommendedReorderQty} {item.unit}
                         </span>
                       </td>
@@ -1047,7 +1047,7 @@ export function AiInventoryForecastView({ initialData }: Props) {
                       setPoPageSize(Number(e.target.value));
                       setPoPage(1);
                     }}
-                    className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-800 focus:border-emerald-500 focus:outline-none"
+                    className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-800 focus:border-brand-500 focus:outline-none"
                   >
                     <option value={10}>10</option>
                     <option value={25}>25</option>
@@ -1083,7 +1083,7 @@ export function AiInventoryForecastView({ initialData }: Props) {
                         onClick={() => setPoPage(pageNum)}
                         className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer ${
                           poPage === pageNum
-                            ? "bg-emerald-600 text-white shadow-xs"
+                            ? "bg-brand-600 text-white shadow-xs"
                             : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100"
                         }`}
                       >
@@ -1106,7 +1106,7 @@ export function AiInventoryForecastView({ initialData }: Props) {
           </div>
 
           {/* 2. Clean WhatsApp Message Card */}
-          <div className="rounded-2xl border border-emerald-200/80 bg-white p-5 shadow-xs space-y-4">
+          <div className="rounded-2xl border border-brand-200/80 bg-white p-5 shadow-xs space-y-4">
             <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center border-b border-slate-100 pb-3">
               <div>
                 <h3 className="font-bold text-slate-900 text-sm sm:text-base">Pratinjau Pesan WhatsApp Supplier</h3>
@@ -1128,14 +1128,14 @@ export function AiInventoryForecastView({ initialData }: Props) {
                   href={waShareUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 transition"
+                  className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-brand-700 transition"
                 >
                   <span>Buka WhatsApp</span>
                 </a>
               </div>
             </div>
 
-            <div className="rounded-xl border border-emerald-200/90 bg-emerald-50/50 p-4 font-mono text-xs text-slate-800 leading-relaxed overflow-x-auto whitespace-pre-wrap">
+            <div className="rounded-xl border border-brand-200/90 bg-brand-50/50 p-4 font-mono text-xs text-slate-800 leading-relaxed overflow-x-auto whitespace-pre-wrap">
               {data.supplierPoDraft}
             </div>
           </div>

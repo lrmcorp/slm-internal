@@ -95,7 +95,7 @@ export function AccountManagerTable({ initialAccounts }: Props) {
 
         <section className="aj-surface p-5">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Akun Aktif</p>
-          <p className="mt-2 text-2xl font-black tracking-tight text-emerald-800 font-mono tabular-nums">
+          <p className="mt-2 text-2xl font-black tracking-tight text-brand-800 font-mono tabular-nums">
             {summary.activeCount} <span className="text-sm font-normal text-slate-500">Akun</span>
           </p>
           <p className="mt-3 text-xs text-slate-500">Dapat dipilih pada transaksi jurnal</p>
@@ -128,7 +128,7 @@ export function AccountManagerTable({ initialAccounts }: Props) {
               onClick={() => setSelectedCategory(c.key)}
               className={`px-3 py-2 text-xs font-semibold rounded-t-xs border-b-2 transition-colors whitespace-nowrap ${
                 selectedCategory === c.key
-                  ? "border-emerald-600 bg-white text-emerald-800"
+                  ? "border-brand-600 bg-white text-brand-800"
                   : "border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-100"
               }`}
             >
@@ -199,7 +199,7 @@ export function AccountManagerTable({ initialAccounts }: Props) {
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold font-mono ${
                           acc.normalBalance === "DEBIT"
-                            ? "bg-emerald-50 text-emerald-800 border border-emerald-200"
+                            ? "bg-brand-50 text-brand-800 border border-brand-200"
                             : "bg-blue-50 text-blue-800 border border-blue-200"
                         }`}
                       >
@@ -221,7 +221,7 @@ export function AccountManagerTable({ initialAccounts }: Props) {
                       <span
                         className={`inline-flex items-center rounded px-2 py-0.5 text-[11px] font-semibold ${
                           acc.isActive
-                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            ? "bg-brand-50 text-brand-700 border border-brand-200"
                             : "bg-slate-100 text-slate-500 border border-slate-200"
                         }`}
                       >
@@ -248,7 +248,7 @@ export function AccountManagerTable({ initialAccounts }: Props) {
                             className={`text-[11px] font-semibold px-2 py-1 rounded transition-colors ${
                               acc.isActive
                                 ? "text-red-700 hover:bg-red-50"
-                                : "text-emerald-700 hover:bg-emerald-50"
+                                : "text-brand-700 hover:bg-brand-50"
                             }`}
                           >
                             {isProcessingId === acc.id ? "..." : acc.isActive ? "Nonaktifkan" : "Aktifkan"}

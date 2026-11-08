@@ -33,7 +33,7 @@ export default async function WarehouseRequestPage({ searchParams }: { searchPar
       <form className="mb-4 flex flex-wrap items-end gap-2">
         <label className="text-xs font-semibold text-slate-700">Dari<input type="date" name="from" defaultValue={from} className={`${input} mt-1 block`} /></label>
         <label className="text-xs font-semibold text-slate-700">Sampai<input type="date" name="to" defaultValue={to} className={`${input} mt-1 block`} /></label>
-        <button className="min-h-10 rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white">Terapkan</button>
+        <button className="min-h-10 rounded-lg bg-brand-700 px-4 text-sm font-semibold text-white">Terapkan</button>
       </form>
 
       <section className="aj-surface mb-5 overflow-x-auto">
@@ -71,7 +71,7 @@ export default async function WarehouseRequestPage({ searchParams }: { searchPar
               <ul className="mt-0.5 text-xs text-slate-600">
                 {s.lines.map((l, i) => <li key={i}><span className="font-mono">{l.sku}</span> {l.name} · <b>{qty(l.quantity)} {l.unit}</b> dari {l.warehouse}</li>)}
               </ul>
-              {s.saleId && <Link href={`/penjualan/${s.saleId}`} className="inline-flex min-h-8 items-center text-xs font-semibold text-emerald-800 underline">Detail nota</Link>}
+              {s.saleId && <Link href={`/penjualan/${s.saleId}`} className="inline-flex min-h-8 items-center text-xs font-semibold text-brand-800 underline">Detail nota</Link>}
             </div>
           </div>
         ))}

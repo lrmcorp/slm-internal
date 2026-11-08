@@ -18,7 +18,7 @@ export function Sidebar({ role, badges = {} }: { role: Role; badges?: NavBadges 
       <div className="flex h-full flex-col">
         {/* Brand Header */}
         <div className="flex items-center gap-3 border-b border-neutral-100 px-6 py-6">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-600 text-sm font-black tracking-tighter text-white shadow-sm">
+          <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-600 text-sm font-black tracking-tighter text-white shadow-sm">
             {brand.initials}
           </span>
           <div className="min-w-0">
@@ -40,7 +40,7 @@ export function Sidebar({ role, badges = {} }: { role: Role; badges?: NavBadges 
                       href={section.href}
                       aria-current={active ? "page" : undefined}
                       className={`flex min-h-10 items-center rounded-xl px-3.5 text-sm font-semibold transition ${
-                        active ? "bg-emerald-700 text-white" : "text-neutral-700 hover:bg-emerald-50 hover:text-emerald-800"
+                        active ? "bg-brand-700 text-white" : "text-neutral-700 hover:bg-brand-50 hover:text-brand-800"
                       }`}
                     >
                       <span>{section.label}</span>

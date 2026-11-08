@@ -97,14 +97,14 @@ export function BalanceSheetViewer({ initialReport, tipeOptions }: Props) {
       <div
         className={`rounded-md border p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
           report.isBalanced
-            ? "border-emerald-500/40 bg-emerald-50 text-emerald-800"
+            ? "border-brand-500/40 bg-brand-50 text-brand-800"
             : "border-rose-500/40 bg-rose-50 text-rose-800"
         }`}
       >
         <div className="flex items-center gap-3">
           <div
             className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
-              report.isBalanced ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"
+              report.isBalanced ? "bg-brand-100 text-brand-800" : "bg-rose-100 text-rose-800"
             }`}
           >
             {report.isBalanced ? "✓" : "!"}
@@ -175,7 +175,7 @@ export function BalanceSheetViewer({ initialReport, tipeOptions }: Props) {
 
                   <div className="flex justify-between py-2 font-bold text-slate-900 border-t border-slate-200 mt-1">
                     <span>Subtotal Aset Lancar</span>
-                    <span className="tabular-nums font-mono text-emerald-700">
+                    <span className="tabular-nums font-mono text-brand-700">
                       {formatCurrency(report.assets.totalCurrentAssets)}
                     </span>
                   </div>
@@ -213,7 +213,7 @@ export function BalanceSheetViewer({ initialReport, tipeOptions }: Props) {
               {/* TOTAL ASET */}
               <div className="rounded border border-slate-200 bg-slate-100 p-3 mt-6 flex justify-between items-center text-sm font-bold">
                 <span className="uppercase tracking-wider text-slate-900">TOTAL ASET</span>
-                <span className="tabular-nums font-mono text-emerald-700 text-base">
+                <span className="tabular-nums font-mono text-brand-700 text-base">
                   {formatCurrency(report.assets.totalAssets)}
                 </span>
               </div>
@@ -276,7 +276,7 @@ export function BalanceSheetViewer({ initialReport, tipeOptions }: Props) {
                     <span>Laba Periode Berjalan (Current Net Earnings)</span>
                     <span
                       className={`tabular-nums font-mono ${
-                        report.equity.currentEarnings >= 0 ? "text-emerald-700" : "text-rose-700"
+                        report.equity.currentEarnings >= 0 ? "text-brand-700" : "text-rose-700"
                       }`}
                     >
                       {formatCurrency(report.equity.currentEarnings)}
@@ -297,7 +297,7 @@ export function BalanceSheetViewer({ initialReport, tipeOptions }: Props) {
                 <span className="uppercase tracking-wider text-slate-900">
                   TOTAL KEWAJIBAN & EKUITAS
                 </span>
-                <span className="tabular-nums font-mono text-emerald-700 text-base">
+                <span className="tabular-nums font-mono text-brand-700 text-base">
                   {formatCurrency(report.totalLiabilitiesAndEquity)}
                 </span>
               </div>

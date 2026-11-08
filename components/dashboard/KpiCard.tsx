@@ -12,10 +12,10 @@ export function KpiCard({
   testId?: string;
 }) {
   const badgeStyles = {
-    blue: "bg-emerald-50 text-emerald-700 border-emerald-200",
-    violet: "bg-emerald-50 text-emerald-700 border-emerald-200",
+    blue: "bg-brand-50 text-brand-700 border-brand-200",
+    violet: "bg-brand-50 text-brand-700 border-brand-200",
     orange: "bg-slate-100 text-slate-700 border-slate-200",
-    green: "bg-emerald-50 text-emerald-700 border-emerald-200"
+    green: "bg-brand-50 text-brand-700 border-brand-200"
   };
 
   return (

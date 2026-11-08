@@ -439,7 +439,7 @@ export function DeliveryOrderThermalPrint({ detail, autoPrint = false, printUser
           <button
             type="button"
             onClick={() => window.print()}
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-600 text-white font-semibold text-xs shadow-sm hover:bg-emerald-700 transition-colors cursor-pointer"
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-brand-600 text-white font-semibold text-xs shadow-sm hover:bg-brand-700 transition-colors cursor-pointer"
           >
             <PrinterIcon />
             <span>Cetak Dialog</span>
@@ -464,7 +464,7 @@ export function DeliveryOrderThermalPrint({ detail, autoPrint = false, printUser
             className="inline-flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-700 font-medium text-xs shadow-sm hover:bg-slate-50 transition-colors cursor-pointer"
             title="Salin teks struk (No Invoice & Nama Customer)"
           >
-            {copied ? <CheckIcon className="text-emerald-600" /> : <CopyIcon />}
+            {copied ? <CheckIcon className="text-brand-600" /> : <CopyIcon />}
             <span>{copied ? "Tersalin" : "Salin Teks"}</span>
           </button>
 
@@ -486,7 +486,7 @@ export function DeliveryOrderThermalPrint({ detail, autoPrint = false, printUser
               bannerAlert.type === "error"
                 ? "bg-red-50 border border-red-200 text-red-800"
                 : bannerAlert.type === "success"
-                ? "bg-emerald-50 border border-emerald-200 text-emerald-800"
+                ? "bg-brand-50 border border-brand-200 text-brand-800"
                 : "bg-slate-100 border border-slate-200 text-slate-800"
             }`}
           >

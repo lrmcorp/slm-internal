@@ -207,7 +207,7 @@ export function PurchasePaymentModal({
               </div>
               <div>
                 <span className="text-slate-500 text-[10px] block">SISA UTANG</span>
-                <span className="font-bold text-emerald-800">
+                <span className="font-bold text-brand-800">
                   {activeInvoice.currency}{" "}
                   {(
                     Number(activeInvoice.totalAmountOriginal) -
@@ -261,8 +261,8 @@ export function PurchasePaymentModal({
                 const invCur = (activeInvoice?.currency || "IDR").toUpperCase();
                 if (rekCur === invCur && invCur !== "IDR") {
                   return (
-                    <span className="mt-1.5 flex items-center gap-1.5 text-xs text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded border border-emerald-200">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                    <span className="mt-1.5 flex items-center gap-1.5 text-xs text-brand-700 bg-brand-50 px-2.5 py-1 rounded border border-brand-200">
+                      <span className="h-1.5 w-1.5 rounded-full bg-brand-500"></span>
                       Rekening Valas Sesuai ({invCur}): Pelunasan langsung dari saldo valuta asing.
                     </span>
                   );
@@ -340,7 +340,7 @@ export function PurchasePaymentModal({
             <div
               className={`p-3 rounded border flex items-center justify-between font-sans ${
                 isForexGain
-                  ? "bg-emerald-50 border-emerald-300 text-emerald-900"
+                  ? "bg-brand-50 border-brand-300 text-brand-900"
                   : isForexLoss
                   ? "bg-rose-50 border-rose-300 text-rose-900"
                   : "bg-slate-100 border-slate-300 text-slate-700"

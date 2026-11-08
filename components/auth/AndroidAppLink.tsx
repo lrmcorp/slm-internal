@@ -14,7 +14,7 @@ export function AndroidAppLink() {
     <a
       href="/downloads/slm-android.apk"
       download
-      className="mt-4 flex min-h-11 items-center justify-center rounded-sm border border-emerald-600 px-4 text-sm font-bold text-emerald-700 hover:bg-emerald-50"
+      className="mt-4 flex min-h-11 items-center justify-center rounded-sm border border-brand-600 px-4 text-sm font-bold text-brand-700 hover:bg-brand-50"
     >
       Unduh aplikasi Android SLM
     </a>

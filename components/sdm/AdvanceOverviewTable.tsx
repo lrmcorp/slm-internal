@@ -71,7 +71,7 @@ export function AdvanceOverviewTable({ loans, rekenings, canManage }: Props) {
 
         <section className="aj-surface p-5">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Uang Muka Selesai (Dipertanggungjawabkan)</p>
-          <p className="mt-2 text-2xl font-black tracking-tight text-emerald-700">{summary.settledCount} Transaksi</p>
+          <p className="mt-2 text-2xl font-black tracking-tight text-brand-700">{summary.settledCount} Transaksi</p>
           <p className="mt-3 text-xs text-slate-500">Nota riil telah selesai dipertanggungjawabkan</p>
         </section>
 
@@ -104,7 +104,7 @@ export function AdvanceOverviewTable({ loans, rekenings, canManage }: Props) {
 
           <Link
             href="/pengeluaran/input"
-            className="inline-flex items-center justify-center rounded border border-emerald-600 bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 transition shadow-2xs"
+            className="inline-flex items-center justify-center rounded border border-brand-600 bg-brand-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-brand-700 transition shadow-2xs"
           >
             + Input Uang Muka Baru
           </Link>
@@ -169,7 +169,7 @@ export function AdvanceOverviewTable({ loans, rekenings, canManage }: Props) {
                         <span
                           className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
                             isSettled
-                              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                              ? "border-brand-200 bg-brand-50 text-brand-700"
                               : approvalStatus === "pending_approval"
                               ? "border-amber-200 bg-amber-50 text-amber-700"
                               : approvalStatus === "rejected"
@@ -196,7 +196,7 @@ export function AdvanceOverviewTable({ loans, rekenings, canManage }: Props) {
                             <button
                               type="button"
                               onClick={() => setSelectedLoanForSettlement(loan)}
-                              className="inline-flex items-center rounded border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 hover:text-emerald-700 transition"
+                              className="inline-flex items-center rounded border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 hover:text-brand-700 transition"
                             >
                               Pertanggungjawaban
                             </button>

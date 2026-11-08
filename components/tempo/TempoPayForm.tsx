@@ -111,7 +111,7 @@ export function TempoPayForm({ tempoId, remainingAmount, tipeId, rekenings }: Pr
   const isFullPayment = amountPaid === remainingAmount;
 
   return (
-    <form onSubmit={submit} className="rounded-2xl border border-emerald-100 bg-gradient-to-b from-white to-emerald-50/30 p-5 shadow-sm sm:p-6">
+    <form onSubmit={submit} className="rounded-2xl border border-brand-100 bg-gradient-to-b from-white to-brand-50/30 p-5 shadow-sm sm:p-6">
       {notice && <div className="mb-4"><Toast {...notice} /></div>}
 
       <div className="mb-5 flex items-center justify-between border-b border-slate-100 pb-3">
@@ -120,7 +120,7 @@ export function TempoPayForm({ tempoId, remainingAmount, tipeId, rekenings }: Pr
           <p className="text-xs text-slate-500">Catat penerimaan cicilan atau pelunasan sisa tagihan</p>
         </div>
         {isFullPayment ? (
-          <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-800">
+          <span className="rounded-full bg-brand-100 px-2.5 py-1 text-xs font-bold text-brand-800">
             Pelunasan Penuh
           </span>
         ) : (
@@ -170,7 +170,7 @@ export function TempoPayForm({ tempoId, remainingAmount, tipeId, rekenings }: Pr
               onClick={() => setAmountPaid(remainingAmount)}
               className={`rounded-lg px-2.5 py-1 text-xs font-bold transition-all cursor-pointer ${
                 amountPaid === remainingAmount
-                  ? "bg-emerald-700 text-white shadow-sm"
+                  ? "bg-brand-700 text-white shadow-sm"
                   : "bg-slate-100 text-slate-700 hover:bg-slate-200"
               }`}
             >
@@ -204,7 +204,7 @@ export function TempoPayForm({ tempoId, remainingAmount, tipeId, rekenings }: Pr
                   onClick={() => setPaymentMethod(method)}
                   className={`flex flex-col items-center justify-center rounded-xl border py-2.5 px-2 text-center transition-all cursor-pointer ${
                     active
-                      ? "border-emerald-500 bg-emerald-50 text-emerald-900 font-bold shadow-sm"
+                      ? "border-brand-500 bg-brand-50 text-brand-900 font-bold shadow-sm"
                       : "border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50"
                   }`}
                 >
@@ -267,7 +267,7 @@ export function TempoPayForm({ tempoId, remainingAmount, tipeId, rekenings }: Pr
         <button
           type="submit"
           disabled={isSubmitting || amountPaid <= 0 || amountPaid > remainingAmount}
-          className="w-full flex items-center justify-center gap-2 rounded-xl bg-emerald-700 py-3 px-4 text-sm font-bold text-white shadow-sm hover:bg-emerald-800 focus:ring-4 focus:ring-emerald-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          className="w-full flex items-center justify-center gap-2 rounded-xl bg-brand-700 py-3 px-4 text-sm font-bold text-white shadow-sm hover:bg-brand-800 focus:ring-4 focus:ring-brand-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
         >
           {isSubmitting ? (
             <>

@@ -243,7 +243,7 @@ export function CameraCell({
         <div className="flex items-center gap-2 min-w-0">
           <span
             className={`h-2 w-2 rounded-full shrink-0 ${
-              camera.isOnline ? "bg-emerald-500" : "bg-slate-300"
+              camera.isOnline ? "bg-brand-500" : "bg-slate-300"
             }`}
           />
           <span className="font-bold text-slate-800 truncate" title={camera.name}>
@@ -256,8 +256,8 @@ export function CameraCell({
 
         <div className="flex items-center gap-1.5 shrink-0">
           {isPlaying && connectionStatus === "live" ? (
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+            <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2 py-0.5 text-[10px] font-bold text-brand-700 border border-brand-200">
+              <span className="h-1.5 w-1.5 rounded-full bg-brand-500" />
               Aktif
             </span>
           ) : isPlaying && connectionStatus === "connecting" ? (
@@ -319,7 +319,7 @@ export function CameraCell({
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 p-4 text-center">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400 mb-2 shadow-2xs">
               {connectionStatus === "connecting" ? (
-                <svg className="w-5 h-5 animate-spin text-emerald-600" fill="none" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 animate-spin text-brand-600" fill="none" viewBox="0 0 24 24">
                   <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                 </svg>
@@ -342,7 +342,7 @@ export function CameraCell({
             <button
               type="button"
               onClick={togglePlay}
-              className="mt-2.5 inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-emerald-700 transition shadow-2xs active:scale-95"
+              className="mt-2.5 inline-flex items-center gap-1.5 rounded-lg bg-brand-600 px-3 py-1.5 text-[11px] font-bold text-white hover:bg-brand-700 transition shadow-2xs active:scale-95"
             >
               <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
                 <path d="M8 5v14l11-7z" />
@@ -354,8 +354,8 @@ export function CameraCell({
 
         {/* Notifikasi Toast Snapshot */}
         {snapshotSuccess && (
-          <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 rounded-lg bg-emerald-700 px-2.5 py-1 text-[11px] font-bold text-white shadow-md border border-emerald-600 animate-fade-in">
-            <svg className="w-3.5 h-3.5 text-emerald-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="absolute top-2 left-1/2 -translate-x-1/2 z-30 flex items-center gap-1.5 rounded-lg bg-brand-700 px-2.5 py-1 text-[11px] font-bold text-white shadow-md border border-brand-600 animate-fade-in">
+            <svg className="w-3.5 h-3.5 text-brand-100" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
             </svg>
             <span>Foto tersimpan</span>
@@ -397,7 +397,7 @@ export function CameraCell({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2" />
               </svg>
             ) : (
-              <svg className="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <svg className="w-3.5 h-3.5 text-brand-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
               </svg>
             )}
@@ -483,8 +483,8 @@ export function CctvLivePlayer({
       {/* Bar Atas Multi-Kamera */}
       <div className="flex flex-wrap items-center justify-between border-b border-slate-200 bg-slate-50/90 px-4 py-2.5 gap-2">
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-bold text-emerald-800 border border-emerald-200">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-2.5 py-0.5 text-xs font-bold text-brand-800 border border-brand-200">
+            <span className="h-2 w-2 rounded-full bg-brand-500" />
             <span>{activeCameras.length} Kamera CCTV Terhubung</span>
           </span>
           <span className="hidden sm:inline-block text-xs text-slate-500">
@@ -499,7 +499,7 @@ export function CctvLivePlayer({
             onClick={() => setViewMode("grid")}
             className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition-all shadow-2xs border ${
               viewMode === "grid"
-                ? "bg-white text-emerald-800 border-slate-300 shadow-xs"
+                ? "bg-white text-brand-800 border-slate-300 shadow-xs"
                 : "border-transparent text-slate-600 hover:bg-slate-200/60"
             }`}
             title="Tampilkan ke-3 kamera sekaligus"
@@ -515,7 +515,7 @@ export function CctvLivePlayer({
             onClick={() => setViewMode("focus")}
             className={`inline-flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-xs font-bold transition-all shadow-2xs border ${
               viewMode === "focus"
-                ? "bg-white text-emerald-800 border-slate-300 shadow-xs"
+                ? "bg-white text-brand-800 border-slate-300 shadow-xs"
                 : "border-transparent text-slate-600 hover:bg-slate-200/60"
             }`}
             title="Tampilkan 1 kamera terpilih secara besar"
@@ -563,7 +563,7 @@ export function CctvLivePlayer({
                     onClick={() => setFocusedId(cam.id)}
                     className={`rounded-lg px-3 py-1.5 text-xs font-bold transition shadow-2xs border ${
                       isSelected
-                        ? "bg-white text-emerald-800 border-slate-300 shadow-xs"
+                        ? "bg-white text-brand-800 border-slate-300 shadow-xs"
                         : "bg-slate-50 text-slate-600 border-slate-200 hover:bg-white"
                     }`}
                   >
@@ -576,7 +576,7 @@ export function CctvLivePlayer({
             <button
               type="button"
               onClick={() => setViewMode("grid")}
-              className="text-xs font-semibold text-emerald-700 hover:underline shrink-0"
+              className="text-xs font-semibold text-brand-700 hover:underline shrink-0"
             >
               ← Kembali ke Grid 3 Kamera
             </button>

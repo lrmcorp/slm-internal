@@ -1105,7 +1105,7 @@ export function PenjualanForm({
       {notice && <Toast {...notice} />}
       {createdSale && (
         <div
-          className={`rounded-lg border px-4 py-3 text-sm ${createdSale.retryable || createdSale.syncStatus === "failed" ? "border-amber-200 bg-amber-50 text-amber-900" : "border-emerald-200 bg-emerald-50 text-emerald-900"}`}
+          className={`rounded-lg border px-4 py-3 text-sm ${createdSale.retryable || createdSale.syncStatus === "failed" ? "border-amber-200 bg-amber-50 text-amber-900" : "border-brand-200 bg-brand-50 text-brand-900"}`}
         >
           {createdSale.testReference && (
             <p className="mb-2 font-semibold">
@@ -1138,7 +1138,7 @@ export function PenjualanForm({
             <div className="flex flex-wrap gap-3">
               <Link
                 href={`/penjualan/${createdSale.id}/invoice`}
-                className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-700 shadow-xs transition-colors"
+                className="rounded-lg bg-brand-600 px-3 py-2 text-xs font-bold text-white hover:bg-brand-700 shadow-xs transition-colors"
               >
                 {createdSale.paymentMethod === "Tempo"
                   ? "Lihat Nota Tempo (PNG / PDF)"
@@ -1146,7 +1146,7 @@ export function PenjualanForm({
               </Link>
               <Link
                 href={`/penjualan/${createdSale.id}`}
-                className="rounded-lg border border-emerald-600 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-100 shadow-xs transition-colors"
+                className="rounded-lg border border-brand-600 bg-brand-50 px-3 py-2 text-xs font-bold text-brand-800 hover:bg-brand-100 shadow-xs transition-colors"
               >
                 Lihat Transaksi
               </Link>
@@ -1157,7 +1157,7 @@ export function PenjualanForm({
                   Boolean(createdSale.erpReference)) && (
                   <Link
                     href={`/print/sales/${createdSale.id}`}
-                    className="rounded-lg border border-emerald-300 px-3 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-100"
+                    className="rounded-lg border border-brand-300 px-3 py-2 text-xs font-bold text-brand-800 hover:bg-brand-100"
                   >
                     Cetak Penjualan
                   </Link>
@@ -1165,7 +1165,7 @@ export function PenjualanForm({
               <button
                 type="button"
                 onClick={() => setCreatedSale(undefined)}
-                className="rounded-lg border border-emerald-300 px-3 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-100"
+                className="rounded-lg border border-brand-300 px-3 py-2 text-xs font-bold text-brand-800 hover:bg-brand-100"
               >
                 Input Lagi
               </button>
@@ -1186,7 +1186,7 @@ export function PenjualanForm({
           )}
         </div>
       )}
-      <p className="rounded-lg border border-emerald-100 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+      <p className="rounded-lg border border-brand-100 bg-brand-50 px-4 py-3 text-sm text-brand-900">
         Tujuan transaksi:{" "}
         {targetsErp ? (
           <>
@@ -1279,7 +1279,7 @@ export function PenjualanForm({
                         value={method}
                         {...register("paymentMethod")}
                       />
-                      <span className="block min-w-24 px-5 py-2 text-center text-sm font-semibold text-neutral-600 peer-checked:bg-emerald-600 peer-checked:text-white">
+                      <span className="block min-w-24 px-5 py-2 text-center text-sm font-semibold text-neutral-600 peer-checked:bg-brand-600 peer-checked:text-white">
                         {method}
                       </span>
                     </label>
@@ -1353,7 +1353,7 @@ export function PenjualanForm({
                 </Field>
               )}
               {paymentMethod === "Tempo" && (
-                <div className="rounded-lg border border-emerald-100 bg-emerald-50/40 p-4 sm:col-span-2 lg:col-span-4">
+                <div className="rounded-lg border border-brand-100 bg-brand-50/40 p-4 sm:col-span-2 lg:col-span-4">
                   <div className="mb-4"><p className="text-sm font-bold text-slate-900">Pembayaran awal / DP</p><p className="mt-1 text-xs text-slate-600">Opsional. Sisa pembayaran otomatis dicatat sebagai piutang Tempo.</p></div>
                   <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                     <Field label="Nominal DP" error={errors.initialPaymentAmount?.message}>
@@ -1392,7 +1392,7 @@ export function PenjualanForm({
                       </Field>
                     )}
                   </div>
-                  <div className="mt-4 grid grid-cols-3 gap-3 border-t border-emerald-100 pt-3 text-sm"><div><p className="text-xs text-slate-500">Total</p><b>{rupiah(total)}</b></div><div><p className="text-xs text-slate-500">Dibayar sekarang</p><b className="text-emerald-700">{rupiah(initialPaymentAmount)}</b></div><div><p className="text-xs text-slate-500">Sisa Tempo</p><b className="text-amber-700">{rupiah(Math.max(0, total - initialPaymentAmount))}</b></div></div>
+                  <div className="mt-4 grid grid-cols-3 gap-3 border-t border-brand-100 pt-3 text-sm"><div><p className="text-xs text-slate-500">Total</p><b>{rupiah(total)}</b></div><div><p className="text-xs text-slate-500">Dibayar sekarang</p><b className="text-brand-700">{rupiah(initialPaymentAmount)}</b></div><div><p className="text-xs text-slate-500">Sisa Tempo</p><b className="text-amber-700">{rupiah(Math.max(0, total - initialPaymentAmount))}</b></div></div>
                 </div>
               )}
               <div className={showExtra || errors.deliveryAt ? "contents" : "hidden"}>
@@ -1412,7 +1412,7 @@ export function PenjualanForm({
               {!(showExtra || errors.deliveryAt) && (
                 <button
                   type="button"
-                  className="min-h-11 justify-self-start text-left text-sm font-semibold text-emerald-800 underline sm:col-span-2 lg:col-span-4"
+                  className="min-h-11 justify-self-start text-left text-sm font-semibold text-brand-800 underline sm:col-span-2 lg:col-span-4"
                   aria-expanded={false}
                   onClick={() => setShowExtra(true)}
                 >
@@ -1423,7 +1423,7 @@ export function PenjualanForm({
                 <label className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900 sm:col-span-2">
                   <input
                     type="checkbox"
-                    className="mt-0.5 h-4 w-4 accent-emerald-600"
+                    className="mt-0.5 h-4 w-4 accent-brand-600"
                     {...register("isTestTransaction")}
                   />
                   <span>
@@ -1994,7 +1994,7 @@ export function PenjualanForm({
                     }
                   }
                 }}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full bg-brand-600 hover:bg-brand-700 text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting && submitMode === "final" ? (
                   <span className="inline-flex items-center justify-center gap-2">
@@ -2366,7 +2366,7 @@ function ProductSearchSelect({
         disabled={disabled}
         value={query}
         placeholder="Cari kode / nama barang"
-        className="block w-full rounded-sm border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-emerald-600 focus:ring-1 focus:ring-emerald-600 disabled:bg-neutral-100"
+        className="block w-full rounded-sm border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 outline-none placeholder:text-neutral-400 focus:border-brand-600 focus:ring-1 focus:ring-brand-600 disabled:bg-neutral-100"
         onFocus={() => setOpen(true)}
         onChange={(event) => {
           setQuery(event.target.value);
@@ -2412,7 +2412,7 @@ function ProductSearchSelect({
               aria-selected={
                 normalizeCode(option.product.code) === normalizeCode(value)
               }
-              className={`w-full rounded-lg px-3 py-2 text-left transition ${index === activeIndex ? "bg-emerald-50" : "hover:bg-neutral-50"}`}
+              className={`w-full rounded-lg px-3 py-2 text-left transition ${index === activeIndex ? "bg-brand-50" : "hover:bg-neutral-50"}`}
               onMouseDown={(event) => event.preventDefault()}
               onClick={() => choose(option)}
             >
@@ -2483,7 +2483,7 @@ function ProductSelectionInfo({
   if (!option)
     return (
       <span className="block text-xs font-normal text-slate-600">
-        <button type="button" className="font-semibold text-emerald-800 underline" onClick={onSwitchManual}>
+        <button type="button" className="font-semibold text-brand-800 underline" onClick={onSwitchManual}>
           Barang baru (belum ada di daftar)
         </button>
       </span>
@@ -2720,7 +2720,7 @@ function DiscountInput({ label, value, type, onValue, onType }: { label: string;
         type="button"
         aria-label={`${label}: ganti ke ${type === "amount" ? "persen" : "rupiah"}`}
         onClick={() => onType(type === "amount" ? "percent" : "amount")}
-        className="min-h-10 w-9 shrink-0 rounded-l-sm border border-r-0 border-neutral-300 bg-neutral-50 text-xs font-bold text-neutral-700 hover:bg-emerald-50"
+        className="min-h-10 w-9 shrink-0 rounded-l-sm border border-r-0 border-neutral-300 bg-neutral-50 text-xs font-bold text-neutral-700 hover:bg-brand-50"
       >
         {type === "amount" ? "Rp" : "%"}
       </button>

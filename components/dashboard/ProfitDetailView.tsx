@@ -82,8 +82,8 @@ export function ProfitDetailView({ data }: { data: DashboardProfitDetails }) {
         <div className="flex flex-col justify-between gap-4 border-b border-slate-800 pb-5 sm:flex-row sm:items-center">
           <div>
             <div className="flex items-center gap-2">
-              <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              <p className="text-xs font-bold uppercase tracking-widest text-emerald-400">
+              <span className="inline-block h-2 w-2 rounded-full bg-brand-400 animate-pulse" />
+              <p className="text-xs font-bold uppercase tracking-widest text-brand-400">
                 Rekonsiliasi Sumber Data Profit
               </p>
             </div>
@@ -92,7 +92,7 @@ export function ProfitDetailView({ data }: { data: DashboardProfitDetails }) {
             </h3>
           </div>
           <div className="flex flex-wrap items-center gap-3">
-            <span className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 px-3.5 py-1.5 text-xs font-bold text-emerald-400">
+            <span className="rounded-xl border border-brand-500/30 bg-brand-500/10 px-3.5 py-1.5 text-xs font-bold text-brand-400">
               Margin Efektif: {data.effectiveMarginPercent.toLocaleString("id-ID", { maximumFractionDigits: 1 })}%
             </span>
             <span className="text-xs text-slate-400 font-mono">
@@ -134,7 +134,7 @@ export function ProfitDetailView({ data }: { data: DashboardProfitDetails }) {
             <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
               3. Gross Profit (Omset − Modal)
             </p>
-            <p className="mt-2 font-mono text-xl font-extrabold text-emerald-400 sm:text-2xl">
+            <p className="mt-2 font-mono text-xl font-extrabold text-brand-400 sm:text-2xl">
               = {rupiah(data.grossProfit)}
             </p>
             <p className="mt-1 text-xs text-slate-500">
@@ -156,13 +156,13 @@ export function ProfitDetailView({ data }: { data: DashboardProfitDetails }) {
           </div>
 
           {/* Pillar 5: Nett Profit */}
-          <div className="rounded-xl border border-emerald-500/40 bg-emerald-950/30 p-4 sm:col-span-2 lg:col-span-1">
-            <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-300">
+          <div className="rounded-xl border border-brand-500/40 bg-brand-950/30 p-4 sm:col-span-2 lg:col-span-1">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-brand-300">
               5. Nett Profit
             </p>
             <p
               className={`mt-2 font-mono text-xl font-extrabold sm:text-2xl ${
-                data.nettProfit >= 0 ? "text-emerald-400" : "text-rose-400"
+                data.nettProfit >= 0 ? "text-brand-400" : "text-rose-400"
               }`}
             >
               = {rupiah(data.nettProfit)}
@@ -182,7 +182,7 @@ export function ProfitDetailView({ data }: { data: DashboardProfitDetails }) {
             onClick={() => setActiveTab("sales")}
             className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-colors ${
               activeTab === "sales"
-                ? "bg-emerald-600 text-white shadow-xs"
+                ? "bg-brand-600 text-white shadow-xs"
                 : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
             }`}
           >
@@ -196,7 +196,7 @@ export function ProfitDetailView({ data }: { data: DashboardProfitDetails }) {
             onClick={() => setActiveTab("expenses")}
             className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-colors ${
               activeTab === "expenses"
-                ? "bg-emerald-600 text-white shadow-xs"
+                ? "bg-brand-600 text-white shadow-xs"
                 : "border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
             }`}
           >
@@ -351,7 +351,7 @@ export function ProfitDetailView({ data }: { data: DashboardProfitDetails }) {
                             href={expense.attachmentUrl}
                             target="_blank"
                             rel="noreferrer"
-                            className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
+                            className="inline-flex items-center gap-1 rounded-md bg-brand-50 px-2 py-1 text-xs font-semibold text-brand-700 hover:bg-brand-100"
                           >
                             <span>Struk</span>
                             <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -418,7 +418,7 @@ function SaleRowItem({
     <>
       <tr
         className={`cursor-pointer transition-colors ${
-          isExpanded ? "bg-emerald-50/40" : "hover:bg-slate-50/80"
+          isExpanded ? "bg-brand-50/40" : "hover:bg-slate-50/80"
         }`}
         onClick={onToggle}
       >
@@ -429,7 +429,7 @@ function SaleRowItem({
             aria-label="Toggle details"
           >
             {isExpanded ? (
-              <svg className="h-4 w-4 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="h-4 w-4 text-brand-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
               </svg>
             ) : (
@@ -443,15 +443,15 @@ function SaleRowItem({
         <td className="px-3 py-3.5 font-bold text-slate-950">{sale.transactionNumber || sale.id}</td>
         <td className="px-3 py-3.5 text-slate-800 font-medium">{sale.customerName || "Walk-In"}</td>
         <td className="px-3 py-3.5 text-xs text-slate-600">
-          <span className="font-bold text-emerald-700">{sale.tipeCode}</span> • {sale.rekeningNameSnapshot || sale.paymentMethod}
+          <span className="font-bold text-brand-700">{sale.tipeCode}</span> • {sale.rekeningNameSnapshot || sale.paymentMethod}
         </td>
         <td className="px-3 py-3.5 text-right font-mono font-bold text-slate-950">{rupiah(sale.revenue)}</td>
         <td className="px-3 py-3.5 text-right font-mono font-semibold text-amber-700">{rupiah(sale.cost)}</td>
-        <td className="px-3 py-3.5 text-right font-mono font-bold text-emerald-700">{rupiah(sale.grossProfit)}</td>
+        <td className="px-3 py-3.5 text-right font-mono font-bold text-brand-700">{rupiah(sale.grossProfit)}</td>
         <td className="px-3 py-3.5 text-center">
           <span
             className={`inline-flex rounded-full px-2.5 py-0.5 text-xs font-bold ${
-              sale.hasRealCost ? "bg-emerald-100 text-emerald-800" : "bg-slate-100 text-slate-700"
+              sale.hasRealCost ? "bg-brand-100 text-brand-800" : "bg-slate-100 text-slate-700"
             }`}
             title={sale.hasRealCost ? "Dihitung dari HPP real master produk" : `Estimasi margin global ${fallbackPercent}%`}
           >
@@ -486,7 +486,7 @@ function SaleRowItem({
                   <span>•</span>
                   <span>Total Modal: <strong className="text-amber-700 font-mono">{rupiah(sale.cost)}</strong></span>
                   <span>•</span>
-                  <span>Gross profit: <strong className="text-emerald-700 font-mono">{rupiah(sale.grossProfit)}</strong></span>
+                  <span>Gross profit: <strong className="text-brand-700 font-mono">{rupiah(sale.grossProfit)}</strong></span>
                 </div>
               </div>
 
@@ -528,10 +528,10 @@ function SaleRowItem({
                           </td>
                           <td className="px-3 py-2.5 text-right font-bold text-slate-950">{rupiah(it.revenue)}</td>
                           <td className="px-3 py-2.5 text-right font-bold text-amber-700">{rupiah(it.cost)}</td>
-                          <td className="px-3 py-2.5 text-right font-bold text-emerald-700">{rupiah(it.grossProfit)}</td>
+                          <td className="px-3 py-2.5 text-right font-bold text-brand-700">{rupiah(it.grossProfit)}</td>
                           <td className="px-3 py-2.5 text-center font-sans">
                             {it.isRealCost ? (
-                              <span className="inline-block rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-800">
+                              <span className="inline-block rounded-md bg-brand-100 px-2 py-0.5 text-[10px] font-bold text-brand-800">
                                 Real HPP
                               </span>
                             ) : (

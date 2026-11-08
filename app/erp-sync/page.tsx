@@ -161,7 +161,7 @@ export default async function ErpSyncPage({
           <p
             className={
               config.ok
-                ? "mt-1 text-lg font-bold text-emerald-700"
+                ? "mt-1 text-lg font-bold text-brand-700"
                 : "mt-1 text-lg font-bold text-amber-700"
             }
           >
@@ -192,7 +192,7 @@ export default async function ErpSyncPage({
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
             Synced
           </p>
-          <p className="mt-1 text-2xl font-bold text-emerald-700">
+          <p className="mt-1 text-2xl font-bold text-brand-700">
             {summary.synced}
           </p>
         </div>
@@ -205,7 +205,7 @@ export default async function ErpSyncPage({
           <p
             className={
               preflight.autoCreateCustomer.enabled
-                ? "mt-1 text-lg font-bold text-emerald-700"
+                ? "mt-1 text-lg font-bold text-brand-700"
                 : "mt-1 text-lg font-bold text-amber-700"
             }
           >
@@ -222,7 +222,7 @@ export default async function ErpSyncPage({
           <p
             className={
               preflight.erp.baseUrlConfigured && preflight.erp.authReady
-                ? "mt-1 text-lg font-bold text-emerald-700"
+                ? "mt-1 text-lg font-bold text-brand-700"
                 : "mt-1 text-lg font-bold text-amber-700"
             }
           >
@@ -268,7 +268,7 @@ export default async function ErpSyncPage({
                     </span>
                     <a
                       href={`/penjualan/${item.id}`}
-                      className="font-semibold text-slate-900 hover:text-emerald-700 hover:underline"
+                      className="font-semibold text-slate-900 hover:text-brand-700 hover:underline"
                     >
                       {item.customerName}
                     </a>
@@ -288,7 +288,7 @@ export default async function ErpSyncPage({
                     item.syncStatus === "failed"
                       ? "rounded-full bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700"
                       : item.syncStatus === "synced"
-                        ? "rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700"
+                        ? "rounded-full bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-700"
                         : "rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700"
                   }
                 >
@@ -300,7 +300,7 @@ export default async function ErpSyncPage({
                       item.stockReleaseStatus === "failed"
                         ? "rounded-full bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700"
                         : ["released", "already_released"].includes(item.stockReleaseStatus)
-                          ? "rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700"
+                          ? "rounded-full bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-700"
                           : "rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700"
                     }
                   >
@@ -314,7 +314,7 @@ export default async function ErpSyncPage({
                         ? "rounded-full bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700"
                         : item.erpPaymentStatus === "paid" ||
                             item.erpPaymentStatus === "partial"
-                          ? "rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700"
+                          ? "rounded-full bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-700"
                           : "rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700"
                     }
                   >
@@ -388,7 +388,7 @@ export default async function ErpSyncPage({
                       </span>
                       <a
                         href={`/penjualan/${item.id}`}
-                        className="font-medium text-slate-900 hover:text-emerald-700 hover:underline"
+                        className="font-medium text-slate-900 hover:text-brand-700 hover:underline"
                       >
                         {item.customerName}
                       </a>
@@ -406,7 +406,7 @@ export default async function ErpSyncPage({
                         item.syncStatus === "failed"
                           ? "rounded-full bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700"
                           : item.syncStatus === "synced"
-                            ? "rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700"
+                            ? "rounded-full bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-700"
                             : "rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700"
                       }
                     >
@@ -425,7 +425,7 @@ export default async function ErpSyncPage({
                           item.stockReleaseStatus === "failed"
                             ? "rounded-full bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700"
                             : ["released", "already_released"].includes(item.stockReleaseStatus)
-                              ? "rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700"
+                              ? "rounded-full bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-700"
                               : "rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700"
                         }
                       >
@@ -443,7 +443,7 @@ export default async function ErpSyncPage({
                             ? "rounded-full bg-red-50 px-2.5 py-1 text-xs font-bold text-red-700"
                             : item.erpPaymentStatus === "paid" ||
                                 item.erpPaymentStatus === "partial"
-                              ? "rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700"
+                              ? "rounded-full bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-700"
                               : "rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700"
                         }
                       >
@@ -518,7 +518,7 @@ export default async function ErpSyncPage({
                 <div>
                   <a
                     href={`/pengeluaran/${item.id}`}
-                    className="font-semibold text-slate-900 hover:text-emerald-700 hover:underline"
+                    className="font-semibold text-slate-900 hover:text-brand-700 hover:underline"
                   >
                     {item.vendorName}
                   </a>
@@ -603,7 +603,7 @@ export default async function ErpSyncPage({
                   <td className="px-5 py-4">
                     <a
                       href={`/pengeluaran/${item.id}`}
-                      className="font-medium text-slate-900 hover:text-emerald-700 hover:underline"
+                      className="font-medium text-slate-900 hover:text-brand-700 hover:underline"
                     >
                       {item.vendorName}
                     </a>

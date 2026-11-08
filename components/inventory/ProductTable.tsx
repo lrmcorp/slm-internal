@@ -29,7 +29,7 @@ export function ProductTable({ rows, rate, cbmRate = null, canManage, initialEdi
     <>
       {/* Form edit di luar tabel supaya tetap utuh di layar HP (tabel bisa digeser ke samping). */}
       {editingRow && (
-        <div ref={editorRef} className="aj-surface mb-4 scroll-mt-4 border-emerald-300 p-4">
+        <div ref={editorRef} className="aj-surface mb-4 scroll-mt-4 border-brand-300 p-4">
           <h3 className="mb-3 font-bold text-slate-900">Ubah {editingRow.sku}</h3>
           <ProductEditor key={editingRow.id} row={editingRow} rate={rate} cbmRate={cbmRate} onDone={() => setEditing(null)} />
         </div>
@@ -45,9 +45,9 @@ export function ProductTable({ rows, rate, cbmRate = null, canManage, initialEdi
         </thead>
         <tbody>
           {rows.map((x) => (
-              <tr key={x.id} className={`border-t border-slate-100 ${editing === x.id ? "bg-emerald-50" : ""}`}>
+              <tr key={x.id} className={`border-t border-slate-100 ${editing === x.id ? "bg-brand-50" : ""}`}>
                 <td className="px-3 py-2 font-mono text-xs font-semibold">{x.sku}</td>
-                <td className="px-3 py-2"><Link className="hover:text-emerald-800" href={`/inventory/mutasi?productId=${x.id}`}>{x.name}</Link><div className="text-xs text-slate-600">{x.ownership === "CONSIGNMENT" && <span className="mr-1 rounded bg-amber-50 px-1 font-semibold text-amber-800">Titipan{x.consignorName ? ` · ${x.consignorName}` : ""}</span>}{[x.category, x.brand].filter(Boolean).join(" / ")}</div></td>
+                <td className="px-3 py-2"><Link className="hover:text-brand-800" href={`/inventory/mutasi?productId=${x.id}`}>{x.name}</Link><div className="text-xs text-slate-600">{x.ownership === "CONSIGNMENT" && <span className="mr-1 rounded bg-amber-50 px-1 font-semibold text-amber-800">Titipan{x.consignorName ? ` · ${x.consignorName}` : ""}</span>}{[x.category, x.brand].filter(Boolean).join(" / ")}</div></td>
                 <td className="px-3 py-2">{x.unit}</td>
                 <td className="px-3 py-2 text-right tabular-nums">{x.unitsPerKoli ? `${fmt(x.unitsPerKoli)} ${x.unit}` : "-"}</td>
                 <td className="px-3 py-2 text-right tabular-nums">{x.priceRmb != null ? (defaultPcsPerUnit(x.unit, x.pcsPerUnit) ? <>¥ {fmt(x.priceRmb / defaultPcsPerUnit(x.unit, x.pcsPerUnit)!, 4)}<span className="text-xs text-slate-500">/pcs</span><div className="text-xs text-slate-600">¥ {fmt(x.priceRmb, 4)}/{x.unit}</div></> : `¥ ${fmt(x.priceRmb, 4)}`) : "-"}{x.priceRmb != null && x.cbmPerUnit ? <div className="text-xs text-slate-600">{fmt(x.cbmPerUnit, 6)} CBM</div> : null}{x.priceRmb != null && x.extraCostIdr ? <div className="text-xs text-slate-600">+ Rp {fmt(x.extraCostIdr)}</div> : null}</td>
@@ -57,7 +57,7 @@ export function ProductTable({ rows, rate, cbmRate = null, canManage, initialEdi
                 <td className={`whitespace-nowrap px-3 py-2 text-right font-semibold tabular-nums ${x.minimumStock > 0 && x.totalQuantity <= x.minimumStock ? "text-red-800" : ""}`}>
                   {x.totalKoliText}{x.unitsPerKoli && x.totalQuantity ? <div className="text-xs font-normal text-slate-600">{fmt(x.totalQuantity)} {x.unit}</div> : null}
                 </td>
-                <td className="px-3 py-2 text-right">{canManage && <button className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold text-emerald-800 hover:bg-emerald-50" onClick={() => setEditing(editing === x.id ? null : x.id)}>{editing === x.id ? "Tutup" : "Ubah"}</button>}</td>
+                <td className="px-3 py-2 text-right">{canManage && <button className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold text-brand-800 hover:bg-brand-50" onClick={() => setEditing(editing === x.id ? null : x.id)}>{editing === x.id ? "Tutup" : "Ubah"}</button>}</td>
               </tr>
           ))}
           {!rows.length && <tr><td colSpan={10} className="px-3 py-8 text-center text-slate-600">Belum ada barang.</td></tr>}

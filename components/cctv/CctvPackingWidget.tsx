@@ -41,7 +41,7 @@ export function CctvPackingWidget({
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs mb-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 pb-4">
         <div className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 shrink-0">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-brand-50 text-brand-700 border border-brand-100 shrink-0">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
@@ -58,8 +58,8 @@ export function CctvPackingWidget({
 
         <div className="flex items-center gap-2">
           {isDetected ? (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700 border border-emerald-200">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-3 py-1 text-xs font-bold text-brand-700 border border-brand-200">
+              <span className="h-2 w-2 rounded-full bg-brand-500 animate-pulse" />
               Terdeteksi CCTV: Ya
             </span>
           ) : (
@@ -103,7 +103,7 @@ export function CctvPackingWidget({
                     ? formatJakartaDateTime(new Date(detection.firstSeenAt))
                     : "Terekam Otomatis"}
               </p>
-              <p className="text-emerald-600 font-semibold text-[11px] mt-0.5 flex items-center gap-1">
+              <p className="text-brand-600 font-semibold text-[11px] mt-0.5 flex items-center gap-1">
                 {isPacked ? (
                   <>
                     <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">

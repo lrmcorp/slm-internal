@@ -24,12 +24,12 @@ export function CctvStatsCards({ stats }: { stats: CctvStatsData }) {
   return (
     <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-4 mb-6">
       {/* Kartu 1: Total Selesai Packing */}
-      <div className="rounded-2xl border border-emerald-100 bg-emerald-50/50 p-4 sm:p-5 shadow-xs">
+      <div className="rounded-2xl border border-brand-100 bg-brand-50/50 p-4 sm:p-5 shadow-xs">
         <div className="flex items-center justify-between">
-          <p className="text-xs font-bold uppercase tracking-wider text-emerald-700">
+          <p className="text-xs font-bold uppercase tracking-wider text-brand-700">
             Selesai Packing
           </p>
-          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-600 text-white">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-brand-600 text-white">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
             </svg>
@@ -38,7 +38,7 @@ export function CctvStatsCards({ stats }: { stats: CctvStatsData }) {
         <p className="mt-2 text-2xl sm:text-3xl font-extrabold text-slate-900">
           {stats.today.totalPacked}
         </p>
-        <p className="mt-1 text-xs text-emerald-800 font-medium">
+        <p className="mt-1 text-xs text-brand-800 font-medium">
           Paket terbungkus hari ini
         </p>
       </div>
@@ -91,13 +91,13 @@ export function CctvStatsCards({ stats }: { stats: CctvStatsData }) {
           <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
             Kamera Meja Aktif
           </p>
-          <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 ring-4 ring-emerald-100" />
+          <span className="flex h-2.5 w-2.5 rounded-full bg-brand-500 ring-4 ring-brand-100" />
         </div>
         <p className="mt-2 text-2xl sm:text-3xl font-extrabold text-slate-900">
           {onlineCameras} <span className="text-sm font-normal text-slate-400">meja</span>
         </p>
         <p className="mt-1 text-xs text-slate-500 flex items-center gap-1.5 font-medium">
-          <span className={`h-1.5 w-1.5 rounded-full ${stats.liveSystem?.status === "healthy" || onlineCameras > 0 ? "bg-emerald-500 animate-pulse" : "bg-slate-400"}`} />
+          <span className={`h-1.5 w-1.5 rounded-full ${stats.liveSystem?.status === "healthy" || onlineCameras > 0 ? "bg-brand-500 animate-pulse" : "bg-slate-400"}`} />
           <span>{stats.liveSystem?.status === "healthy" ? "Sistem CCTV Terhubung" : "Standby Meja Packing"}</span>
         </p>
       </div>

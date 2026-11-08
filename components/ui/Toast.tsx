@@ -14,7 +14,7 @@ export function Toast({
   const isWarning = type === "warning";
 
   const colorClasses = isSuccess
-    ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+    ? "border-brand-200 bg-brand-50 text-brand-800"
     : isError
     ? "border-rose-200 bg-rose-50 text-rose-800"
     : isWarning
@@ -22,7 +22,7 @@ export function Toast({
     : "border-blue-200 bg-blue-50 text-blue-800";
 
   const iconBg = isSuccess
-    ? "bg-emerald-200/60 text-emerald-800"
+    ? "bg-brand-200/60 text-brand-800"
     : isError
     ? "bg-rose-200/60 text-rose-800"
     : isWarning

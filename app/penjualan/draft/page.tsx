@@ -87,7 +87,7 @@ export default async function DraftPenjualanPage({ searchParams }: { searchParam
         {can(role, "penjualan.create") && (
           <Link
             href="/penjualan/input"
-            className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-emerald-700"
+            className="rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-brand-700"
           >
             + Input Penjualan Baru
           </Link>
@@ -150,12 +150,12 @@ export default async function DraftPenjualanPage({ searchParams }: { searchParam
               </div>
               <div className="flex justify-between items-baseline border-t border-slate-100 pt-2">
                 <span className="text-xs text-slate-500">{draft.items.length} jenis barang</span>
-                <span className="text-base font-bold text-emerald-700">{rupiah(draft.total)}</span>
+                <span className="text-base font-bold text-brand-700">{rupiah(draft.total)}</span>
               </div>
               <div className="flex gap-2 pt-1">
                 <Link
                   href={`/penjualan/${draft.id}/edit`}
-                  className="flex-1 rounded-md bg-emerald-600 px-3 py-2 text-center text-xs font-bold text-white shadow-xs hover:bg-emerald-700"
+                  className="flex-1 rounded-md bg-brand-600 px-3 py-2 text-center text-xs font-bold text-white shadow-xs hover:bg-brand-700"
                 >
                   Lanjutkan / Finalkan
                 </Link>
@@ -179,7 +179,7 @@ export default async function DraftPenjualanPage({ searchParams }: { searchParam
               <p className="mt-1 text-sm text-slate-500">Semua pesanan telah difinalisasi atau belum ada draft tersimpan.</p>
               <Link
                 href="/penjualan/input"
-                className="mt-4 inline-flex rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700"
+                className="mt-4 inline-flex rounded-lg bg-brand-600 px-4 py-2 text-xs font-bold text-white hover:bg-brand-700"
               >
                 + Buat Penjualan Sekarang
               </Link>
@@ -233,7 +233,7 @@ export default async function DraftPenjualanPage({ searchParams }: { searchParam
                     <div className="flex items-center justify-center gap-2">
                       <Link
                         href={`/penjualan/${draft.id}/edit`}
-                        className="rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-emerald-700 whitespace-nowrap"
+                        className="rounded-md bg-brand-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-brand-700 whitespace-nowrap"
                       >
                         Lanjutkan / Finalkan →
                       </Link>
@@ -259,7 +259,7 @@ export default async function DraftPenjualanPage({ searchParams }: { searchParam
                     <p className="mt-1 text-sm text-slate-500">Gunakan tombol &quot;Simpan Draft&quot; di form penjualan untuk mencatat pesanan sementara.</p>
                     <Link
                       href="/penjualan/input"
-                      className="mt-4 inline-flex rounded-lg bg-emerald-600 px-4 py-2 text-xs font-bold text-white hover:bg-emerald-700"
+                      className="mt-4 inline-flex rounded-lg bg-brand-600 px-4 py-2 text-xs font-bold text-white hover:bg-brand-700"
                     >
                       + Input Penjualan Baru
                     </Link>

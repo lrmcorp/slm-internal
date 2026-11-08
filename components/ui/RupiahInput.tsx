@@ -11,7 +11,7 @@ export function RupiahInput({ value, onChange, placeholder, id, className = "", 
 }) {
   const shown = value ? Number(value).toLocaleString("id-ID") : "";
   return (
-    <div className={`flex min-h-11 items-center rounded-lg border border-slate-300 bg-white focus-within:border-emerald-600 ${className}`}>
+    <div className={`flex min-h-11 items-center rounded-lg border border-slate-300 bg-white focus-within:border-brand-600 ${className}`}>
       <span className="pl-3 text-sm font-semibold text-slate-500">Rp</span>
       <input
         id={id}

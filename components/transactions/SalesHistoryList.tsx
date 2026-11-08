@@ -63,7 +63,7 @@ function DayHeading({ dayKey, summary, showTotal }: { dayKey: string; summary?: 
 }
 
 const rowLink =
-  "inline-flex min-h-7 items-center rounded-md px-1.5 text-xs font-semibold text-emerald-800 hover:bg-emerald-50";
+  "inline-flex min-h-7 items-center rounded-md px-1.5 text-xs font-semibold text-brand-800 hover:bg-brand-50";
 
 export function nextExpandedSaleId(
   currentId: string | null,
@@ -116,7 +116,7 @@ function Badge({
 }) {
   const colors = {
     slate: "bg-slate-100 text-slate-600",
-    green: "bg-emerald-50 text-emerald-700",
+    green: "bg-brand-50 text-brand-700",
     amber: "bg-amber-50 text-amber-700",
     red: "bg-rose-50 text-rose-700",
     blue: "bg-blue-50 text-blue-700",
@@ -164,7 +164,7 @@ export function unifiedDeliveryStatus(sale: Pick<Sale, "doStatus" | "doPackingSt
   if (sale.doStatus === "selesai") {
     return {
       label: "Selesai",
-      className: "bg-emerald-100 text-emerald-800 border-emerald-200"
+      className: "bg-brand-100 text-brand-800 border-brand-200"
     };
   }
   if (sale.doStatus === "selesai_setengah") {
@@ -191,7 +191,7 @@ export function DeliveryStatusBadge({ status }: { status?: string }) {
     return (
       <span
         data-testid="do-status-badge"
-        className="inline-flex items-center rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-bold text-emerald-800 shadow-xs border border-emerald-200"
+        className="inline-flex items-center rounded-full bg-brand-100 px-2 py-0.5 text-[11px] font-bold text-brand-800 shadow-xs border border-brand-200"
       >
         Selesai
       </span>
@@ -273,9 +273,9 @@ export function DeliveryOrderBadges({ sale, wrap = false }: { sale: Sale; wrap?:
         <span
           data-testid="do-packing-badge"
           title="Pesanan telah selesai dipacking (Surat Jalan)"
-          className="inline-flex items-center gap-1 rounded bg-emerald-50 px-1.5 py-0.5 text-[10px] font-bold text-emerald-700 border border-emerald-200 shadow-2xs"
+          className="inline-flex items-center gap-1 rounded bg-brand-50 px-1.5 py-0.5 text-[10px] font-bold text-brand-700 border border-brand-200 shadow-2xs"
         >
-          <svg className="w-3 h-3 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-3 h-3 text-brand-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
           </svg>
           <span>Dipacking</span>
@@ -310,8 +310,8 @@ function ExpandButton({
       onClick={onToggle}
       className={
         compact
-          ? "grid h-9 w-9 place-items-center rounded-md border border-slate-200 text-slate-600 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
-          : "flex w-full items-center justify-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 font-semibold text-slate-700 hover:border-emerald-300 hover:bg-emerald-50 hover:text-emerald-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
+          ? "grid h-9 w-9 place-items-center rounded-md border border-slate-200 text-slate-600 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+          : "flex w-full items-center justify-center gap-1.5 rounded-md border border-slate-200 bg-slate-50 px-3 py-2.5 font-semibold text-slate-700 hover:border-brand-300 hover:bg-brand-50 hover:text-brand-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
       }
     >
       <span
@@ -492,10 +492,10 @@ export function SalesHistoryList({
                   {expanded ? "Tutup" : `${sale.items.length} item`}
                   <span aria-hidden="true" className={`transition-transform ${expanded ? "rotate-180" : ""}`}>⌄</span>
                 </button>
-                <Link className="grid h-9 min-w-0 flex-1 place-items-center rounded-md bg-emerald-600 text-xs font-semibold text-white" href={`/penjualan/${sale.id}`}>
+                <Link className="grid h-9 min-w-0 flex-1 place-items-center rounded-md bg-brand-600 text-xs font-semibold text-white" href={`/penjualan/${sale.id}`}>
                   Detail
                 </Link>
-                <Link className="grid h-9 min-w-0 flex-1 place-items-center rounded-md border border-emerald-300 bg-emerald-50 text-xs font-bold text-emerald-800" href={`/print/sales/${sale.id}/continuous`}>
+                <Link className="grid h-9 min-w-0 flex-1 place-items-center rounded-md border border-brand-300 bg-brand-50 text-xs font-bold text-brand-800" href={`/print/sales/${sale.id}/continuous`}>
                   Cetak
                 </Link>
                 {canManage && sale.source !== "MJ" && sale.approvalStatus !== "cancelled" && (
@@ -639,7 +639,7 @@ export function SalesHistoryList({
                         <EmptyStockBadge shortage={stockShortage[sale.id]} />
                         <span className={`rounded-full border px-2 py-0.5 text-[11px] font-bold ${delivery.className}`}>{delivery.label}</span>
                         {sale.doPackingStatus === "sudah" && sale.doStatus !== "selesai" && sale.doStatus !== "selesai_setengah" && (
-                          <span className="text-xs font-semibold text-emerald-800">Dipacking</span>
+                          <span className="text-xs font-semibold text-brand-800">Dipacking</span>
                         )}
                       </div>
                     </td>

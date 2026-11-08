@@ -96,7 +96,7 @@ export function CostCalculator({ defaultRmbRate, defaultCbmRate }: { defaultRmbR
           ) : (
             <div className="flex items-center justify-between gap-3 text-sm">
               <p>Kurs <b>Rp {num(rmbRate).toLocaleString("id-ID")}</b>/RMB · Tarif <b>Rp {num(cbmRate).toLocaleString("id-ID")}</b>/CBM<span className="block text-xs text-slate-500">Dari Master Barang</span></p>
-              <button type="button" className="min-h-10 shrink-0 rounded-lg px-3 text-sm font-semibold text-emerald-800 hover:bg-emerald-50" onClick={() => setEditingRates(true)}>Ubah</button>
+              <button type="button" className="min-h-10 shrink-0 rounded-lg px-3 text-sm font-semibold text-brand-800 hover:bg-brand-50" onClick={() => setEditingRates(true)}>Ubah</button>
             </div>
           )}
         </div>
@@ -120,9 +120,9 @@ export function CostCalculator({ defaultRmbRate, defaultCbmRate }: { defaultRmbR
               <Row label={`Harga barang per ${unitKind.toLowerCase()}`} note={`¥${r.priceRmbPerUnit.toLocaleString("id-ID")} × ${rp(num(rmbRate))}`} value={rp(r.goodsPerUnit)} />
               <Row label="Harga barang per pcs" value={rp(r.goodsPerPcs)} />
             </dl>
-            <div className="mt-3 grid grid-cols-2 gap-3 rounded-lg bg-emerald-50 p-3">
-              <div><p className="text-xs font-semibold text-emerald-900">Modal per {unitKind.toLowerCase()}</p><p className="text-xl font-bold tabular-nums text-emerald-950">{rp(r.costPerUnit)}</p></div>
-              <div><p className="text-xs font-semibold text-emerald-900">Modal per pcs</p><p className="text-xl font-bold tabular-nums text-emerald-950">{rp(r.costPerPcs)}</p></div>
+            <div className="mt-3 grid grid-cols-2 gap-3 rounded-lg bg-brand-50 p-3">
+              <div><p className="text-xs font-semibold text-brand-900">Modal per {unitKind.toLowerCase()}</p><p className="text-xl font-bold tabular-nums text-brand-950">{rp(r.costPerUnit)}</p></div>
+              <div><p className="text-xs font-semibold text-brand-900">Modal per pcs</p><p className="text-xl font-bold tabular-nums text-brand-950">{rp(r.costPerPcs)}</p></div>
             </div>
             <p className="mt-2 text-xs text-slate-600">
               1 koli = {r.pcsPerKoli.toLocaleString("id-ID")} pcs · modal 1 koli {rp(r.costPerKoli)} · CBM per {unitKind.toLowerCase()} {r.cbmPerUnit.toLocaleString("id-ID", { maximumFractionDigits: 6 })}

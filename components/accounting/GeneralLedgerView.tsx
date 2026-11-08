@@ -86,7 +86,7 @@ export function GeneralLedgerView({
                   setSelectedAccountId(e.target.value);
                   fetchLedger(e.target.value, startDate, endDate);
                 }}
-                className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-xs font-mono focus:border-emerald-600 focus:outline-none"
+                className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-xs font-mono focus:border-brand-600 focus:outline-none"
               >
                 {accounts.map((acc) => (
                   <option key={acc.id} value={acc.id}>
@@ -104,7 +104,7 @@ export function GeneralLedgerView({
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-xs font-mono focus:border-emerald-600 focus:outline-none"
+                className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-xs font-mono focus:border-brand-600 focus:outline-none"
               />
             </div>
 
@@ -116,7 +116,7 @@ export function GeneralLedgerView({
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-xs font-mono focus:border-emerald-600 focus:outline-none"
+                className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-xs font-mono focus:border-brand-600 focus:outline-none"
               />
             </div>
           </div>
@@ -146,7 +146,7 @@ export function GeneralLedgerView({
 
         <section className="aj-surface p-5">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Mutasi Debit</p>
-          <p className="mt-2 text-2xl font-black tracking-tight text-emerald-800 font-mono tabular-nums">
+          <p className="mt-2 text-2xl font-black tracking-tight text-brand-800 font-mono tabular-nums">
             {formatCurrency(report.totalDebit)}
           </p>
           <p className="mt-3 text-xs text-slate-500">
@@ -256,7 +256,7 @@ export function GeneralLedgerView({
                 <td colSpan={4} className="py-3 px-4 text-right uppercase tracking-wider text-slate-700">
                   Total Mutasi & Saldo Akhir
                 </td>
-                <td className="py-3 px-4 text-right font-mono tabular-nums text-emerald-800">
+                <td className="py-3 px-4 text-right font-mono tabular-nums text-brand-800">
                   {formatCurrency(report.totalDebit)}
                 </td>
                 <td className="py-3 px-4 text-right font-mono tabular-nums text-rose-800">

@@ -79,14 +79,14 @@ export function TrialBalanceTable({ initialReport }: Props) {
       <section
         className={`aj-surface p-5 border-l-4 ${
           report.isEquilibrium
-            ? "border-l-emerald-600 bg-emerald-50/40"
+            ? "border-l-brand-600 bg-brand-50/40"
             : "border-l-red-600 bg-red-50/40"
         }`}
       >
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <span className={`text-base font-bold ${report.isEquilibrium ? "text-emerald-800" : "text-red-800"}`}>
+              <span className={`text-base font-bold ${report.isEquilibrium ? "text-brand-800" : "text-red-800"}`}>
                 {report.isEquilibrium
                   ? "NERACA SALDO SEIMBANG (EQUILIBRIUM)"
                   : "PERINGATAN: NERACA SALDO TIDAK SEIMBANG"}
@@ -94,7 +94,7 @@ export function TrialBalanceTable({ initialReport }: Props) {
               <span
                 className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${
                   report.isEquilibrium
-                    ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                    ? "bg-brand-100 text-brand-800 border border-brand-300"
                     : "bg-red-100 text-red-800 border border-red-300"
                 }`}
               >
@@ -129,7 +129,7 @@ export function TrialBalanceTable({ initialReport }: Props) {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-xs font-mono focus:border-emerald-600 focus:outline-none"
+                className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-xs font-mono focus:border-brand-600 focus:outline-none"
               />
             </div>
 
@@ -141,7 +141,7 @@ export function TrialBalanceTable({ initialReport }: Props) {
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-xs font-mono focus:border-emerald-600 focus:outline-none"
+                className="w-full rounded border border-slate-300 bg-white px-3 py-2 text-xs font-mono focus:border-brand-600 focus:outline-none"
               />
             </div>
 
@@ -168,7 +168,7 @@ export function TrialBalanceTable({ initialReport }: Props) {
                   type="checkbox"
                   checked={hideZero}
                   onChange={(e) => setHideZero(e.target.checked)}
-                  className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                  className="rounded border-slate-300 text-brand-600 focus:ring-brand-500"
                 />
                 Sembunyikan Akun Saldo Nol
               </label>
@@ -198,7 +198,7 @@ export function TrialBalanceTable({ initialReport }: Props) {
                 <th colSpan={2} className="py-2 px-4 text-center border-b border-r border-slate-200 bg-slate-200/60">
                   Pergerakan Periode
                 </th>
-                <th colSpan={2} className="py-2 px-4 text-center border-b border-slate-200 bg-emerald-100/60 text-emerald-950">
+                <th colSpan={2} className="py-2 px-4 text-center border-b border-slate-200 bg-brand-100/60 text-brand-950">
                   Saldo Akhir (Neraca Saldo)
                 </th>
                 <th rowSpan={2} className="py-2.5 px-3 w-20 text-center">Buku Besar</th>
@@ -206,8 +206,8 @@ export function TrialBalanceTable({ initialReport }: Props) {
               <tr>
                 <th className="py-1.5 px-3 w-36 text-right border-r border-slate-200 bg-slate-100">Debit (Rp)</th>
                 <th className="py-1.5 px-3 w-36 text-right border-r border-slate-200 bg-slate-100">Kredit (Rp)</th>
-                <th className="py-1.5 px-3 w-36 text-right border-r border-slate-200 bg-emerald-50 text-emerald-900">Debit (Rp)</th>
-                <th className="py-1.5 px-3 w-36 text-right bg-emerald-50 text-emerald-900">Kredit (Rp)</th>
+                <th className="py-1.5 px-3 w-36 text-right border-r border-slate-200 bg-brand-50 text-brand-900">Debit (Rp)</th>
+                <th className="py-1.5 px-3 w-36 text-right bg-brand-50 text-brand-900">Kredit (Rp)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -247,7 +247,7 @@ export function TrialBalanceTable({ initialReport }: Props) {
                     <td className="py-2.5 px-3 text-center">
                       <Link
                         href={`/akuntansi/buku-besar?accountId=${acc.accountId}`}
-                        className="text-emerald-700 hover:text-emerald-900 font-bold hover:underline"
+                        className="text-brand-700 hover:text-brand-900 font-bold hover:underline"
                         title="Buka Buku Besar Akun Ini"
                       >
                         ↗
@@ -268,10 +268,10 @@ export function TrialBalanceTable({ initialReport }: Props) {
                 <td className="py-3 px-3 text-right font-mono tabular-nums text-slate-900 border-r border-slate-200">
                   {formatCurrency(report.totals.periodCredit)}
                 </td>
-                <td className="py-3 px-3 text-right font-mono tabular-nums text-emerald-900 bg-emerald-100/60 border-r border-slate-200">
+                <td className="py-3 px-3 text-right font-mono tabular-nums text-brand-900 bg-brand-100/60 border-r border-slate-200">
                   {formatCurrency(report.totals.endingDebit)}
                 </td>
-                <td className="py-3 px-3 text-right font-mono tabular-nums text-emerald-900 bg-emerald-100/60">
+                <td className="py-3 px-3 text-right font-mono tabular-nums text-brand-900 bg-brand-100/60">
                   {formatCurrency(report.totals.endingCredit)}
                 </td>
                 <td></td>

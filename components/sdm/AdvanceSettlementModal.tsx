@@ -178,15 +178,15 @@ export function AdvanceSettlementModal({
 
           {/* Balance comparison helper box */}
           {isSurplus && (
-            <div className="rounded-sm border border-emerald-200 bg-emerald-50 p-3.5 text-xs text-emerald-950 flex items-start gap-2.5">
-              <svg className="h-4 w-4 shrink-0 text-emerald-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="rounded-sm border border-brand-200 bg-brand-50 p-3.5 text-xs text-brand-950 flex items-start gap-2.5">
+              <svg className="h-4 w-4 shrink-0 text-brand-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <div>
-                <p className="font-bold text-emerald-900">
+                <p className="font-bold text-brand-900">
                   Sisa Uang Muka Lebih: <span className="font-mono tabular-nums">{formatCurrency(diff)}</span>
                 </p>
-                <p className="mt-0.5 text-emerald-800">
+                <p className="mt-0.5 text-brand-800">
                   Karyawan wajib menyetorkan kembali sisa dana ini ke rekening kas perusahaan di bawah.
                 </p>
               </div>

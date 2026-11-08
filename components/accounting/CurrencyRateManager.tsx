@@ -109,7 +109,7 @@ export function CurrencyRateManager({ initialRates }: Props) {
       case "BOOKING":
         return <span className="rounded-sm border border-blue-300 bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-800">Booking / Transaksi</span>;
       case "BANK_ACTUAL":
-        return <span className="rounded-sm border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-800">Bank Aktual</span>;
+        return <span className="rounded-sm border border-brand-300 bg-brand-50 px-2 py-0.5 text-xs font-semibold text-brand-800">Bank Aktual</span>;
       case "TAX_KMK":
         return <span className="rounded-sm border border-purple-300 bg-purple-50 px-2 py-0.5 text-xs font-semibold text-purple-800">Pajak (KMK)</span>;
       default:

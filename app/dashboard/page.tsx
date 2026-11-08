@@ -202,8 +202,8 @@ export default async function DashboardPage({ searchParams }: { searchParams?: P
           <div className="mb-3 flex flex-wrap items-end justify-between gap-2">
             <h3 id="ringkasan-heading" className="text-lg font-bold tracking-tight">Ringkasan penjualan</h3>
             <div className="flex flex-wrap gap-4 text-sm font-semibold">
-              <Link className="text-emerald-800 hover:underline" href="/dashboard/detail">Rincian laba</Link>
-              <Link className="text-emerald-800 hover:underline" href="/settings/profit-slm">
+              <Link className="text-brand-800 hover:underline" href="/dashboard/detail">Rincian laba</Link>
+              <Link className="text-brand-800 hover:underline" href="/settings/profit-slm">
                 Atur estimasi GP {operationalProfit.grossProfitPercent.toLocaleString("id-ID", { maximumFractionDigits: 2 })}%
               </Link>
             </div>
@@ -230,7 +230,7 @@ export default async function DashboardPage({ searchParams }: { searchParams?: P
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {rows.map((r) => (
-                      <tr key={r.label} className={r.label === "Nett profit" ? "bg-emerald-50/40" : undefined}>
+                      <tr key={r.label} className={r.label === "Nett profit" ? "bg-brand-50/40" : undefined}>
                         <th scope="row" className={`px-3 py-2 text-left sm:px-4 ${r.strong ? "font-semibold text-slate-900" : "font-medium text-slate-700"}`}>{r.label}</th>
                         {cell(r.today, r.todayId, r.strong, r.sub?.[0])}
                         {cell(r.month, r.monthId, r.strong, r.sub?.[1])}
@@ -289,31 +289,31 @@ export default async function DashboardPage({ searchParams }: { searchParams?: P
       <div className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(300px,.85fr)]">
         <section className="aj-surface overflow-hidden">
           <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 sm:px-6">
-            <div><p className="text-xs font-bold uppercase tracking-[0.13em] text-emerald-600">Aktivitas</p><h2 className="mt-1 text-lg font-bold tracking-tight">Aktivitas terbaru</h2></div>
-            <Link className="text-sm font-semibold text-emerald-700 hover:text-emerald-800" href="/barang">Lihat barang →</Link>
+            <div><p className="text-xs font-bold uppercase tracking-[0.13em] text-brand-600">Aktivitas</p><h2 className="mt-1 text-lg font-bold tracking-tight">Aktivitas terbaru</h2></div>
+            <Link className="text-sm font-semibold text-brand-700 hover:text-brand-800" href="/barang">Lihat barang →</Link>
           </div>
           <div className="divide-y divide-slate-100">
             {activities.map((activity) => (
               <div key={activity.id} className="flex items-center justify-between gap-4 px-5 py-4 sm:px-6">
                 <div className="flex items-center gap-3">
-                  <span className={`grid h-9 w-9 place-items-center rounded-xl text-sm ${activity.entityType === "sales" ? "bg-emerald-50 text-emerald-700" : activity.entityType === "expense" ? "bg-slate-100 text-slate-700" : "bg-slate-100 text-slate-600"}`}>{activity.entityType === "sales" ? "↗" : activity.entityType === "expense" ? "−" : "◇"}</span>
+                  <span className={`grid h-9 w-9 place-items-center rounded-xl text-sm ${activity.entityType === "sales" ? "bg-brand-50 text-brand-700" : activity.entityType === "expense" ? "bg-slate-100 text-slate-700" : "bg-slate-100 text-slate-600"}`}>{activity.entityType === "sales" ? "↗" : activity.entityType === "expense" ? "−" : "◇"}</span>
                   <div><p className="font-semibold text-slate-800">{activityText(activity)}</p><time className="text-xs text-slate-500">{new Intl.DateTimeFormat("id-ID", { dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Jakarta" }).format(new Date(activity.createdAt))}</time></div>
                 </div>
-                <span className="text-xs font-semibold text-emerald-600">{activityStatusText(activity)}</span>
+                <span className="text-xs font-semibold text-brand-600">{activityStatusText(activity)}</span>
               </div>
             ))}
             {activities.length === 0 && <p className="px-5 py-8 text-sm text-slate-500">Riwayat aktivitas belum tersedia.</p>}
           </div>
         </section>
         <section className="aj-surface p-5 sm:p-6">
-          <p className="text-xs font-bold uppercase tracking-[0.13em] text-emerald-600">Koneksi</p>
+          <p className="text-xs font-bold uppercase tracking-[0.13em] text-brand-600">Koneksi</p>
           <h2 className="mt-1 text-lg font-bold tracking-tight">Status sistem</h2>
           <Status label="Master Barang SLM" ok={products.success && products.data.length > 0} text={products.success ? `${products.data.length.toLocaleString("id-ID")} barang · sumber harga modal dashboard` : products.message} />
           <Status label="OpenCloud Storage" ok={cloud.configured} text={cloud.message} />
           <Status label="WhatsApp" ok={whatsappStatus.ready} text={whatsappStatus.message} />
-          <div className="mt-5 rounded-xl border border-emerald-100 bg-emerald-50 p-4 text-emerald-950">
+          <div className="mt-5 rounded-xl border border-brand-100 bg-brand-50 p-4 text-brand-950">
             <p className="text-sm font-semibold">Butuh transaksi cepat?</p>
-            <Link href="/pengeluaran/input" className="mt-2 inline-block text-sm font-semibold text-emerald-700 hover:text-emerald-800">Input pengeluaran →</Link>
+            <Link href="/pengeluaran/input" className="mt-2 inline-block text-sm font-semibold text-brand-700 hover:text-brand-800">Input pengeluaran →</Link>
           </div>
         </section>
       </div>
@@ -324,7 +324,7 @@ export default async function DashboardPage({ searchParams }: { searchParams?: P
 function Status({ label, ok, text }: { label: string; ok: boolean; text: string }) {
   return (
     <div className="mt-4 rounded-xl border border-slate-100 bg-slate-50 p-3.5">
-      <div className="flex items-center gap-2 text-sm font-semibold"><span className={`h-2.5 w-2.5 rounded-full ${ok ? "bg-emerald-500" : "bg-red-500"}`} />{label}</div>
+      <div className="flex items-center gap-2 text-sm font-semibold"><span className={`h-2.5 w-2.5 rounded-full ${ok ? "bg-brand-500" : "bg-red-500"}`} />{label}</div>
       <p className="mt-1 text-xs leading-5 text-slate-500">{text}</p>
     </div>
   );

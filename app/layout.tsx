@@ -17,7 +17,7 @@ export function generateMetadata(): Metadata {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="id">
+    <html lang="id" data-accent={getAppBrand().accent ?? undefined}>
       <body suppressHydrationWarning>
         <Suspense fallback={null}>
           <TopLoadingBar />

@@ -142,7 +142,7 @@ function SettingsCard({
   tone: "emerald" | "amber" | "slate";
 }) {
   const hover = {
-    emerald: "hover:border-emerald-400 hover:bg-emerald-50",
+    emerald: "hover:border-brand-400 hover:bg-brand-50",
     amber: "hover:border-amber-400 hover:bg-amber-50",
     slate: "hover:border-slate-400 hover:bg-slate-50",
   }[tone];

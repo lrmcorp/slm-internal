@@ -87,9 +87,9 @@ export function CustomerNameInput({ registration, value, onPick }: { registratio
                   type="button"
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => pick(c)}
-                  className={`block min-h-11 w-full px-3 py-2 text-left ${index === active ? "bg-emerald-50" : "hover:bg-neutral-50"}`}
+                  className={`block min-h-11 w-full px-3 py-2 text-left ${index === active ? "bg-brand-50" : "hover:bg-neutral-50"}`}
                 >
-                  <span className="block text-sm font-semibold text-slate-900">{c.name}{same && <span className="ml-1.5 text-xs font-normal text-emerald-800">dipilih</span>}</span>
+                  <span className="block text-sm font-semibold text-slate-900">{c.name}{same && <span className="ml-1.5 text-xs font-normal text-brand-800">dipilih</span>}</span>
                   <span className="block truncate text-xs text-slate-600">
                     {[c.phone, c.location, c.shippingMethod].filter(Boolean).join(" · ") || "Belum ada HP/lokasi"} · {c.orderCount}x belanja
                   </span>

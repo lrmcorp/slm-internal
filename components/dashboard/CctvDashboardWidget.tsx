@@ -111,7 +111,7 @@ export function CctvDashboardWidget({
       {/* Header Widget */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 pb-4">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 shrink-0">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-700 border border-brand-100 shrink-0">
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
             </svg>
@@ -121,8 +121,8 @@ export function CctvDashboardWidget({
               <h3 className="text-base font-bold text-slate-900 tracking-tight">
                 Pengawasan Meja Packing CCTV
               </h3>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 border border-emerald-200">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 animate-pulse" />
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-2.5 py-0.5 text-[11px] font-bold text-brand-700 border border-brand-200">
+                <span className="h-1.5 w-1.5 rounded-full bg-brand-600 animate-pulse" />
                 Hari Ini
               </span>
             </div>
@@ -139,7 +139,7 @@ export function CctvDashboardWidget({
             onClick={() => setShowLiveStream((prev) => !prev)}
             className={`inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-1.5 text-xs font-bold transition-all shadow-2xs ${
               showLiveStream
-                ? "border-emerald-200 bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
+                ? "border-brand-200 bg-brand-50 text-brand-800 hover:bg-brand-100"
                 : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
             }`}
           >
@@ -160,10 +160,10 @@ export function CctvDashboardWidget({
           </Link>
           <Link
             href="/reports/cctv"
-            className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 shadow-xs transition-colors"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-brand-700 shadow-xs transition-colors"
           >
             <span>Laporan CCTV</span>
-            <svg className="w-3.5 h-3.5 text-emerald-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-3.5 h-3.5 text-brand-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
             </svg>
           </Link>
@@ -176,7 +176,7 @@ export function CctvDashboardWidget({
           <CctvLivePlayer cameras={streams} autoPlay={true} />
           <div className="flex items-center justify-between px-1 text-[11px] text-slate-500">
             <span className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              <span className="h-2 w-2 rounded-full bg-brand-500" />
               Pantauan CCTV Meja Packing aktif secara real-time untuk peran Super Admin
             </span>
             <span>Jeda otomatis hemat bandwidth saat di luar layar</span>
@@ -190,10 +190,10 @@ export function CctvDashboardWidget({
           <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
             Selesai Packing
           </p>
-          <p className="mt-1 text-2xl font-black text-emerald-700 sm:text-3xl">
+          <p className="mt-1 text-2xl font-black text-brand-700 sm:text-3xl">
             {totalPacked}
           </p>
-          <p className="text-[11px] text-emerald-600 mt-1 font-semibold flex items-center gap-1">
+          <p className="text-[11px] text-brand-600 mt-1 font-semibold flex items-center gap-1">
             <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
             </svg>
@@ -230,7 +230,7 @@ export function CctvDashboardWidget({
             Kamera AI Vision
           </p>
           <div className="mt-1.5 flex items-center gap-2">
-            <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${isCctvOnline ? "bg-emerald-500" : "bg-slate-400"}`} />
+            <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${isCctvOnline ? "bg-brand-500" : "bg-slate-400"}`} />
             <p className="text-sm font-bold text-slate-800">
               {isCctvOnline ? "Online" : "Standby"}
             </p>
@@ -299,7 +299,7 @@ export function CctvDashboardWidget({
                       {sale ? (
                         <Link
                           href={`/penjualan/${sale.id}`}
-                          className="block truncate font-mono text-xs font-bold text-emerald-700 hover:underline"
+                          className="block truncate font-mono text-xs font-bold text-brand-700 hover:underline"
                         >
                           {sale.transactionNumber || item.invoiceNumber || sale.id}
                         </Link>

@@ -79,7 +79,7 @@ export default async function CctvMonitoringPage({ searchParams }: Props) {
       {/* Header Halaman */}
       <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="mb-2 text-xs font-bold uppercase tracking-[0.13em] text-emerald-600">
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.13em] text-brand-600">
             Sistem & Monitoring
           </p>
           <h2 className="aj-page-title text-3xl font-bold">Monitoring CCTV</h2>
@@ -191,7 +191,7 @@ export default async function CctvMonitoringPage({ searchParams }: Props) {
             {detectionsResult.page < detectionsResult.totalPages && (
               <Link
                 href={pageHref(params, detectionsResult.page + 1)}
-                className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
+                className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700"
               >
                 Selanjutnya →
               </Link>

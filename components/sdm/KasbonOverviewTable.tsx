@@ -59,7 +59,7 @@ export function KasbonOverviewTable({ overview }: Props) {
 
         <section className="aj-surface p-5">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Pelunasan Diterima</p>
-          <p className="mt-2 text-2xl font-black tracking-tight text-emerald-700">{formatCurrency(summary.totalRepaid)}</p>
+          <p className="mt-2 text-2xl font-black tracking-tight text-brand-700">{formatCurrency(summary.totalRepaid)}</p>
           <p className="mt-3 text-xs text-slate-500">Melalui transfer, tunai, atau potong gaji</p>
         </section>
 
@@ -98,7 +98,7 @@ export function KasbonOverviewTable({ overview }: Props) {
 
           <Link
             href="/pengeluaran/input"
-            className="inline-flex items-center justify-center rounded border border-emerald-600 bg-emerald-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-emerald-700 transition shadow-2xs"
+            className="inline-flex items-center justify-center rounded border border-brand-600 bg-brand-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-brand-700 transition shadow-2xs"
           >
             + Input Kasbon Baru
           </Link>
@@ -138,7 +138,7 @@ export function KasbonOverviewTable({ overview }: Props) {
                     <td className="px-5 py-3.5 text-right font-mono tabular-nums text-slate-900">
                       {formatCurrency(item.totalLoans)}
                     </td>
-                    <td className="px-5 py-3.5 text-right font-mono tabular-nums text-emerald-700">
+                    <td className="px-5 py-3.5 text-right font-mono tabular-nums text-brand-700">
                       {formatCurrency(item.totalRepaid)}
                     </td>
                     <td className="px-5 py-3.5 text-right font-mono tabular-nums font-bold text-amber-700">
@@ -149,7 +149,7 @@ export function KasbonOverviewTable({ overview }: Props) {
                         className={`inline-flex rounded-full border px-2.5 py-0.5 text-xs font-semibold ${
                           item.openBalance > 0
                             ? "border-amber-200 bg-amber-50 text-amber-700"
-                            : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                            : "border-brand-200 bg-brand-50 text-brand-700"
                         }`}
                       >
                         {item.openBalance > 0 ? "Belum Lunas" : "Lunas"}
@@ -158,7 +158,7 @@ export function KasbonOverviewTable({ overview }: Props) {
                     <td className="px-5 py-3.5 text-right">
                       <Link
                         href={`/sdm/kasbon/${item.employeeId}`}
-                        className="inline-flex items-center rounded border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 hover:text-emerald-700 transition"
+                        className="inline-flex items-center rounded border border-slate-300 bg-white px-3 py-1 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 hover:text-brand-700 transition"
                       >
                         Buku Pembantu →
                       </Link>

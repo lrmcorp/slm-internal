@@ -21,7 +21,7 @@ function rupiah(value: number) {
 function Badge({ value, tone = "slate" }: { value: string; tone?: "slate" | "green" | "amber" | "red" | "blue" }) {
   const colors = {
     slate: "bg-slate-100 text-slate-600",
-    green: "bg-emerald-50 text-emerald-700",
+    green: "bg-brand-50 text-brand-700",
     amber: "bg-amber-50 text-amber-700",
     red: "bg-red-50 text-red-700",
     blue: "bg-blue-50 text-blue-700"
@@ -119,16 +119,16 @@ export default async function SalesDetailPage({ params }: { params: Promise<{ id
     <AppShell>
       <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="mb-2 text-xs font-bold uppercase tracking-[0.13em] text-emerald-600">Detail Penjualan</p>
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.13em] text-brand-600">Detail Penjualan</p>
           <h2 className="aj-page-title text-3xl font-bold">{sale.customerName}</h2>
           {canViewTransactionNumber && <p className="mt-2 font-mono text-sm text-slate-500">{sale.transactionNumber || sale.id}</p>}
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <Link href="/penjualan" className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">Riwayat</Link>
-          <Link href={`/penjualan/${sale.id}/invoice`} className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 shadow-xs transition-colors">
+          <Link href={`/penjualan/${sale.id}/invoice`} className="rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-brand-700 shadow-xs transition-colors">
             {sale.paymentMethod === "Tempo" ? "Lihat / Simpan Nota Tempo" : "Lihat / Simpan Invoice"}
           </Link>
-          <Link href={`/print/sales/${sale.id}/continuous`} className="rounded-xl border border-emerald-600 bg-emerald-50 px-4 py-2.5 text-sm font-bold text-emerald-800 hover:bg-emerald-100 shadow-xs transition-colors">Cetak Nota</Link>
+          <Link href={`/print/sales/${sale.id}/continuous`} className="rounded-xl border border-brand-600 bg-brand-50 px-4 py-2.5 text-sm font-bold text-brand-800 hover:bg-brand-100 shadow-xs transition-colors">Cetak Nota</Link>
           {sale.approvalStatus === "approved" && sale.source !== "MJ" && (
             <SalesReturnModal
               salesRecordId={sale.id}
@@ -311,7 +311,7 @@ export default async function SalesDetailPage({ params }: { params: Promise<{ id
       </section>
 
       {/* Card 3: Integrasi Stok Gudang Aneka Jaya (AJ ERP) */}
-      <section className="aj-surface mb-5 p-5 border-l-4 border-emerald-500">
+      <section className="aj-surface mb-5 p-5 border-l-4 border-brand-500">
         <h3 className="mb-3 text-sm font-bold uppercase tracking-wider text-slate-900">
           Integrasi Gudang Aneka Jaya (AJ ERP)
         </h3>

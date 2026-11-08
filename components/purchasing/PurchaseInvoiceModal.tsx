@@ -378,7 +378,7 @@ export function PurchaseInvoiceModal({
               <button
                 type="button"
                 onClick={handleAddLandedCost}
-                className="text-xs font-semibold text-emerald-700 hover:text-emerald-900"
+                className="text-xs font-semibold text-brand-700 hover:text-brand-900"
               >
                 + Tambah Biaya Landed Cost
               </button>
@@ -474,7 +474,7 @@ export function PurchaseInvoiceModal({
                             className={`inline-block text-[9px] px-1 py-0.2 rounded font-semibold ${
                               lc.isCreditableTax
                                 ? "bg-purple-200 text-purple-900"
-                                : "bg-emerald-100 text-emerald-800"
+                                : "bg-brand-100 text-brand-800"
                             }`}
                           >
                             {lc.isCreditableTax ? "Kredit Pajak (1-1006)" : "HPP Barang (1-1005)"}
@@ -510,7 +510,7 @@ export function PurchaseInvoiceModal({
                       <th className="px-3 py-2 text-right">Harga Beli IDR</th>
                       <th className="px-3 py-2 text-right">Landed Cost IDR</th>
                       <th className="px-3 py-2 text-right">Total Biaya IDR</th>
-                      <th className="px-3 py-2 text-right font-bold text-emerald-800">
+                      <th className="px-3 py-2 text-right font-bold text-brand-800">
                         HPP Riil / Unit
                       </th>
                     </tr>
@@ -530,7 +530,7 @@ export function PurchaseInvoiceModal({
                         <td className="px-3 py-2 text-right font-bold">
                           Rp {row.totalCostIdr.toLocaleString("id-ID")}
                         </td>
-                        <td className="px-3 py-2 text-right font-bold text-emerald-800 bg-emerald-50/40">
+                        <td className="px-3 py-2 text-right font-bold text-brand-800 bg-brand-50/40">
                           Rp {row.finalUnitCostIdr.toLocaleString("id-ID")}
                         </td>
                       </tr>
@@ -545,7 +545,7 @@ export function PurchaseInvoiceModal({
           <div className="p-4 rounded-sm border border-slate-200 bg-slate-50 grid grid-cols-1 sm:grid-cols-3 gap-3 font-mono text-xs">
             <div>
               <div className="text-slate-500">Nilai Masuk Persediaan (1-1005):</div>
-              <div className="text-sm font-bold text-emerald-800">
+              <div className="text-sm font-bold text-brand-800">
                 Rp {(subtotalIdr + nonCreditableLandedTotal).toLocaleString("id-ID")}
               </div>
               <div className="text-[10px] text-slate-400">

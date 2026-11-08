@@ -130,11 +130,11 @@ export function PurchaseOrderView({ initialOrders, suppliers, inventoryLocations
       case "SUBMITTED":
         return <span className="rounded-sm border border-blue-300 bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-800">Diajukan</span>;
       case "APPROVED":
-        return <span className="rounded-sm border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-xs font-semibold text-emerald-800">Disetujui</span>;
+        return <span className="rounded-sm border border-brand-300 bg-brand-50 px-2 py-0.5 text-xs font-semibold text-brand-800">Disetujui</span>;
       case "PARTIAL_RECEIVED":
         return <span className="rounded-sm border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-800">Diterima Sebagian</span>;
       case "COMPLETED":
-        return <span className="rounded-sm border border-emerald-500 bg-emerald-100 px-2 py-0.5 text-xs font-bold text-emerald-900">Selesai (Lengkap)</span>;
+        return <span className="rounded-sm border border-brand-500 bg-brand-100 px-2 py-0.5 text-xs font-bold text-brand-900">Selesai (Lengkap)</span>;
       case "CANCELLED":
         return <span className="rounded-sm border border-rose-300 bg-rose-50 px-2 py-0.5 text-xs font-semibold text-rose-800">Dibatalkan</span>;
       default:
@@ -277,7 +277,7 @@ export function PurchaseOrderView({ initialOrders, suppliers, inventoryLocations
                               <button
                                 disabled={isUpdatingStatus}
                                 onClick={() => handleUpdateStatus(o.id, "APPROVED")}
-                                className="rounded-sm border border-emerald-600 bg-emerald-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-emerald-700"
+                                className="rounded-sm border border-brand-600 bg-brand-600 px-2.5 py-1 text-xs font-semibold text-white hover:bg-brand-700"
                               >
                                 Setujui PO
                               </button>
@@ -294,7 +294,7 @@ export function PurchaseOrderView({ initialOrders, suppliers, inventoryLocations
                           {(o.status === "APPROVED" || o.status === "PARTIAL_RECEIVED") && (
                             <button
                               onClick={() => setGrnOrder(o)}
-                              className="rounded-sm border border-emerald-700 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-800 hover:bg-emerald-100"
+                              className="rounded-sm border border-brand-700 bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-800 hover:bg-brand-100"
                             >
                               + Terima Barang (GRN)
                             </button>
@@ -362,7 +362,7 @@ export function PurchaseOrderView({ initialOrders, suppliers, inventoryLocations
                               <td className="px-3 py-2 text-right">
                                 {it.quantity} {it.unit}
                               </td>
-                              <td className="px-3 py-2 text-right font-bold text-emerald-700">
+                              <td className="px-3 py-2 text-right font-bold text-brand-700">
                                 {it.receivedQuantity} {it.unit}
                               </td>
                               <td className="px-3 py-2 text-right">
@@ -389,7 +389,7 @@ export function PurchaseOrderView({ initialOrders, suppliers, inventoryLocations
                           {po.receipts.map((grn) => (
                             <div key={grn.id} className="p-3 bg-slate-50 border border-slate-200 rounded-sm">
                               <div className="flex justify-between items-center text-slate-800">
-                                <span className="font-bold text-emerald-800">{grn.grnNumber}</span>
+                                <span className="font-bold text-brand-800">{grn.grnNumber}</span>
                                 <span>{new Date(grn.receiptDate).toLocaleDateString("id-ID")} ({grn.warehouseName})</span>
                               </div>
                               <div className="text-slate-500 text-[11px] mt-1 font-sans">

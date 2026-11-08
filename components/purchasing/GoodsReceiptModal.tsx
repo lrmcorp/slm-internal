@@ -145,7 +145,7 @@ export function GoodsReceiptModal({ isOpen, onClose, order, onSuccess, locations
                       <option key={l.id} value={l.id}>{l.code} · {l.name} ({l.type === "STORE" ? "Toko" : "Gudang"})</option>
                     ))}
                   </select>
-                  <p className="mt-1 text-xs text-emerald-700">Barang yang diterima langsung menambah stok lokasi ini.</p>
+                  <p className="mt-1 text-xs text-brand-700">Barang yang diterima langsung menambah stok lokasi ini.</p>
                 </>
               ) : (
                 <>

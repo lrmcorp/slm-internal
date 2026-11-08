@@ -119,7 +119,7 @@ export function DeliveryOrderQueueTable({
   const getStatusBadge = (status: DeliveryOrderQueueItem["status"]) => {
     if (status === "selesai") {
       return (
-        <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-bold text-emerald-800 border border-emerald-200 shadow-sm">
+        <span className="inline-flex items-center rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-bold text-brand-800 border border-brand-200 shadow-sm">
           Selesai
         </span>
       );
@@ -188,7 +188,7 @@ export function DeliveryOrderQueueTable({
                 <span
                   className={`inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold ${
                     item.packingStatus === "sudah"
-                      ? "bg-emerald-100 text-emerald-800"
+                      ? "bg-brand-100 text-brand-800"
                       : "bg-slate-100 text-slate-600"
                   }`}
                 >
@@ -277,7 +277,7 @@ export function DeliveryOrderQueueTable({
                 </Link>
                 <Link
                   href={`/delivery-orders/${item.id}`}
-                  className="flex-1 text-center rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700"
+                  className="flex-1 text-center rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-brand-700"
                 >
                   {canProcess && item.status !== "selesai" ? "Proses DO" : "Lihat DO"}
                 </Link>
@@ -410,7 +410,7 @@ export function DeliveryOrderQueueTable({
                   <span
                     className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold ${
                       item.packingStatus === "sudah"
-                        ? "bg-emerald-100 text-emerald-800"
+                        ? "bg-brand-100 text-brand-800"
                         : "bg-slate-100 text-slate-600"
                     }`}
                   >
@@ -470,7 +470,7 @@ export function DeliveryOrderQueueTable({
                     </Link>
                     <Link
                       href={`/delivery-orders/${item.id}`}
-                      className="inline-flex items-center justify-center rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700 transition-colors"
+                      className="inline-flex items-center justify-center rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white shadow-sm hover:bg-brand-700 transition-colors"
                     >
                       {canProcess && item.status !== "selesai" ? "Proses DO" : "Lihat DO"}
                     </Link>

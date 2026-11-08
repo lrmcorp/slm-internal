@@ -134,7 +134,7 @@ export function ExpenseJournalPreview({
     <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-4 shadow-2xs space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 pb-2.5">
         <div className="flex items-center gap-2">
-          <span className="grid h-6 w-6 place-items-center rounded-md bg-emerald-100 text-xs text-emerald-800 font-bold">
+          <span className="grid h-6 w-6 place-items-center rounded-md bg-brand-100 text-xs text-brand-800 font-bold">
             ⚖
           </span>
           <div>
@@ -148,8 +148,8 @@ export function ExpenseJournalPreview({
         </div>
 
         {safeAmount > 0 ? (
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200 px-2.5 py-0.5 text-[11px] font-semibold text-emerald-700">
-            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 border border-brand-200 px-2.5 py-0.5 text-[11px] font-semibold text-brand-700">
+            <span className="h-1.5 w-1.5 rounded-full bg-brand-500 animate-pulse" />
             Seimbang (Balance)
           </span>
         ) : (
@@ -226,7 +226,7 @@ export function ExpenseJournalPreview({
       </div>
 
       <p className="text-[11px] text-slate-600 leading-relaxed font-sans flex items-start gap-1.5">
-        <span className="text-emerald-700 font-bold">ℹ Catatan Akuntansi:</span>
+        <span className="text-brand-700 font-bold">ℹ Catatan Akuntansi:</span>
         <span>{journalDetails.note}</span>
       </p>
     </div>

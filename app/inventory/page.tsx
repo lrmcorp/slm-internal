@@ -31,9 +31,9 @@ export default async function InventoryStockPage({ searchParams }: { searchParam
         title="Stok Gudang & Toko"
         description={<>Stok semua gudang dan toko dalam satu tabel. Penjualan saat ini memotong stok dari <b>{inventorySource() === "local" ? "SLM" : "ERP (belum pindah ke SLM)"}</b>.</>}
         actions={<>
-          {role === "OWNER" && <Link href="/stok-barang/ai-forecast" className="inline-flex min-h-11 items-center rounded-lg border border-emerald-300 px-4 text-sm font-semibold text-emerald-800">Prediksi Stok &amp; Dead Stock</Link>}
-          {can(role, "inventory.transfer") && <Link href="/inventory/transfer" className="inline-flex min-h-11 items-center rounded-lg border border-emerald-300 px-4 text-sm font-semibold text-emerald-800">Transfer</Link>}
-          {can(role, "inventory.receive") && <Link href="/inventory/barang-masuk" className="inline-flex min-h-11 items-center rounded-lg bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800">Barang Masuk</Link>}
+          {role === "OWNER" && <Link href="/stok-barang/ai-forecast" className="inline-flex min-h-11 items-center rounded-lg border border-brand-300 px-4 text-sm font-semibold text-brand-800">Prediksi Stok &amp; Dead Stock</Link>}
+          {can(role, "inventory.transfer") && <Link href="/inventory/transfer" className="inline-flex min-h-11 items-center rounded-lg border border-brand-300 px-4 text-sm font-semibold text-brand-800">Transfer</Link>}
+          {can(role, "inventory.receive") && <Link href="/inventory/barang-masuk" className="inline-flex min-h-11 items-center rounded-lg bg-brand-700 px-4 text-sm font-semibold text-white hover:bg-brand-800">Barang Masuk</Link>}
         </>}
       />
       <form className="mb-4 flex flex-wrap gap-2">
@@ -84,7 +84,7 @@ export default async function InventoryStockPage({ searchParams }: { searchParam
               {typeParam === "WAREHOUSE" && <th className="whitespace-nowrap px-3 py-2 text-right">Total Toko</th>}
               {matrix.locations.map((l) => (
                 <th key={l.id} className="whitespace-nowrap px-3 py-2 text-right normal-case">
-                  {canMovement ? <Link href={`/inventory/mutasi?locationId=${l.id}`} className="hover:text-emerald-800">{l.name}</Link> : l.name}
+                  {canMovement ? <Link href={`/inventory/mutasi?locationId=${l.id}`} className="hover:text-brand-800">{l.name}</Link> : l.name}
                   <div className="text-[11px] font-normal text-slate-600">{l.code}</div>
                 </th>
               ))}
@@ -119,7 +119,7 @@ export default async function InventoryStockPage({ searchParams }: { searchParam
             })}
             {!matrix.data.length && (
               <tr><td colSpan={matrix.locations.length + 4} className="px-3 py-8 text-center text-slate-600">
-                {missingName ? "Semua barang di sini sudah punya nama." : "Belum ada barang."}{!missingName && can(role, "inventory.master") && <> Mulai dari <Link className="text-emerald-800 underline" href="/inventory/lokasi">Lokasi Stok</Link> lalu <Link className="text-emerald-800 underline" href="/inventory/produk">Master Barang</Link>.</>}
+                {missingName ? "Semua barang di sini sudah punya nama." : "Belum ada barang."}{!missingName && can(role, "inventory.master") && <> Mulai dari <Link className="text-brand-800 underline" href="/inventory/lokasi">Lokasi Stok</Link> lalu <Link className="text-brand-800 underline" href="/inventory/produk">Master Barang</Link>.</>}
               </td></tr>
             )}
           </tbody>
@@ -154,7 +154,7 @@ function ProductCell({ row, canMovement, canEditMaster, canAdjust }: { row: Matr
     <ProductPhoto productId={row.productId} sku={row.sku} photoUrl={row.photoUrl} canEdit={canEditMaster} />
     <div className={row.hasName || !canEditMaster ? "min-w-[200px] max-w-[300px]" : "w-[240px] sm:w-[300px]"}>
       <div className="flex flex-wrap items-center gap-2">
-        {canMovement && row.hasName ? <Link href={`/inventory/mutasi?productId=${row.productId}`} className="hover:text-emerald-800">{title}</Link> : title}
+        {canMovement && row.hasName ? <Link href={`/inventory/mutasi?productId=${row.productId}`} className="hover:text-brand-800">{title}</Link> : title}
         {row.lowStock && <LowChip />}
       </div>
       <div className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-slate-600">
@@ -162,7 +162,7 @@ function ProductCell({ row, canMovement, canEditMaster, canAdjust }: { row: Matr
         {row.category && <span>{row.category} ·</span>}
         <span>{row.unit}{row.unitsPerKoli ? ` · isi ${fmtQty(row.unitsPerKoli)} ${row.unit}/koli` : ""}</span>
         {canAdjust && (
-          <Link href={`/inventory/adjustment?productId=${row.productId}`} className="ml-1 inline-flex min-h-11 items-center px-1 text-sm font-semibold text-emerald-800 underline">Koreksi</Link>
+          <Link href={`/inventory/adjustment?productId=${row.productId}`} className="ml-1 inline-flex min-h-11 items-center px-1 text-sm font-semibold text-brand-800 underline">Koreksi</Link>
         )}
       </div>
       {!row.hasName && canEditMaster && <InlineNameForm productId={row.productId} sku={row.sku} />}
@@ -203,10 +203,10 @@ function MobileStockRow({ row, scopeLabel, scopeQty, scopeKoli, parts, canMoveme
               {parts.filter(([, qty]) => qty !== 0 && qty !== scopeQty).map(([label, qty, koli]) => <span key={label}> · {label} {short(qty, koli)}</span>)}
             </span>
             {!row.hasName && canEditMaster && (
-              <Link href={`/inventory/produk?keyword=${encodeURIComponent(row.sku)}&edit=${row.productId}`} className="-my-3 inline-flex min-h-11 shrink-0 items-center text-sm font-semibold text-emerald-800 underline">Isi nama</Link>
+              <Link href={`/inventory/produk?keyword=${encodeURIComponent(row.sku)}&edit=${row.productId}`} className="-my-3 inline-flex min-h-11 shrink-0 items-center text-sm font-semibold text-brand-800 underline">Isi nama</Link>
             )}
             {canAdjust && (
-              <Link href={`/inventory/adjustment?productId=${row.productId}`} className="-my-3 inline-flex min-h-11 shrink-0 items-center text-sm font-semibold text-emerald-800 underline">Koreksi</Link>
+              <Link href={`/inventory/adjustment?productId=${row.productId}`} className="-my-3 inline-flex min-h-11 shrink-0 items-center text-sm font-semibold text-brand-800 underline">Koreksi</Link>
             )}
           </div>
         </div>

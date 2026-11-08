@@ -38,7 +38,7 @@ export function ProductPhoto({ productId, sku, photoUrl, canEdit }: { productId:
     return (
       <>
         {picker}
-        <button type="button" disabled={busy} onClick={() => input.current?.click()} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-dashed border-slate-300 text-[11px] font-semibold leading-tight text-slate-600 hover:border-emerald-500 hover:text-emerald-800" aria-label={`Tambah foto ${sku}`}>
+        <button type="button" disabled={busy} onClick={() => input.current?.click()} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md border border-dashed border-slate-300 text-[11px] font-semibold leading-tight text-slate-600 hover:border-brand-500 hover:text-brand-800" aria-label={`Tambah foto ${sku}`}>
           {busy ? "..." : "+ Foto"}
         </button>
       </>
@@ -58,7 +58,7 @@ export function ProductPhoto({ productId, sku, photoUrl, canEdit }: { productId:
         />
       </a>
       {canEdit && (
-        <button type="button" disabled={busy} onClick={() => input.current?.click()} className="absolute -bottom-1 -right-1 rounded bg-white/90 px-1 text-[10px] font-semibold text-emerald-800 shadow-sm ring-1 ring-slate-200" aria-label={`Ganti foto ${sku}`}>
+        <button type="button" disabled={busy} onClick={() => input.current?.click()} className="absolute -bottom-1 -right-1 rounded bg-white/90 px-1 text-[10px] font-semibold text-brand-800 shadow-sm ring-1 ring-slate-200" aria-label={`Ganti foto ${sku}`}>
           {busy ? "…" : "Ganti"}
         </button>
       )}

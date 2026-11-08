@@ -29,7 +29,7 @@ export function InventoryActionButton({ endpoint, label, title, description, ask
     }
   }
 
-  const cls = variant === "danger" ? "border-red-300 text-red-800 hover:bg-red-50" : "border-emerald-300 text-emerald-800 hover:bg-emerald-50";
+  const cls = variant === "danger" ? "border-red-300 text-red-800 hover:bg-red-50" : "border-brand-300 text-brand-800 hover:bg-brand-50";
   return (
     <>
       <button type="button" disabled={busy} onClick={() => setOpen(true)} className={`inline-flex min-h-11 items-center rounded-lg border px-3 text-sm font-semibold disabled:opacity-50 ${cls}`}>{label}</button>

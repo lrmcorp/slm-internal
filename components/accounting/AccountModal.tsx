@@ -166,7 +166,7 @@ function AccountForm({ account, onClose, onSuccess }: { account: AccountRecord |
               value={code}
               onChange={(e) => setCode(e.target.value)}
               placeholder="Contoh: 6-1005"
-              className="mt-1 block w-full rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-mono focus:border-emerald-600 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500"
+              className="mt-1 block w-full rounded border border-slate-300 bg-white px-3 py-1.5 text-xs font-mono focus:border-brand-600 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500"
             />
             {isSystem && (
               <p className="mt-1 text-[11px] text-amber-700">Kode akun sistem tidak dapat diubah.</p>
@@ -182,7 +182,7 @@ function AccountForm({ account, onClose, onSuccess }: { account: AccountRecord |
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Contoh: Beban Pemeliharaan Bangunan"
-              className="mt-1 block w-full rounded border border-slate-300 bg-white px-3 py-1.5 text-xs focus:border-emerald-600 focus:outline-none"
+              className="mt-1 block w-full rounded border border-slate-300 bg-white px-3 py-1.5 text-xs focus:border-brand-600 focus:outline-none"
             />
           </div>
 
@@ -195,7 +195,7 @@ function AccountForm({ account, onClose, onSuccess }: { account: AccountRecord |
                 onChange={(e) =>
                   handleCategoryChange(e.target.value as Category)
                 }
-                className="mt-1 block w-full rounded border border-slate-300 bg-white px-3 py-1.5 text-xs focus:border-emerald-600 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500 font-mono"
+                className="mt-1 block w-full rounded border border-slate-300 bg-white px-3 py-1.5 text-xs focus:border-brand-600 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500 font-mono"
               >
                 {(Object.keys(CATEGORY_LABEL) as Category[]).map((key) => (
                   <option key={key} value={key}>{CATEGORY_LABEL[key]}</option>
@@ -209,7 +209,7 @@ function AccountForm({ account, onClose, onSuccess }: { account: AccountRecord |
                 disabled={isSystem}
                 value={normalBalance}
                 onChange={(e) => setNormalBalance(e.target.value as NormalBalance)}
-                className="mt-1 block w-full rounded border border-slate-300 bg-white px-3 py-1.5 text-xs focus:border-emerald-600 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500 font-mono"
+                className="mt-1 block w-full rounded border border-slate-300 bg-white px-3 py-1.5 text-xs focus:border-brand-600 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500 font-mono"
               >
                 <option value="DEBIT">DEBIT</option>
                 <option value="CREDIT">KREDIT</option>
@@ -224,7 +224,7 @@ function AccountForm({ account, onClose, onSuccess }: { account: AccountRecord |
                 disabled={isSystem}
                 value={reportGroup}
                 onChange={(e) => setReportGroup(e.target.value)}
-                className="mt-1 block w-full rounded border border-slate-300 bg-white px-3 py-1.5 text-xs focus:border-emerald-600 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500"
+                className="mt-1 block w-full rounded border border-slate-300 bg-white px-3 py-1.5 text-xs focus:border-brand-600 focus:outline-none disabled:bg-slate-100 disabled:text-slate-500"
               >
                 <option value="">Otomatis dari kode akun</option>
                 {REPORT_GROUPS[category].map(([value, label]) => <option key={value} value={value}>{label}</option>)}
@@ -239,7 +239,7 @@ function AccountForm({ account, onClose, onSuccess }: { account: AccountRecord |
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Penjelasan tujuan penggunaan akun ini..."
-              className="mt-1 block w-full rounded border border-slate-300 bg-white px-3 py-1.5 text-xs focus:border-emerald-600 focus:outline-none"
+              className="mt-1 block w-full rounded border border-slate-300 bg-white px-3 py-1.5 text-xs focus:border-brand-600 focus:outline-none"
             />
           </div>
 

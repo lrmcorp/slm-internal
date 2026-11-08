@@ -129,7 +129,7 @@ export function OpnameImportForm({ locations }: { locations: InvLocation[] }) {
             {summary.store && <Stat label={`Qty toko → ${summary.store.locationCode}`} value={`${fmt(summary.store.totalQty)} (${summary.store.nonZero} kode)`} />}
             <Stat label="Nilai modal fisik" value={`Rp ${fmt(summary.totalCostValue)}`} />
           </div>
-          {!summary.dryRun && <p className="text-emerald-800">Dokumen opname: {[...(summary.warehouse?.documents ?? []), ...(summary.store?.documents ?? [])].join(", ")}</p>}
+          {!summary.dryRun && <p className="text-brand-800">Dokumen opname: {[...(summary.warehouse?.documents ?? []), ...(summary.store?.documents ?? [])].join(", ")}</p>}
           {summary.warnings.length > 0 && (
             <ul className="list-disc space-y-1 rounded-lg bg-amber-50 py-2 pl-8 pr-3 text-amber-800">{summary.warnings.map((w, i) => <li key={i}>{w}</li>)}</ul>
           )}

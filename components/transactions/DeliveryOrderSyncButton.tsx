@@ -102,7 +102,7 @@ export function DeliveryOrderSyncButton({
     <div className={`flex flex-wrap items-center gap-2 ${className}`}>
       <Link
         href={`/delivery-orders/${deliveryOrder.id}`}
-        className="font-mono text-sm font-semibold text-emerald-700 hover:text-emerald-800 hover:underline"
+        className="font-mono text-sm font-semibold text-brand-700 hover:text-brand-800 hover:underline"
         title="Lihat detail Surat Jalan (DO)"
       >
         {deliveryOrder.doNumber}

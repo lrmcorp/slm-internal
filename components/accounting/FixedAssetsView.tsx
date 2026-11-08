@@ -153,17 +153,17 @@ function AssetRow({ asset: a, open, canManage, onToggle, onSaved }: { asset: Fix
   const input = "min-h-10 w-full rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-sm";
   return (
     <>
-      <tr className={open ? "bg-emerald-50" : undefined}>
+      <tr className={open ? "bg-brand-50" : undefined}>
         <td className="px-3 py-2"><p className="font-medium text-slate-900">{a.name}</p><p className="text-xs text-slate-500">{a.assetNumber}{a.locationName ? ` · ${a.locationName}` : ""}</p></td>
         <td className="whitespace-nowrap px-3 py-2">{rp(a.acquisitionCost)}<p className="text-xs text-slate-500">{day(a.acquisitionDate)}</p></td>
         <td className="whitespace-nowrap px-3 py-2">{day(a.availableForUseDate)}<p className="text-xs text-slate-500">{a.usefulLifeMonths ? `${a.usefulLifeMonths} bulan` : "-"}{a.residualValue != null ? ` · residu ${rp(a.residualValue)}` : ""}</p></td>
         <td className="px-3 py-2 text-right tabular-nums">{rp(a.accumulated)}</td>
         <td className="px-3 py-2 text-right font-semibold tabular-nums">{rp(a.bookValue)}</td>
         <td className="px-3 py-2 text-xs">{a.missing.length ? <span className="text-amber-700">Lengkapi: {a.missing.join(", ")}</span> : STATUS[a.status] ?? a.status}</td>
-        <td className="px-3 py-2 text-right">{canManage && <button className="min-h-10 rounded-lg px-3 text-sm font-semibold text-emerald-800 hover:bg-emerald-50" onClick={onToggle}>{open ? "Tutup" : "Ubah"}</button>}</td>
+        <td className="px-3 py-2 text-right">{canManage && <button className="min-h-10 rounded-lg px-3 text-sm font-semibold text-brand-800 hover:bg-brand-50" onClick={onToggle}>{open ? "Tutup" : "Ubah"}</button>}</td>
       </tr>
       {open && (
-        <tr className="bg-emerald-50/60">
+        <tr className="bg-brand-50/60">
           <td colSpan={7} className="px-3 pb-3">
             <div className="grid gap-2 sm:grid-cols-3 lg:grid-cols-7 lg:items-end">
               <label className="text-xs font-semibold text-slate-700 sm:col-span-2">Nama<input className={input} value={f.name} onChange={(e) => setF({ ...f, name: e.target.value })} /></label>

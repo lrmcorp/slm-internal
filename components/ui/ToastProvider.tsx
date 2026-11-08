@@ -77,7 +77,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
           const isWarning = toast.type === "warning";
 
           const bgClass = isSuccess
-            ? "bg-white border-emerald-300 text-slate-800 shadow-emerald-500/10"
+            ? "bg-white border-brand-300 text-slate-800 shadow-brand-500/10"
             : isError
             ? "bg-white border-rose-300 text-slate-800 shadow-rose-500/10"
             : isWarning
@@ -85,7 +85,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
             : "bg-white border-blue-300 text-slate-800 shadow-blue-500/10";
 
           const iconBg = isSuccess
-            ? "bg-emerald-100 text-emerald-700"
+            ? "bg-brand-100 text-brand-700"
             : isError
             ? "bg-rose-100 text-rose-700"
             : isWarning

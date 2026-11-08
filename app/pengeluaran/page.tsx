@@ -13,12 +13,12 @@ export const dynamic = "force-dynamic";
 const PAGE_SIZE = 10;
 
 const statusClass: Record<string, string> = {
-  approved: "bg-emerald-50 text-emerald-700",
+  approved: "bg-brand-50 text-brand-700",
   pending_approval: "bg-amber-50 text-amber-700",
   rejected: "bg-red-50 text-red-700",
   failed: "bg-red-50 text-red-700",
   pending: "bg-amber-50 text-amber-700",
-  synced: "bg-emerald-50 text-emerald-700",
+  synced: "bg-brand-50 text-brand-700",
   not_required: "bg-slate-100 text-slate-600"
 };
 
@@ -81,11 +81,11 @@ export default async function PengeluaranHistoryPage({ searchParams }: { searchP
     <AppShell>
       <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="mb-2 text-xs font-bold uppercase tracking-[0.13em] text-emerald-600">ExpenseRecord</p>
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.13em] text-brand-600">ExpenseRecord</p>
           <h2 className="aj-page-title text-3xl font-bold">Riwayat Pengeluaran</h2>
           <p className="mt-2 text-sm text-slate-600">Daftar pengeluaran permanen beserta status approval dan ERP sync.</p>
         </div>
-        {can(role, "pengeluaran.create") && <Link href="/pengeluaran/input" className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-emerald-700">+ Input Pengeluaran</Link>}
+        {can(role, "pengeluaran.create") && <Link href="/pengeluaran/input" className="rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-brand-700">+ Input Pengeluaran</Link>}
       </div>
       <ResponsiveFilterPanel
         title="Filter pengeluaran"
@@ -130,7 +130,7 @@ export default async function PengeluaranHistoryPage({ searchParams }: { searchP
                   <div><dt className="text-xs font-semibold uppercase tracking-wider text-slate-400">COA / Kategori</dt><dd className="mt-0.5">{expense.coaNameSnapshot} / {expense.category}</dd></div>
                 </dl>
                 <div className="mt-4 grid grid-cols-2 gap-2">
-                  <Link className="rounded-md bg-emerald-600 px-3 py-2 text-center text-sm font-semibold text-white hover:bg-emerald-700" href={`/pengeluaran/${expense.id}`}>Detail</Link>
+                  <Link className="rounded-md bg-brand-600 px-3 py-2 text-center text-sm font-semibold text-white hover:bg-brand-700" href={`/pengeluaran/${expense.id}`}>Detail</Link>
                   <Link className="rounded-md border border-slate-300 px-3 py-2 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50" href={`/print/expenses/${expense.id}`}>Cetak</Link>
                   {expense.attachmentUrl && <a className="rounded-md border border-slate-300 px-3 py-2 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50" href={expense.attachmentUrl} target="_blank" rel="noreferrer">Lampiran</a>}
                   {canManage && expense.approvalStatus !== "cancelled" && <Link className="rounded-md border border-slate-300 px-3 py-2 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50" href={`/pengeluaran/${expense.id}/edit`}>Edit</Link>}
@@ -164,7 +164,7 @@ export default async function PengeluaranHistoryPage({ searchParams }: { searchP
                   <tr key={expense.id} className={`border-b transition-colors ${isMj ? "border-amber-200/90 bg-amber-50/80 hover:bg-amber-100/70" : "border-slate-100 hover:bg-slate-50/80"}`}>
                     <td className="px-5 py-4">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <Link className="whitespace-nowrap rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 shadow-xs" href={`/pengeluaran/${expense.id}`}>Detail</Link>
+                        <Link className="whitespace-nowrap rounded-md bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 shadow-xs" href={`/pengeluaran/${expense.id}`}>Detail</Link>
                         <Link className="whitespace-nowrap rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50" href={`/print/expenses/${expense.id}`}>Cetak</Link>
                         {canManage && (
                           <>
@@ -192,7 +192,7 @@ export default async function PengeluaranHistoryPage({ searchParams }: { searchP
                     <td className="px-5 py-4 text-right font-semibold">{rupiah(expense.amount)}</td>
                     <td className="px-5 py-4"><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${statusClass[expense.approvalStatus || "approved"] || "bg-slate-100 text-slate-600"}`}>{expense.approvalStatus || "approved"}</span></td>
                     <td className="px-5 py-4"><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${statusClass[expense.erpSyncStatus || "not_required"] || "bg-slate-100 text-slate-600"}`}>{expense.erpSyncStatus || "not_required"}</span></td>
-                    <td className="px-5 py-4">{expense.attachmentUrl ? <a className="font-semibold text-emerald-700 hover:text-emerald-800" href={expense.attachmentUrl} target="_blank" rel="noreferrer">Buka</a> : "—"}</td>
+                    <td className="px-5 py-4">{expense.attachmentUrl ? <a className="font-semibold text-brand-700 hover:text-brand-800" href={expense.attachmentUrl} target="_blank" rel="noreferrer">Buka</a> : "—"}</td>
                   </tr>
                 );
               })}

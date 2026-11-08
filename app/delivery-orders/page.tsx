@@ -155,7 +155,7 @@ export default async function DeliveryOrdersPage({
     <AppShell>
       <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="mb-2 text-xs font-bold uppercase tracking-[0.13em] text-emerald-600">
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.13em] text-brand-600">
             Logistik &amp; Pengiriman
           </p>
           <h2 className="aj-page-title text-3xl font-bold">Delivery Order (DO)</h2>
@@ -164,8 +164,8 @@ export default async function DeliveryOrdersPage({
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-800 border border-emerald-200">
-            <svg className="w-3.5 h-3.5 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <span className="inline-flex items-center gap-1.5 rounded-lg bg-brand-50 px-3 py-1.5 text-xs font-semibold text-brand-800 border border-brand-200">
+            <svg className="w-3.5 h-3.5 text-brand-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8h4.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a2 2 0 104 0m-10 0a2 2 0 104 0" />
             </svg>
             <span>Mode Pengiriman</span>
@@ -201,8 +201,8 @@ export default async function DeliveryOrdersPage({
           href={isMyTasks ? `/delivery-orders?status=belum_selesai&officerId=${user.id}` : "/delivery-orders?status=belum_selesai&view=all"}
           className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
             isBelumSelesai
-              ? "bg-emerald-700 text-white"
-              : "bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100"
+              ? "bg-brand-700 text-white"
+              : "bg-brand-50 text-brand-800 border border-brand-200 hover:bg-brand-100"
           }`}
         >
           Belum Selesai

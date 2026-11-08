@@ -40,7 +40,7 @@ test("Super Admin can open the complete operational navigation without simulated
   await expect(page.locator('nav a[href^="/pembelian"]')).toHaveCount(0);
   await expect(page.getByText("Konfigurasi ERP belum lengkap.", { exact: true })).toBeVisible();
   await expect(page.getByText(/mock/i)).toHaveCount(0);
-  await expect(page.locator('nav a[href="/dashboard"]')).toHaveClass(/bg-emerald-600/);
+  await expect(page.locator('nav a[href="/dashboard"]')).toHaveClass(/bg-brand-600/);
   await expect(page.locator('nav a[href="/dashboard"]')).not.toHaveClass(/bg-blue-600/);
 
   const purchaseResponse = await page.goto("/pembelian/input", { waitUntil: "networkidle" });

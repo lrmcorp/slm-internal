@@ -154,7 +154,7 @@ export function SavingsWithdrawalModal({
             {currentAccount && (
               <div className="mt-2 flex items-center justify-between rounded border border-slate-200 bg-slate-50 px-3 py-2 text-xs">
                 <span className="text-slate-500">Saldo Simpanan Tersedia:</span>
-                <span className="font-semibold text-emerald-700 tabular-nums">
+                <span className="font-semibold text-brand-700 tabular-nums">
                   {formatCurrency(availableBalance)}
                 </span>
               </div>

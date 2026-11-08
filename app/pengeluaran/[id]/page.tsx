@@ -14,7 +14,7 @@ function rupiah(value: number) {
 function Badge({ value, tone = "slate" }: { value: string; tone?: "slate" | "green" | "amber" | "red" }) {
   const colors = {
     slate: "bg-slate-100 text-slate-600",
-    green: "bg-emerald-50 text-emerald-700",
+    green: "bg-brand-50 text-brand-700",
     amber: "bg-amber-50 text-amber-700",
     red: "bg-red-50 text-red-700"
   }[tone];
@@ -40,14 +40,14 @@ export default async function ExpenseDetailPage({ params }: { params: Promise<{ 
     <AppShell>
       <div className="mb-7 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
         <div>
-          <p className="mb-2 text-xs font-bold uppercase tracking-[0.13em] text-emerald-600">Detail Pengeluaran</p>
+          <p className="mb-2 text-xs font-bold uppercase tracking-[0.13em] text-brand-600">Detail Pengeluaran</p>
           <h2 className="aj-page-title text-3xl font-bold">{expense.vendorName}</h2>
           <p className="mt-2 font-mono text-sm text-slate-500">{expense.id}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href="/pengeluaran" className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">Riwayat</Link>
-          <Link href={`/pengeluaran/${expense.id}/invoice`} className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-emerald-700 shadow-xs transition-colors">Lihat / Simpan Bukti</Link>
-          <Link href={`/print/expenses/${expense.id}`} className="rounded-xl border border-emerald-600 bg-emerald-50 px-4 py-2.5 text-sm font-bold text-emerald-800 hover:bg-emerald-100 shadow-xs transition-colors">Cetak</Link>
+          <Link href={`/pengeluaran/${expense.id}/invoice`} className="rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-brand-700 shadow-xs transition-colors">Lihat / Simpan Bukti</Link>
+          <Link href={`/print/expenses/${expense.id}`} className="rounded-xl border border-brand-600 bg-brand-50 px-4 py-2.5 text-sm font-bold text-brand-800 hover:bg-brand-100 shadow-xs transition-colors">Cetak</Link>
           {canManage && expense.approvalStatus !== "cancelled" && <Link href={`/pengeluaran/${expense.id}/edit`} className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">Edit</Link>}
         </div>
       </div>

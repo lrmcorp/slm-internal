@@ -117,7 +117,7 @@ export function CctvDetectionsTable({ items }: { items: DetectionItem[] }) {
                   {/* Kamera / Meja */}
                   <td className="px-4 py-3">
                     <span className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-700">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-brand-500" />
                       {item.cameraName || "Meja Packing"}
                     </span>
                     {item.notes && (
@@ -141,7 +141,7 @@ export function CctvDetectionsTable({ items }: { items: DetectionItem[] }) {
                         <p className="font-semibold text-slate-800">
                           {formatJakartaDateTime(item.packingCompletedAt)}
                         </p>
-                        <p className="text-[10px] text-emerald-600 font-medium">Selesai Dibungkus</p>
+                        <p className="text-[10px] text-brand-600 font-medium">Selesai Dibungkus</p>
                       </div>
                     ) : item.firstSeenAt ? (
                       <div>
@@ -158,8 +158,8 @@ export function CctvDetectionsTable({ items }: { items: DetectionItem[] }) {
                   {/* Status Pencocokan */}
                   <td className="px-4 py-3">
                     {isMatched ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 border border-emerald-200">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-700 border border-brand-200">
+                        <span className="h-1.5 w-1.5 rounded-full bg-brand-600 animate-pulse" />
                         SLM: Cocok
                       </span>
                     ) : item.eventType === "anomaly" ? (
@@ -185,7 +185,7 @@ export function CctvDetectionsTable({ items }: { items: DetectionItem[] }) {
                     {item.salesRecord ? (
                       <Link
                         href={`/penjualan/${item.salesRecord.id}`}
-                        className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700 shadow-xs transition-colors inline-block"
+                        className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700 shadow-xs transition-colors inline-block"
                       >
                         Lihat Penjualan
                       </Link>

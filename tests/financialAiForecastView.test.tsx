@@ -81,9 +81,9 @@ describe("AiFinancialForecastView Component", () => {
     expect(html).toContain("Executive CFO Briefing");
     expect(html).toContain("Konsultasi Finansial Interaktif");
     
-    // Active tab uses primary emerald-600 background and white text
-    expect(html).toContain("bg-emerald-600 text-white shadow-xs");
-    expect(html).toContain("bg-emerald-700 text-emerald-100");
+    // Active tab uses primary brand-600 background and white text
+    expect(html).toContain("bg-brand-600 text-white shadow-xs");
+    expect(html).toContain("bg-brand-700 text-brand-100");
   });
 
   it("renders intuitive cash runway curve chart with SVG and buffer threshold", () => {

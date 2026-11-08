@@ -163,7 +163,7 @@ export function RekeningManager({ types, rekenings: initial }: Props) {
   const statusBadge = (active: boolean) => (
     <span
       className={`rounded-sm px-2.5 py-0.5 text-xs font-semibold ${
-        active ? "bg-emerald-50 border border-emerald-300 text-emerald-800" : "bg-slate-100 border border-slate-300 text-slate-600"
+        active ? "bg-brand-50 border border-brand-300 text-brand-800" : "bg-slate-100 border border-slate-300 text-slate-600"
       }`}
     >
       {active ? "Aktif" : "Nonaktif"}
@@ -196,7 +196,7 @@ export function RekeningManager({ types, rekenings: initial }: Props) {
             onClick={() => toggleDraftTipe(tipe.id)}
             className={`rounded-sm border px-3 py-1 text-xs font-semibold transition ${
               draft.tipeIds.includes(tipe.id)
-                ? "bg-emerald-700 border-emerald-800 text-white"
+                ? "bg-brand-700 border-brand-800 text-white"
                 : "bg-slate-50 border-slate-300 text-slate-700 hover:bg-slate-100"
             }`}
           >
@@ -562,7 +562,7 @@ export function RekeningManager({ types, rekenings: initial }: Props) {
                     <>
                       <td className="px-5 py-4">
                         <div className="font-semibold text-slate-900">{rek.name}</div>
-                        <div className="mt-0.5 font-mono text-xs font-medium text-emerald-700">{rek.id}</div>
+                        <div className="mt-0.5 font-mono text-xs font-medium text-brand-700">{rek.id}</div>
                       </td>
                       <td className="px-5 py-4">{currencyBadge(rek.currency || "IDR")}</td>
                       <td className="px-5 py-4">
@@ -760,7 +760,7 @@ export function RekeningManager({ types, rekenings: initial }: Props) {
                     onClick={() => toggleTipe(tipe.id)}
                     className={`rounded-sm border px-3 py-1 text-xs font-semibold transition ${
                       selectedTipeIds.includes(tipe.id)
-                        ? "bg-emerald-700 border-emerald-800 text-white"
+                        ? "bg-brand-700 border-brand-800 text-white"
                         : "bg-slate-50 border-slate-300 text-slate-700 hover:bg-slate-100"
                     }`}
                   >

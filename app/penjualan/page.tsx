@@ -124,7 +124,7 @@ export default async function PenjualanHistoryPage({ searchParams }: { searchPar
           <h2 className="aj-page-title text-3xl font-bold">Riwayat Penjualan</h2>
           <p className="mt-2 text-sm text-slate-600">Cari dan cetak transaksi penjualan.</p>
         </div>
-        {can(role, "penjualan.create") && <Link href="/penjualan/input" className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-emerald-700">+ Input Penjualan</Link>}
+        {can(role, "penjualan.create") && <Link href="/penjualan/input" className="rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-brand-700">+ Input Penjualan</Link>}
       </div>
 
       <ResponsiveFilterPanel
@@ -141,7 +141,7 @@ export default async function PenjualanHistoryPage({ searchParams }: { searchPar
         <label className="text-sm font-medium text-slate-700 md:min-w-56 md:flex-1">Cari<Input name="keyword" defaultValue={valueOf(params, "keyword") || ""} placeholder="Customer / No transaksi / Barang" className="mt-1" /></label>
         <label className="text-sm font-medium text-slate-700 md:w-36">Pembayaran<Select name="paymentMethod" defaultValue={valueOf(params, "paymentMethod") || ""} className="mt-1"><option value="">Semua</option>{paymentMethods.map((item) => <option key={item} value={item}>{item}</option>)}</Select></label>
         <details className="group order-last w-full" open={hasExtraFilter(params)}>
-          <summary className="inline-flex min-h-11 cursor-pointer items-center text-sm font-semibold text-emerald-800 underline">
+          <summary className="inline-flex min-h-11 cursor-pointer items-center text-sm font-semibold text-brand-800 underline">
             Filter lainnya (tipe, rekening, approval, ERP, packing)
           </summary>
           <div className="mt-2 grid gap-3 md:grid-cols-5">

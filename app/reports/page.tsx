@@ -54,7 +54,7 @@ export default async function ReportsPage({ searchParams }: { searchParams?: Pro
         <div className="flex flex-wrap items-center gap-2">
           <a
             href={`/api/reports/daily?date=${encodeURIComponent(selectedDate)}&format=excel`}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-emerald-600 bg-emerald-50 px-4 py-2.5 text-xs font-bold text-emerald-800 shadow-xs transition hover:bg-emerald-100 sm:text-sm"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-brand-600 bg-brand-50 px-4 py-2.5 text-xs font-bold text-brand-800 shadow-xs transition hover:bg-brand-100 sm:text-sm"
           >
             Unduh Excel
           </a>
@@ -62,7 +62,7 @@ export default async function ReportsPage({ searchParams }: { searchParams?: Pro
             href={`/reports/print?date=${encodeURIComponent(selectedDate)}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-700 sm:text-sm"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-brand-700 sm:text-sm"
           >
             Cetak / PDF
           </a>
@@ -74,7 +74,7 @@ export default async function ReportsPage({ searchParams }: { searchParams?: Pro
           <span className="mb-1 block">Tanggal laporan</span>
           <input className="w-full rounded-xl border border-slate-300 px-3 py-2 sm:w-auto" type="date" name="date" defaultValue={selectedDate} />
         </label>
-        <button className="rounded-xl bg-emerald-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-emerald-700">Terapkan</button>
+        <button className="rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-brand-700">Terapkan</button>
       </form>
 
       <div className="mb-5 grid gap-4 lg:grid-cols-4 md:grid-cols-2">
@@ -126,7 +126,7 @@ export default async function ReportsPage({ searchParams }: { searchParams?: Pro
                   <p className="shrink-0 font-bold text-slate-900">{rupiah(sale.total)}</p>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2 text-xs">
-                  <span className="rounded-full bg-emerald-50 px-2.5 py-1 font-semibold text-emerald-700">{sale.paymentMethod}</span>
+                  <span className="rounded-full bg-brand-50 px-2.5 py-1 font-semibold text-brand-700">{sale.paymentMethod}</span>
                   <span className="rounded-full bg-slate-100 px-2.5 py-1 font-semibold text-slate-600">{sale.syncTarget === "erp" ? sale.syncStatus || "pending" : "local"}</span>
                 </div>
               </article>

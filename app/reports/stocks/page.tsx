@@ -116,7 +116,7 @@ export default async function StockReportsPage({
       <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold text-slate-500">
-            <Link href="/reports" className="hover:text-emerald-600">
+            <Link href="/reports" className="hover:text-brand-600">
               Laporan
             </Link>
             <span>/</span>
@@ -135,7 +135,7 @@ export default async function StockReportsPage({
           {role === "OWNER" && (
             <Link
               href="/stok-barang/ai-forecast"
-              className="inline-flex items-center gap-1.5 rounded-xl bg-emerald-700 px-3.5 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-emerald-800 sm:text-sm"
+              className="inline-flex items-center gap-1.5 rounded-xl bg-brand-700 px-3.5 py-2.5 text-xs font-bold text-white shadow-xs transition hover:bg-brand-800 sm:text-sm"
             >
               <span>Prediksi Stok</span>
             </Link>
@@ -143,10 +143,10 @@ export default async function StockReportsPage({
 
           <a
             href={exportExcelUrl}
-            className="inline-flex items-center gap-2 rounded-xl border border-emerald-600 bg-emerald-50 px-4 py-2.5 text-xs font-bold text-emerald-800 shadow-xs transition hover:bg-emerald-100 sm:text-sm"
+            className="inline-flex items-center gap-2 rounded-xl border border-brand-600 bg-brand-50 px-4 py-2.5 text-xs font-bold text-brand-800 shadow-xs transition hover:bg-brand-100 sm:text-sm"
           >
             <svg
-              className="h-4 w-4 text-emerald-600"
+              className="h-4 w-4 text-brand-600"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -165,7 +165,7 @@ export default async function StockReportsPage({
             href={printPdfUrl}
             target="_blank"
             rel="noreferrer"
-            className="inline-flex items-center gap-2 rounded-xl bg-emerald-700 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-800 sm:text-sm"
+            className="inline-flex items-center gap-2 rounded-xl bg-brand-700 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-brand-800 sm:text-sm"
           >
             <svg
               className="h-4 w-4"
@@ -196,7 +196,7 @@ export default async function StockReportsPage({
             <select
               name="type"
               defaultValue={typeParam}
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             >
               <option value="STORE">Toko</option>
               <option value="WAREHOUSE">Gudang</option>
@@ -209,7 +209,7 @@ export default async function StockReportsPage({
             <select
               name="warehouse"
               defaultValue={warehouse}
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             >
               <option value="">Semua Lokasi</option>
               {report.warehouses.map((wh) => (
@@ -225,7 +225,7 @@ export default async function StockReportsPage({
             <select
               name="status"
               defaultValue={status}
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             >
               <option value="all">Semua Status</option>
               <option value="warning">Menipis (sisa 1 koli atau kurang)</option>
@@ -241,14 +241,14 @@ export default async function StockReportsPage({
               name="keyword"
               defaultValue={keyword}
               placeholder="Contoh: BRG-001 / Benang..."
-              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+              className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
             />
           </label>
 
           <div className="flex items-end gap-2">
             <button
               type="submit"
-              className="flex-1 rounded-xl bg-emerald-700 px-4 py-2.5 text-sm font-bold text-white shadow-xs transition hover:bg-emerald-800"
+              className="flex-1 rounded-xl bg-brand-700 px-4 py-2.5 text-sm font-bold text-white shadow-xs transition hover:bg-brand-800"
             >
               Terapkan Filter
             </button>
@@ -319,7 +319,7 @@ export default async function StockReportsPage({
                   href={buildPageHref({ ...filterState, pageSize: String(size) }, 1)}
                   className={`rounded-md px-2.5 py-1 font-semibold transition ${
                     pageSize === size
-                      ? "bg-emerald-700 text-white"
+                      ? "bg-brand-700 text-white"
                       : "bg-slate-100 text-slate-700 hover:bg-slate-200"
                   }`}
                 >
@@ -412,7 +412,7 @@ export default async function StockReportsPage({
                       </span>
                     )}
                     {item.status === "safe" && (
-                      <span className="inline-flex rounded-full bg-emerald-100 px-2.5 py-1 text-xs font-bold text-emerald-800">
+                      <span className="inline-flex rounded-full bg-brand-100 px-2.5 py-1 text-xs font-bold text-brand-800">
                         Aman
                       </span>
                     )}
@@ -452,13 +452,13 @@ export default async function StockReportsPage({
                   <td colSpan={4} className="px-5 py-4 text-center uppercase tracking-wider">
                     Total Persediaan (Semua {report.summary.totalItems} Item)
                   </td>
-                  <td className="px-5 py-4 text-right text-xs text-emerald-800">
+                  <td className="px-5 py-4 text-right text-xs text-brand-800">
                     {(report.summary.unitTotals ?? []).length ? (report.summary.unitTotals ?? []).map((u) => `${u.quantity.toLocaleString("id-ID")} ${u.unit}`).join(" · ") : "0"}
                   </td>
                   <td colSpan={3} className="px-5 py-4 text-right text-xs text-slate-500">
                     {report.summary.totalItems} Baris Item
                   </td>
-                  <td className="px-5 py-4 text-right text-base text-emerald-800">
+                  <td className="px-5 py-4 text-right text-base text-brand-800">
                     {report.summary.totalCostValuation > 0
                       ? rupiah(report.summary.totalCostValuation)
                       : "-"}

@@ -239,8 +239,8 @@ export function AiFinancialForecastView({ initialData }: Props) {
     switch (data.projections.healthStatus) {
       case "HEALTHY":
         return (
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-300">
-            <span className="h-2 w-2 rounded-full bg-emerald-500" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-brand-50 text-brand-800 border border-brand-300">
+            <span className="h-2 w-2 rounded-full bg-brand-500" />
             Likuiditas Terkendali
           </span>
         );
@@ -476,7 +476,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
               type="button"
               onClick={handleRefresh}
               disabled={loading}
-              className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-emerald-700 disabled:opacity-50 transition-colors cursor-pointer"
+              className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-xs font-semibold text-white shadow-xs hover:bg-brand-700 disabled:opacity-50 transition-colors cursor-pointer"
             >
               <IconRefresh className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
               <span>{loading ? "Menganalisis..." : "Sinkronisasi AI"}</span>
@@ -513,7 +513,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
             <div className="mt-1.5 text-base font-bold text-slate-900 sm:text-lg">
               {rupiah(data.baseMetrics.past30DaysRevenue)}
             </div>
-            <div className="mt-1 text-[11px] text-emerald-700 font-medium">
+            <div className="mt-1 text-[11px] text-brand-700 font-medium">
               Gross Profit: {rupiah(data.baseMetrics.past30DaysGrossProfit)} ({data.baseMetrics.past30DaysGrossMarginPercent}%)
             </div>
           </div>
@@ -536,7 +536,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
             <span className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500">
               Laba Bersih Operasional
             </span>
-            <div className={`mt-1.5 text-base font-bold sm:text-lg ${data.baseMetrics.past30DaysNettProfit >= 0 ? "text-emerald-800" : "text-rose-800"}`}>
+            <div className={`mt-1.5 text-base font-bold sm:text-lg ${data.baseMetrics.past30DaysNettProfit >= 0 ? "text-brand-800" : "text-rose-800"}`}>
               {rupiah(data.baseMetrics.past30DaysNettProfit)}
             </div>
             <div className="mt-1 text-[11px] text-slate-500">
@@ -584,7 +584,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
           onClick={() => setActiveTab("cashflow")}
           className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all cursor-pointer ${
             activeTab === "cashflow"
-              ? "bg-emerald-600 text-white shadow-xs"
+              ? "bg-brand-600 text-white shadow-xs"
               : "bg-slate-100 text-slate-700 hover:bg-slate-200"
           }`}
         >
@@ -592,7 +592,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
           <span
             className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
               activeTab === "cashflow"
-                ? "bg-emerald-700 text-emerald-100"
+                ? "bg-brand-700 text-brand-100"
                 : "bg-slate-200 text-slate-700"
             }`}
           >
@@ -605,7 +605,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
           onClick={() => setActiveTab("briefing")}
           className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all cursor-pointer ${
             activeTab === "briefing"
-              ? "bg-emerald-600 text-white shadow-xs"
+              ? "bg-brand-600 text-white shadow-xs"
               : "bg-slate-100 text-slate-700 hover:bg-slate-200"
           }`}
         >
@@ -613,7 +613,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
           <span
             className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
               activeTab === "briefing"
-                ? "bg-emerald-700 text-emerald-100"
+                ? "bg-brand-700 text-brand-100"
                 : "bg-slate-200 text-slate-700"
             }`}
           >
@@ -626,7 +626,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
           onClick={() => setActiveTab("ask")}
           className={`flex items-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold transition-all cursor-pointer ${
             activeTab === "ask"
-              ? "bg-emerald-600 text-white shadow-xs"
+              ? "bg-brand-600 text-white shadow-xs"
               : "bg-slate-100 text-slate-700 hover:bg-slate-200"
           }`}
         >
@@ -634,7 +634,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
           <span
             className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
               activeTab === "ask"
-                ? "bg-emerald-700 text-emerald-100"
+                ? "bg-brand-700 text-brand-100"
                 : "bg-slate-200 text-slate-700"
             }`}
           >
@@ -669,7 +669,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
                         </div>
                         <p className="text-[11px] text-slate-600 leading-relaxed">{alert.reason}</p>
                         <div className="pt-1 border-t border-slate-100 text-[11px] text-slate-700">
-                          <span className="font-semibold text-emerald-800">Tindakan Mitigasi:</span> {alert.recommendedAction}
+                          <span className="font-semibold text-brand-800">Tindakan Mitigasi:</span> {alert.recommendedAction}
                         </div>
                       </div>
                     ))}
@@ -699,14 +699,14 @@ export function AiFinancialForecastView({ initialData }: Props) {
               </div>
               <div className="space-y-0.5">
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Titik Tertinggi 30 Hari</span>
-                <div className="text-sm font-bold text-emerald-800">{rupiah(maxProjectedBalance)}</div>
+                <div className="text-sm font-bold text-brand-800">{rupiah(maxProjectedBalance)}</div>
                 <span className="text-[10px] text-slate-500 font-medium">
                   {highestBalancePoint ? `Pada H+${highestBalancePoint.dayNumber} (${highestBalancePoint.date.slice(5)})` : "-"}
                 </span>
               </div>
               <div className="space-y-0.5">
                 <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Evaluasi Cadangan Buffer</span>
-                <div className={`text-sm font-bold ${breachDayCount > 0 ? "text-amber-700" : "text-emerald-700"}`}>
+                <div className={`text-sm font-bold ${breachDayCount > 0 ? "text-amber-700" : "text-brand-700"}`}>
                   {breachDayCount > 0 ? `${breachDayCount} Hari Di Bawah Buffer` : "Cadangan Aman 30 Hari"}
                 </div>
                 <span className="text-[10px] text-slate-500">Ambang: {shortRupiah(data.baseMetrics.minimumBufferThreshold)}</span>
@@ -733,7 +733,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
                     onClick={() => setChartMode("curve")}
                     className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
                       chartMode === "curve"
-                        ? "bg-emerald-600 text-white shadow-xs"
+                        ? "bg-brand-600 text-white shadow-xs"
                         : "text-slate-600 hover:text-slate-900"
                     }`}
                   >
@@ -745,7 +745,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
                     onClick={() => setChartMode("bars")}
                     className={`inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold transition-all cursor-pointer ${
                       chartMode === "bars"
-                        ? "bg-emerald-600 text-white shadow-xs"
+                        ? "bg-brand-600 text-white shadow-xs"
                         : "text-slate-600 hover:text-slate-900"
                     }`}
                   >
@@ -758,7 +758,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
                 {chartMode === "curve" ? (
                   <div className="hidden lg:flex items-center gap-3 text-[11px] text-slate-600">
                     <div className="flex items-center gap-1.5">
-                      <span className="h-2.5 w-2.5 rounded-full bg-emerald-600 ring-2 ring-emerald-200" />
+                      <span className="h-2.5 w-2.5 rounded-full bg-brand-600 ring-2 ring-brand-200" />
                       <span>Saldo Kas Berjalan</span>
                     </div>
                     <div className="flex items-center gap-1.5">
@@ -773,7 +773,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
                 ) : (
                   <div className="hidden lg:flex items-center gap-3 text-[11px] text-slate-600">
                     <div className="flex items-center gap-1.5">
-                      <span className="h-2.5 w-2.5 rounded-sm bg-emerald-600" />
+                      <span className="h-2.5 w-2.5 rounded-sm bg-brand-600" />
                       <span>Kas Masuk (+)</span>
                     </div>
                     <div className="flex items-center gap-1.5">
@@ -797,9 +797,9 @@ export function AiFinancialForecastView({ initialData }: Props) {
                       <defs>
                         {/* Gradient for area fill under the curve */}
                         <linearGradient id="cashCurveGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                          <stop offset="0%" stopColor="#059669" stopOpacity="0.28" />
-                          <stop offset="65%" stopColor="#10b981" stopOpacity="0.08" />
-                          <stop offset="100%" stopColor="#10b981" stopOpacity="0.01" />
+                          <stop offset="0%" stopColor="var(--brand-600-hex)" stopOpacity="0.28" />
+                          <stop offset="65%" stopColor="var(--brand-500-hex)" stopOpacity="0.08" />
+                          <stop offset="100%" stopColor="var(--brand-500-hex)" stopOpacity="0.01" />
                         </linearGradient>
                       </defs>
 
@@ -875,7 +875,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
                         <path
                           d={curveLinePath}
                           fill="none"
-                          stroke="#059669"
+                          stroke="var(--brand-600-hex)"
                           strokeWidth={2.5}
                           strokeLinecap="round"
                           strokeLinejoin="round"
@@ -942,7 +942,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
                                 y1={padTop}
                                 x2={pt.x}
                                 y2={padTop + plotH}
-                                stroke={pt.isBufferBreached ? "#ef4444" : "#059669"}
+                                stroke={pt.isBufferBreached ? "#ef4444" : "var(--brand-600-hex)"}
                                 strokeWidth={1.5}
                                 strokeDasharray="3 3"
                                 pointerEvents="none"
@@ -954,7 +954,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
                               cx={pt.x}
                               cy={pt.y}
                               r={isHovered ? 6 : pt.isBufferBreached ? 4 : 3}
-                              fill={pt.isBufferBreached ? "#ef4444" : "#059669"}
+                              fill={pt.isBufferBreached ? "#ef4444" : "var(--brand-600-hex)"}
                               stroke="#ffffff"
                               strokeWidth={isHovered ? 2.5 : 1.5}
                               className="transition-all"
@@ -979,7 +979,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
                                 cx={pt.x}
                                 cy={pt.y}
                                 r={9}
-                                fill={pt.isBufferBreached ? "#ef4444" : "#059669"}
+                                fill={pt.isBufferBreached ? "#ef4444" : "var(--brand-600-hex)"}
                                 opacity={0.2}
                                 pointerEvents="none"
                               />
@@ -1019,13 +1019,13 @@ export function AiFinancialForecastView({ initialData }: Props) {
                         onClick={() => setHoveredDay(pt.dayNumber)}
                         className={`relative flex flex-col justify-end items-center h-full cursor-pointer rounded-sm px-0.5 transition-colors ${
                           pt.isBufferBreached ? "bg-amber-50/80" : "hover:bg-slate-50"
-                        } ${isHovered ? "ring-2 ring-emerald-500 bg-emerald-50/50" : ""}`}
+                        } ${isHovered ? "ring-2 ring-brand-500 bg-brand-50/50" : ""}`}
                       >
                         <div className="w-full flex items-end justify-center gap-0.5 h-full">
                           {/* Inflow bar */}
                           <div
                             style={{ height: `${inflowHeight}%` }}
-                            className="w-1/2 bg-emerald-600 rounded-t-sm transition-all"
+                            className="w-1/2 bg-brand-600 rounded-t-sm transition-all"
                             title={`Kas Masuk: +${rupiah(pt.projectedInflow)}`}
                           />
                           {/* Outflow bar */}
@@ -1035,7 +1035,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
                             title={`Kas Keluar: -${rupiah(pt.projectedOutflow)}`}
                           />
                         </div>
-                        <span className={`mt-1 text-[9px] font-mono ${isHovered ? "font-bold text-emerald-800" : "text-slate-400"}`}>
+                        <span className={`mt-1 text-[9px] font-mono ${isHovered ? "font-bold text-brand-800" : "text-slate-400"}`}>
                           {pt.dayNumber}
                         </span>
                       </div>
@@ -1058,8 +1058,8 @@ export function AiFinancialForecastView({ initialData }: Props) {
                       Di Bawah Batas Cadangan Aman (Defisit {rupiah(data.baseMetrics.minimumBufferThreshold - activeSelectedDay.projectedBalance)})
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-800">
-                      <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                    <span className="inline-flex items-center gap-1.5 rounded-lg border border-brand-300 bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-800">
+                      <span className="h-2 w-2 rounded-full bg-brand-500" />
                       Cadangan Likuid Aman (+{rupiah(activeSelectedDay.projectedBalance - data.baseMetrics.minimumBufferThreshold)} di atas batas)
                     </span>
                   )}
@@ -1085,16 +1085,16 @@ export function AiFinancialForecastView({ initialData }: Props) {
 
                 {/* 2. Kas Masuk Hari Ini */}
                 <div className="rounded-lg border border-slate-200 bg-white p-3">
-                  <span className="block text-[11px] font-semibold text-emerald-700 uppercase tracking-wider">
+                  <span className="block text-[11px] font-semibold text-brand-700 uppercase tracking-wider">
                     Kas Masuk Harian (+)
                   </span>
-                  <div className="mt-1 text-base font-bold text-emerald-800">
+                  <div className="mt-1 text-base font-bold text-brand-800">
                     +{rupiah(activeSelectedDay.projectedInflow)}
                   </div>
                   <div className="mt-0.5 text-[11px] text-slate-500">
                     Penjualan: {shortRupiah(activeSelectedDay.inflowBreakdown.expectedDailySales)}
                     {activeSelectedDay.inflowBreakdown.expectedTempoCollections > 0 && (
-                      <span className="block text-emerald-600 font-semibold">
+                      <span className="block text-brand-600 font-semibold">
                         Tempo: +{shortRupiah(activeSelectedDay.inflowBreakdown.expectedTempoCollections)}
                       </span>
                     )}
@@ -1128,7 +1128,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
                     const netFlow = activeSelectedDay.projectedInflow - activeSelectedDay.projectedOutflow;
                     return (
                       <>
-                        <div className={`mt-1 text-base font-bold ${netFlow >= 0 ? "text-emerald-700" : "text-rose-700"}`}>
+                        <div className={`mt-1 text-base font-bold ${netFlow >= 0 ? "text-brand-700" : "text-rose-700"}`}>
                           {netFlow >= 0 ? `+${rupiah(netFlow)}` : `-${rupiah(Math.abs(netFlow))}`}
                         </div>
                         <div className="mt-0.5 text-[11px] text-slate-500">
@@ -1172,7 +1172,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
                       setDebtorPage(1);
                     }}
                     placeholder="Cari nama debitur customer..."
-                    className="w-full rounded-lg border border-slate-300 bg-white pl-9 pr-8 py-2 text-xs text-slate-800 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-2xs"
+                    className="w-full rounded-lg border border-slate-300 bg-white pl-9 pr-8 py-2 text-xs text-slate-800 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 shadow-2xs"
                   />
                   {debtorSearch && (
                     <button
@@ -1197,7 +1197,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
                       setDebtorSort(e.target.value as any);
                       setDebtorPage(1);
                     }}
-                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-2xs focus:border-emerald-500 focus:outline-none"
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-2xs focus:border-brand-500 focus:outline-none"
                   >
                     <option value="DUE_ASC">Jatuh Tempo Terdekat</option>
                     <option value="AMOUNT_DESC">Nominal Tertinggi</option>
@@ -1218,7 +1218,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
                     }}
                     className={`rounded-lg px-2.5 py-1 transition cursor-pointer ${
                       debtorFilter === "ALL"
-                        ? "bg-emerald-600 text-white shadow-xs"
+                        ? "bg-brand-600 text-white shadow-xs"
                         : "bg-slate-100 hover:bg-slate-200 text-slate-700"
                     }`}
                   >
@@ -1306,8 +1306,8 @@ export function AiFinancialForecastView({ initialData }: Props) {
                     >
                       {copiedIndex === idx ? (
                         <>
-                          <IconCheck className="w-3.5 h-3.5 text-emerald-600" />
-                          <span className="text-emerald-700 font-bold">Tersalin ke Clipboard</span>
+                          <IconCheck className="w-3.5 h-3.5 text-brand-600" />
+                          <span className="text-brand-700 font-bold">Tersalin ke Clipboard</span>
                         </>
                       ) : (
                         <>
@@ -1349,7 +1349,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
                       setDebtorPageSize(Number(e.target.value));
                       setDebtorPage(1);
                     }}
-                    className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-800 focus:border-emerald-500 focus:outline-none"
+                    className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-800 focus:border-brand-500 focus:outline-none"
                   >
                     <option value={6}>6</option>
                     <option value={12}>12</option>
@@ -1385,7 +1385,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
                         onClick={() => setDebtorPage(pageNum)}
                         className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer ${
                           debtorPage === pageNum
-                            ? "bg-emerald-600 text-white shadow-xs"
+                            ? "bg-brand-600 text-white shadow-xs"
                             : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100"
                         }`}
                       >
@@ -1437,7 +1437,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
                       setTimelinePage(1);
                     }}
                     placeholder="Cari tanggal (contoh: 2026-09 atau H+7)..."
-                    className="w-full rounded-lg border border-slate-300 bg-white pl-9 pr-8 py-2 text-xs text-slate-800 placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-2xs"
+                    className="w-full rounded-lg border border-slate-300 bg-white pl-9 pr-8 py-2 text-xs text-slate-800 placeholder:text-slate-400 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 shadow-2xs"
                   />
                   {timelineSearch && (
                     <button
@@ -1462,7 +1462,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
                       setTimelineFilterWeek(e.target.value as any);
                       setTimelinePage(1);
                     }}
-                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-2xs focus:border-emerald-500 focus:outline-none"
+                    className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-xs font-semibold text-slate-700 shadow-2xs focus:border-brand-500 focus:outline-none"
                   >
                     <option value="ALL">Semua Minggu (H+1 s/d H+30)</option>
                     <option value="W1">Minggu 1 (H+1 s/d H+7)</option>
@@ -1485,7 +1485,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
                     }}
                     className={`rounded-lg px-2.5 py-1 transition cursor-pointer ${
                       timelineFilterCondition === "ALL"
-                        ? "bg-emerald-600 text-white shadow-xs"
+                        ? "bg-brand-600 text-white shadow-xs"
                         : "bg-slate-100 hover:bg-slate-200 text-slate-700"
                     }`}
                   >
@@ -1513,8 +1513,8 @@ export function AiFinancialForecastView({ initialData }: Props) {
                     }}
                     className={`rounded-lg px-2.5 py-1 transition cursor-pointer ${
                       timelineFilterCondition === "TEMPO_INFLOW"
-                        ? "bg-emerald-600 text-white shadow-xs"
-                        : "bg-emerald-50 text-emerald-800 hover:bg-emerald-100"
+                        ? "bg-brand-600 text-white shadow-xs"
+                        : "bg-brand-50 text-brand-800 hover:bg-brand-100"
                     }`}
                   >
                     Kas Masuk Tempo ({tempoInflowDayCount})
@@ -1559,10 +1559,10 @@ export function AiFinancialForecastView({ initialData }: Props) {
                     <tr key={row.dayNumber} className={row.isBufferBreached ? "bg-amber-50/50" : "hover:bg-slate-50/70"}>
                       <td className="px-3.5 py-2.5 font-bold text-slate-600 font-mono">H+{row.dayNumber}</td>
                       <td className="px-3.5 py-2.5 text-slate-800 font-mono">{row.date}</td>
-                      <td className="px-3.5 py-2.5 text-right font-medium text-emerald-700">
+                      <td className="px-3.5 py-2.5 text-right font-medium text-brand-700">
                         +{rupiah(row.projectedInflow)}
                         {row.inflowBreakdown.expectedTempoCollections > 0 && (
-                          <span className="block text-[10px] text-emerald-600">
+                          <span className="block text-[10px] text-brand-600">
                             (Tempo: {rupiah(row.inflowBreakdown.expectedTempoCollections)})
                           </span>
                         )}
@@ -1584,7 +1584,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
                             Di Bawah Buffer
                           </span>
                         ) : (
-                          <span className="inline-block px-2 py-0.5 rounded-sm text-[10px] font-medium bg-emerald-50 text-emerald-800 border border-emerald-200">
+                          <span className="inline-block px-2 py-0.5 rounded-sm text-[10px] font-medium bg-brand-50 text-brand-800 border border-brand-200">
                             Aman
                           </span>
                         )}
@@ -1613,7 +1613,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
                       setTimelinePageSize(Number(e.target.value));
                       setTimelinePage(1);
                     }}
-                    className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-800 focus:border-emerald-500 focus:outline-none"
+                    className="rounded-lg border border-slate-300 bg-white px-2 py-1 text-xs font-semibold text-slate-800 focus:border-brand-500 focus:outline-none"
                   >
                     <option value={10}>10</option>
                     <option value={15}>15</option>
@@ -1649,7 +1649,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
                         onClick={() => setTimelinePage(pageNum)}
                         className={`rounded-lg px-2.5 py-1 text-xs font-bold transition cursor-pointer ${
                           timelinePage === pageNum
-                            ? "bg-emerald-600 text-white shadow-xs"
+                            ? "bg-brand-600 text-white shadow-xs"
                             : "bg-white border border-slate-300 text-slate-700 hover:bg-slate-100"
                         }`}
                       >
@@ -1694,7 +1694,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
             <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-2.5">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-700">Profitabilitas &amp; Margin</span>
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-brand-50 text-brand-800 border border-brand-200">
                   Margin: {data.baseMetrics.past30DaysGrossMarginPercent}%
                 </span>
               </div>
@@ -1725,7 +1725,7 @@ export function AiFinancialForecastView({ initialData }: Props) {
             <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-2.5">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-700">Kesehatan Piutang Usaha</span>
-                <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200">
+                <span className="text-[11px] font-bold px-2 py-0.5 rounded-md bg-brand-50 text-brand-800 border border-brand-200">
                   Tempo: {rupiah(data.baseMetrics.activeReceivablesTotal)}
                 </span>
               </div>
@@ -1845,8 +1845,8 @@ export function AiFinancialForecastView({ initialData }: Props) {
                     )}
 
                     {msg.action && (
-                      <div className="rounded-md bg-emerald-50 p-2.5 border border-emerald-200 text-[11px] text-emerald-950">
-                        <span className="font-bold text-emerald-900 block mb-0.5">Rekomendasi Langkah Strategis:</span>
+                      <div className="rounded-md bg-brand-50 p-2.5 border border-brand-200 text-[11px] text-brand-950">
+                        <span className="font-bold text-brand-900 block mb-0.5">Rekomendasi Langkah Strategis:</span>
                         {msg.action}
                       </div>
                     )}
@@ -1875,12 +1875,12 @@ export function AiFinancialForecastView({ initialData }: Props) {
                 onChange={(e) => setQuestion(e.target.value)}
                 placeholder="Ketik pertanyaan atau simulasi keuangan (contoh: Apakah aman belanja stok 50 juta minggu ini?)..."
                 disabled={asking}
-                className="flex-1 rounded-lg border border-slate-300 px-4 py-2.5 text-xs text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500 shadow-2xs"
+                className="flex-1 rounded-lg border border-slate-300 px-4 py-2.5 text-xs text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500 shadow-2xs"
               />
               <button
                 type="submit"
                 disabled={asking || !question.trim()}
-                className="rounded-lg bg-emerald-600 px-5 py-2.5 text-xs font-semibold text-white shadow-xs hover:bg-emerald-700 disabled:opacity-50 transition-colors cursor-pointer"
+                className="rounded-lg bg-brand-600 px-5 py-2.5 text-xs font-semibold text-white shadow-xs hover:bg-brand-700 disabled:opacity-50 transition-colors cursor-pointer"
               >
                 {asking ? "Memproses..." : "Kirim Analisis"}
               </button>

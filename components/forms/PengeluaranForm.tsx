@@ -303,7 +303,7 @@ export function PengeluaranForm({ tipes, rekenings, expense, employees = [], coa
     <form onSubmit={handleSubmit(submit)} className="space-y-6">
       {notice && <Toast {...notice} />}
       {createdExpense && (
-        <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+        <div className="rounded-lg border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-900">
           {createdExpense.erpReference && (
             <p className="mb-2">
               Referensi ERP: <code>{createdExpense.erpReference}</code>
@@ -312,26 +312,26 @@ export function PengeluaranForm({ tipes, rekenings, expense, employees = [], coa
           <div className="flex flex-wrap gap-3">
             <Link
               href={`/pengeluaran/${createdExpense.id}/invoice`}
-              className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-bold text-white hover:bg-emerald-700 shadow-xs transition-colors"
+              className="rounded-lg bg-brand-600 px-3 py-2 text-xs font-bold text-white hover:bg-brand-700 shadow-xs transition-colors"
             >
               Lihat Bukti (PNG / PDF)
             </Link>
             <Link
               href={`/pengeluaran/${createdExpense.id}`}
-              className="rounded-lg border border-emerald-600 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-100 shadow-xs transition-colors"
+              className="rounded-lg border border-brand-600 bg-brand-50 px-3 py-2 text-xs font-bold text-brand-800 hover:bg-brand-100 shadow-xs transition-colors"
             >
               Lihat Pengeluaran
             </Link>
             <Link
               href={`/print/expenses/${createdExpense.id}`}
-              className="rounded-lg border border-emerald-300 px-3 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-100"
+              className="rounded-lg border border-brand-300 px-3 py-2 text-xs font-bold text-brand-800 hover:bg-brand-100"
             >
               Cetak Pengeluaran
             </Link>
             <button
               type="button"
               onClick={() => setCreatedExpense(undefined)}
-              className="rounded-lg border border-emerald-300 px-3 py-2 text-xs font-bold text-emerald-800 hover:bg-emerald-100"
+              className="rounded-lg border border-brand-300 px-3 py-2 text-xs font-bold text-brand-800 hover:bg-brand-100"
             >
               Input Lagi
             </button>
@@ -373,13 +373,13 @@ export function PengeluaranForm({ tipes, rekenings, expense, employees = [], coa
         </div>
       )}
       {categoryCode === "salary" && (
-        <div className="rounded border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-sm text-emerald-950 flex items-start gap-3">
-          <svg className="h-5 w-5 shrink-0 text-emerald-700 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="rounded border border-brand-200 bg-brand-50/80 px-4 py-3 text-sm text-brand-950 flex items-start gap-3">
+          <svg className="h-5 w-5 shrink-0 text-brand-700 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
           <div>
-            <p className="font-semibold text-emerald-900">Klasifikasi Akuntansi: Gaji Karyawan</p>
-            <p className="mt-1 text-xs text-emerald-800 leading-relaxed">
+            <p className="font-semibold text-brand-900">Klasifikasi Akuntansi: Gaji Karyawan</p>
+            <p className="mt-1 text-xs text-brand-800 leading-relaxed">
               Dicatat sebagai Beban Gaji periode bersangkutan dan tersimpan di riwayat penggajian SDM. Masukkan nominal bersih yang ditransfer ke rekening karyawan.
             </p>
           </div>
@@ -493,15 +493,15 @@ export function PengeluaranForm({ tipes, rekenings, expense, employees = [], coa
           )}
 
           {isSalary && (
-            <div className="md:col-span-2 rounded-lg border border-emerald-200 bg-emerald-50/60 p-3.5">
-              <label className="block text-xs font-bold uppercase tracking-wider text-emerald-950 mb-2">
+            <div className="md:col-span-2 rounded-lg border border-brand-200 bg-brand-50/60 p-3.5">
+              <label className="block text-xs font-bold uppercase tracking-wider text-brand-950 mb-2">
                 Kebijakan Akuntansi Pembayaran Gaji *
               </label>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <label
                   className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition ${
                     salaryPaymentType === "EXPENSE"
-                      ? "bg-white border-emerald-600 shadow-xs ring-1 ring-emerald-600"
+                      ? "bg-white border-brand-600 shadow-xs ring-1 ring-brand-600"
                       : "bg-white/70 border-slate-200 hover:bg-white"
                   }`}
                 >
@@ -515,7 +515,7 @@ export function PengeluaranForm({ tipes, rekenings, expense, employees = [], coa
                       setValue("coaId", "6-1002", { shouldDirty: true });
                       setValue("coaNameSnapshot", "6-1002 Beban Gaji Karyawan", { shouldDirty: true });
                     }}
-                    className="mt-0.5 text-emerald-600 focus:ring-emerald-500"
+                    className="mt-0.5 text-brand-600 focus:ring-brand-500"
                   />
                   <div>
                     <span className="block text-xs font-bold text-slate-900">Beban Gaji Langsung (Akun 6-1002)</span>
@@ -528,7 +528,7 @@ export function PengeluaranForm({ tipes, rekenings, expense, employees = [], coa
                 <label
                   className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition ${
                     salaryPaymentType === "PAYABLE"
-                      ? "bg-white border-emerald-600 shadow-xs ring-1 ring-emerald-600"
+                      ? "bg-white border-brand-600 shadow-xs ring-1 ring-brand-600"
                       : "bg-white/70 border-slate-200 hover:bg-white"
                   }`}
                 >
@@ -542,7 +542,7 @@ export function PengeluaranForm({ tipes, rekenings, expense, employees = [], coa
                       setValue("coaId", "2-1002", { shouldDirty: true });
                       setValue("coaNameSnapshot", "2-1002 Utang Gaji", { shouldDirty: true });
                     }}
-                    className="mt-0.5 text-emerald-600 focus:ring-emerald-500"
+                    className="mt-0.5 text-brand-600 focus:ring-brand-500"
                   />
                   <div>
                     <span className="block text-xs font-bold text-slate-900">Pelunasan Utang Gaji (Akun 2-1002)</span>

@@ -22,7 +22,7 @@ export function SectionTabs({ role }: { role: Role }) {
                 href={link.href}
                 aria-current={active ? "page" : undefined}
                 className={`inline-flex min-h-11 items-center whitespace-nowrap border-b-2 px-3 text-sm font-semibold transition ${
-                  active ? "border-emerald-700 text-emerald-800" : "border-transparent text-slate-600 hover:border-slate-300 hover:text-slate-900"
+                  active ? "border-brand-700 text-brand-800" : "border-transparent text-slate-600 hover:border-slate-300 hover:text-slate-900"
                 }`}
               >
                 {link.label}

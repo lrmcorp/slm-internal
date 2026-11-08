@@ -34,9 +34,9 @@ export function InlineNameForm({ productId, sku }: { productId: string; sku: str
         onChange={(e) => setName(e.target.value)}
         placeholder="Ketik nama barang"
         maxLength={255}
-        className="min-h-11 w-full min-w-0 rounded-lg border border-slate-300 bg-white px-2 text-sm focus:border-emerald-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600"
+        className="min-h-11 w-full min-w-0 rounded-lg border border-slate-300 bg-white px-2 text-sm focus:border-brand-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
       />
-      <button type="submit" disabled={busy || !name.trim()} className="min-h-11 shrink-0 rounded-lg bg-emerald-700 px-3 text-sm font-semibold text-white hover:bg-emerald-800 disabled:opacity-50">
+      <button type="submit" disabled={busy || !name.trim()} className="min-h-11 shrink-0 rounded-lg bg-brand-700 px-3 text-sm font-semibold text-white hover:bg-brand-800 disabled:opacity-50">
         {busy ? "..." : "Simpan"}
       </button>
     </form>

@@ -367,7 +367,7 @@ export function DeliveryOrderDetailView({
             <span
               className={`rounded-full px-2.5 py-1 text-xs font-bold ${
                 detail.status === "selesai"
-                  ? "bg-emerald-100 text-emerald-800"
+                  ? "bg-brand-100 text-brand-800"
                   : detail.status === "selesai_setengah"
                   ? "bg-amber-100 text-amber-800"
                   : "bg-slate-100 text-slate-700"
@@ -412,7 +412,7 @@ export function DeliveryOrderDetailView({
           <span
             className={`inline-flex items-center px-2.5 py-1 rounded text-xs font-semibold ${
               detail.packingStatus === "sudah"
-                ? "bg-emerald-100 text-emerald-800"
+                ? "bg-brand-100 text-brand-800"
                 : "bg-slate-100 text-slate-600"
             }`}
           >
@@ -555,7 +555,7 @@ export function DeliveryOrderDetailView({
             <span
               className={`inline-flex items-center px-2 py-0.5 rounded font-bold ${
                 detail.packingStatus === "sudah"
-                  ? "bg-emerald-100 text-emerald-800"
+                  ? "bg-brand-100 text-brand-800"
                   : "bg-slate-100 text-slate-600"
               }`}
             >
@@ -649,7 +649,7 @@ export function DeliveryOrderDetailView({
                       if (el) el.indeterminate = someSelected;
                     }}
                     onChange={toggleSelectAll}
-                    className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                    className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
                   />
                 </th>
                 <th className="w-10 px-2 py-3 text-center">No</th>
@@ -668,7 +668,7 @@ export function DeliveryOrderDetailView({
                     key={item.id}
                     onClick={() => toggleItem(item.id)}
                     className={`cursor-pointer transition-colors ${
-                      isChecked ? "bg-emerald-50/50" : "hover:bg-slate-50/80"
+                      isChecked ? "bg-brand-50/50" : "hover:bg-slate-50/80"
                     }`}
                   >
                     <td className="w-10 px-3 py-3 text-center" onClick={(e) => e.stopPropagation()}>
@@ -676,7 +676,7 @@ export function DeliveryOrderDetailView({
                         type="checkbox"
                         checked={isChecked}
                         onChange={() => toggleItem(item.id)}
-                        className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500"
+                        className="h-4 w-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500"
                       />
                     </td>
                     <td className="w-10 px-2 py-3 text-center text-xs font-semibold text-slate-600 tabular-nums">
@@ -702,7 +702,7 @@ export function DeliveryOrderDetailView({
                     </td>
                     <td className="px-4 py-3 text-center">
                       {item.isShipped ? (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-800">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold bg-brand-100 text-brand-800">
                           Terkirim
                         </span>
                       ) : (
@@ -736,8 +736,8 @@ export function DeliveryOrderDetailView({
             </span>
           </div>
           {canProcess && (detail.status === "selesai" || detail.status === "selesai_setengah") && (
-            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-200">
-              <svg className="w-3.5 h-3.5 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-brand-700 bg-brand-50 px-2.5 py-1 rounded-md border border-brand-200">
+              <svg className="w-3.5 h-3.5 text-brand-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
               <span>DO Selesai · Foto susulan didukung</span>
@@ -773,7 +773,7 @@ export function DeliveryOrderDetailView({
                   type="button"
                   onClick={() => handleSaveReceiptPhotos()}
                   disabled={isSavingPhotos || isUploading}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 shadow-sm transition-colors disabled:opacity-50 cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 shadow-sm transition-colors disabled:opacity-50 cursor-pointer"
                 >
                   <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -795,7 +795,7 @@ export function DeliveryOrderDetailView({
                 value={trackingNumber}
                 onChange={(e) => setTrackingNumber(e.target.value)}
                 placeholder="Contoh: JNE-987654321..."
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
               />
             </div>
             <div>
@@ -807,7 +807,7 @@ export function DeliveryOrderDetailView({
                 rows={2}
                 onChange={(e) => setShippingNotes(e.target.value)}
                 placeholder="Catatan tambahan untuk ekspedisi / penerima..."
-                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm text-slate-900 focus:border-brand-500 focus:outline-none focus:ring-1 focus:ring-brand-500"
               />
             </div>
           </div>
@@ -830,7 +830,7 @@ export function DeliveryOrderDetailView({
             type="button"
             disabled={isSubmitting || selectedItemIds.length === 0}
             onClick={handleShipItems}
-            className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-emerald-700 focus:outline-none disabled:opacity-50 transition-colors"
+            className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-brand-700 focus:outline-none disabled:opacity-50 transition-colors"
           >
             {isSubmitting ? (
               "Memproses..."
@@ -875,8 +875,8 @@ export function DeliveryOrderDetailView({
                 ? `Konfirmasi pengiriman untuk SEMUA barang (${selectedItemIds.length} item) ke customer ${detail.sale.customerName}? Status Surat Jalan dan Penjualan akan otomatis diselesaikan.`
                 : `Konfirmasi pengiriman SEBAGIAN (${selectedItemIds.length} dari ${detail.items.length} item) ke customer ${detail.sale.customerName}? Status Surat Jalan akan menjadi "Selesai Sebagian".`}
             </p>
-            <div className="p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2">
-              <svg className="w-4 h-4 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="p-2.5 rounded-lg bg-brand-50 border border-brand-200 text-xs text-brand-800 flex items-center gap-2">
+              <svg className="w-4 h-4 text-brand-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
               <span className="font-medium">

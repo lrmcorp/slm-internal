@@ -200,7 +200,7 @@ export function PurchasePaymentView({
 
                       <td className="px-5 py-4 text-right font-mono">
                         {isGain ? (
-                          <div className="inline-block px-2 py-0.5 rounded border border-emerald-300 bg-emerald-50 text-emerald-800 font-bold text-xs">
+                          <div className="inline-block px-2 py-0.5 rounded border border-brand-300 bg-brand-50 text-brand-800 font-bold text-xs">
                             + Rp {forexDiff.toLocaleString("id-ID")} (Laba)
                           </div>
                         ) : isLoss ? (
@@ -215,7 +215,7 @@ export function PurchasePaymentView({
                       <td className="px-5 py-4 text-center">
                         {p.journalEntry ? (
                           <div>
-                            <span className="font-mono text-xs font-semibold text-emerald-700 block">
+                            <span className="font-mono text-xs font-semibold text-brand-700 block">
                               {p.journalEntry.journalNumber}
                             </span>
                             <button
@@ -281,7 +281,7 @@ export function PurchasePaymentView({
                                 <span className="font-sans text-slate-600">{l.accountNameSnapshot}</span>
                               </td>
                               <td className="px-3 py-2 font-sans text-slate-500 text-[11px]">{l.memo || "-"}</td>
-                              <td className="px-3 py-2 text-right text-emerald-800">
+                              <td className="px-3 py-2 text-right text-brand-800">
                                 {Number(l.debit) > 0 ? `Rp ${Number(l.debit).toLocaleString("id-ID")}` : "-"}
                               </td>
                               <td className="px-3 py-2 text-right text-slate-700">

@@ -92,7 +92,7 @@ export function JournalDetailModal({ journal, onClose, onJournalReversed }: Prop
               <span
                 className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold ${
                   journal.status === "POSTED"
-                    ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                    ? "bg-brand-50 text-brand-700 border border-brand-200"
                     : "bg-amber-50 text-amber-800 border border-amber-200"
                 }`}
               >
@@ -177,10 +177,10 @@ export function JournalDetailModal({ journal, onClose, onJournalReversed }: Prop
                   <td colSpan={3} className="py-2.5 px-3 text-right uppercase tracking-wider text-slate-600">
                     Total
                   </td>
-                  <td className="py-2.5 px-3 text-right font-mono tabular-nums text-emerald-800">
+                  <td className="py-2.5 px-3 text-right font-mono tabular-nums text-brand-800">
                     {formatCurrency(totalDebit)}
                   </td>
-                  <td className="py-2.5 px-3 text-right font-mono tabular-nums text-emerald-800">
+                  <td className="py-2.5 px-3 text-right font-mono tabular-nums text-brand-800">
                     {formatCurrency(totalCredit)}
                   </td>
                 </tr>

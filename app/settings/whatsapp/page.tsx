@@ -16,14 +16,14 @@ export default async function WhatsAppSettingsPage() {
   const status = getWhatsappProviderStatus();
   return <AppShell>
     <div className="mb-7">
-      <p className="mb-2 text-xs font-bold uppercase tracking-[0.13em] text-emerald-600">Super Admin</p>
+      <p className="mb-2 text-xs font-bold uppercase tracking-[0.13em] text-brand-600">Super Admin</p>
       <h2 className="aj-page-title text-3xl font-bold">WhatsApp Settings</h2>
       <p className="mt-2 text-sm text-slate-600">Kelola recipient WhatsApp untuk daily report, stock alert, dan tempo reminder. Token tetap server-side.</p>
     </div>
     <div className="mb-6 grid gap-4 lg:grid-cols-[1fr_26rem]">
-      <section className={`aj-surface border p-5 ${status.ready ? "border-emerald-100" : "border-amber-200 bg-amber-50"}`}>
+      <section className={`aj-surface border p-5 ${status.ready ? "border-brand-100" : "border-amber-200 bg-amber-50"}`}>
         <p className="text-xs font-bold uppercase tracking-[0.13em] text-slate-500">Provider Status</p>
-        <h3 className={`mt-2 text-xl font-black ${status.ready ? "text-emerald-700" : "text-amber-800"}`}>{status.label}</h3>
+        <h3 className={`mt-2 text-xl font-black ${status.ready ? "text-brand-700" : "text-amber-800"}`}>{status.label}</h3>
         <p className="mt-1 text-sm text-slate-600">Provider: <b>{status.provider || "Belum dikonfigurasi"}</b></p>
         <p className="mt-1 text-sm text-slate-600">{status.message}</p>
       </section>

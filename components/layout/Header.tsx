@@ -18,15 +18,15 @@ export function Header({ user, showDemoLogout = false, showLogout = false }: { u
       <div className="flex flex-wrap items-center justify-end gap-3 text-xs text-neutral-600">
         <span className="hidden border-r border-neutral-200 pr-4 sm:block">{date}</span>
         <details className="relative">
-          <summary className="flex cursor-pointer list-none items-center gap-2 border border-neutral-300 bg-white px-2.5 py-1.5 transition hover:border-emerald-400 hover:bg-emerald-50">
-            <span className="grid h-7 w-7 place-items-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-800">{initials(user.name)}</span>
+          <summary className="flex cursor-pointer list-none items-center gap-2 border border-neutral-300 bg-white px-2.5 py-1.5 transition hover:border-brand-400 hover:bg-brand-50">
+            <span className="grid h-7 w-7 place-items-center rounded-full bg-brand-100 text-xs font-bold text-brand-800">{initials(user.name)}</span>
             <span className="text-left"><span className="block max-w-36 truncate font-semibold text-neutral-800">{user.name}</span><span className="block text-[10px] text-neutral-500">{roleLabel(user.role)}</span></span>
           </summary>
           <div className="absolute right-0 z-30 mt-2 w-64 border border-neutral-200 bg-white p-3 shadow-lg">
             <p className="truncate text-sm font-semibold text-neutral-900">{user.name}</p>
             {user.email && <p className="mt-0.5 truncate text-xs text-neutral-500">{user.email}</p>}
             <div className="mt-3 border-t border-neutral-100 pt-3">
-              <Link href="/profile" className="block px-2 py-2 text-sm font-semibold text-neutral-700 hover:bg-emerald-50 hover:text-emerald-800">Profil</Link>
+              <Link href="/profile" className="block px-2 py-2 text-sm font-semibold text-neutral-700 hover:bg-brand-50 hover:text-brand-800">Profil</Link>
               {showLogout ? <LogoutButton className="mt-1 w-full justify-start border-0 px-2 py-2" /> : null}
               {showDemoLogout ? <DemoLogoutButton /> : null}
             </div>

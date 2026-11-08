@@ -74,19 +74,19 @@ export function AuthLandingPage({ currentRole }: { currentRole: Role }) {
     <main className="min-h-screen overflow-x-hidden bg-slate-50 px-5 py-6 text-slate-950 sm:px-8 lg:px-10">
       <section className="mx-auto flex min-h-[calc(100vh-3rem)] max-w-6xl flex-col justify-center">
         <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(340px,0.8fr)] lg:items-stretch">
-          <div className="relative overflow-hidden rounded-[2rem] border border-emerald-100 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8 lg:p-10">
-            <div className="absolute right-0 top-0 h-40 w-40 -translate-y-1/2 translate-x-1/3 rounded-full bg-emerald-100 blur-3xl" aria-hidden="true" />
+          <div className="relative overflow-hidden rounded-[2rem] border border-brand-100 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.08)] sm:p-8 lg:p-10">
+            <div className="absolute right-0 top-0 h-40 w-40 -translate-y-1/2 translate-x-1/3 rounded-full bg-brand-100 blur-3xl" aria-hidden="true" />
             <div className="relative">
               <div className="flex flex-wrap gap-2">
                 {statusItems.map((item) => (
-                  <span key={item} className="rounded-full border border-emerald-100 bg-emerald-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-emerald-700">
+                  <span key={item} className="rounded-full border border-brand-100 bg-brand-50 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-brand-700">
                     {item}
                   </span>
                 ))}
               </div>
 
               <div className="mt-10 max-w-3xl">
-                <p className="text-sm font-semibold text-emerald-700">{APP_BRAND_NAME}</p>
+                <p className="text-sm font-semibold text-brand-700">{APP_BRAND_NAME}</p>
                 <h1 className="mt-3 text-4xl font-bold leading-tight tracking-tight text-slate-950 sm:text-5xl lg:text-6xl">{APP_BRAND_TITLE}</h1>
                 <p className="mt-5 max-w-2xl text-base leading-8 text-slate-600 sm:text-lg">
                   Pusat kerja operasional untuk penjualan, tempo, approval, stok, dan laporan harian. Masuk sesuai peran untuk melanjutkan pekerjaan dengan data yang rapi dan terkontrol.
@@ -99,7 +99,7 @@ export function AuthLandingPage({ currentRole }: { currentRole: Role }) {
                     <LoginForm />
                   </div>
                 ) : ssoReady ? (
-                  <Link href={loginHref} className="inline-flex min-h-12 items-center justify-center rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-700">
+                  <Link href={loginHref} className="inline-flex min-h-12 items-center justify-center rounded-xl bg-brand-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-brand-600/20 transition hover:bg-brand-700">
                     Masuk ke Sistem
                   </Link>
                 ) : isTrustedHeader ? (
@@ -108,11 +108,11 @@ export function AuthLandingPage({ currentRole }: { currentRole: Role }) {
                   </button>
                 ) : null}
                 {showRoleSelector ? (
-                  <a href="#development-role-selector" className="inline-flex min-h-12 items-center justify-center rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-700">
+                  <a href="#development-role-selector" className="inline-flex min-h-12 items-center justify-center rounded-xl bg-brand-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-brand-600/20 transition hover:bg-brand-700">
                     Pilih Role Development
                   </a>
                 ) : null}
-                <Link href="/no-access" className="inline-flex min-h-12 items-center justify-center rounded-xl px-3 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-100 hover:text-emerald-800">
+                <Link href="/no-access" className="inline-flex min-h-12 items-center justify-center rounded-xl px-3 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-100 hover:text-brand-800">
                   Lihat status akses
                 </Link>
               </div>
@@ -122,8 +122,8 @@ export function AuthLandingPage({ currentRole }: { currentRole: Role }) {
 
               <div className="mt-10 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                 {modules.map((item) => (
-                  <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 transition hover:border-emerald-200 hover:bg-emerald-50/70">
-                    <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-100 text-emerald-700">
+                  <div key={item.label} className="rounded-2xl border border-slate-200 bg-slate-50/80 p-4 transition hover:border-brand-200 hover:bg-brand-50/70">
+                    <div className="grid h-10 w-10 place-items-center rounded-xl bg-brand-100 text-brand-700">
                       <ModuleIcon name={item.icon} />
                     </div>
                     <h2 className="mt-4 text-sm font-bold text-slate-950">{item.label}</h2>
@@ -136,7 +136,7 @@ export function AuthLandingPage({ currentRole }: { currentRole: Role }) {
 
           <aside className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.07)] sm:p-7">
             <div className="flex items-center gap-3">
-              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-emerald-600 text-sm font-black tracking-tighter text-white">{APP_BRAND_INITIALS}</span>
+              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-600 text-sm font-black tracking-tighter text-white">{APP_BRAND_INITIALS}</span>
               <div>
                 <p className="text-sm font-bold text-slate-950">Status Akses</p>
                 <p className="mt-0.5 text-xs text-slate-500">Kontrol masuk aplikasi internal</p>
@@ -148,7 +148,7 @@ export function AuthLandingPage({ currentRole }: { currentRole: Role }) {
                 <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">Mode aplikasi</p>
                 <div className="mt-3 flex items-center justify-between gap-4">
                   <p className="text-lg font-bold text-slate-950">{appMode}</p>
-                  <span className="rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 text-xs font-bold text-emerald-700">{roleLabel(currentRole)}</span>
+                  <span className="rounded-full border border-brand-200 bg-brand-50 px-3 py-1 text-xs font-bold text-brand-700">{roleLabel(currentRole)}</span>
                 </div>
               </div>
 
@@ -160,7 +160,7 @@ export function AuthLandingPage({ currentRole }: { currentRole: Role }) {
               </div>
 
               {isLocalCredentials ? (
-                <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm leading-6 text-emerald-900">
+                <div className="rounded-2xl border border-brand-100 bg-brand-50 p-4 text-sm leading-6 text-brand-900">
                   <p className="font-bold">Login internal aktif</p>
                   <p className="mt-1 text-xs leading-5">Role dan permission mengikuti data user yang tersimpan di database.</p>
                 </div>
@@ -170,7 +170,7 @@ export function AuthLandingPage({ currentRole }: { currentRole: Role }) {
                   <p className="mt-1 text-xs leading-5">Operator perlu mengisi <code className="font-semibold">AUTH_SSO_LOGIN_URL</code> sebelum user dapat masuk melalui SSO.</p>
                 </div>
               ) : (
-                <div className="rounded-2xl border border-emerald-100 bg-emerald-50 p-4 text-sm leading-6 text-emerald-900">
+                <div className="rounded-2xl border border-brand-100 bg-brand-50 p-4 text-sm leading-6 text-brand-900">
                   {ssoReady ? "Login SSO siap digunakan." : "Akses halaman kerja mengikuti role aktif yang tersimpan untuk pengguna."}
                 </div>
               )}

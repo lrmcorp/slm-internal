@@ -180,10 +180,10 @@ export function ShipmentImportForm({ locations }: { locations: InvLocation[] }) 
                     <td className="px-3 py-1.5">
                       <div className="flex min-w-0 items-center gap-2">
                         <span className="shrink-0 font-mono text-[11px] text-slate-500">{p.sku}</span>
-                        {!p.exists && <span className="shrink-0 rounded bg-emerald-50 px-1 text-[10px] font-semibold text-emerald-800">baru</span>}
+                        {!p.exists && <span className="shrink-0 rounded bg-brand-50 px-1 text-[10px] font-semibold text-brand-800">baru</span>}
                         <input
                           aria-label={`Nama ${p.sku}`}
-                          className="min-w-0 flex-1 rounded border border-transparent bg-transparent px-1 py-0.5 hover:border-slate-300 focus:border-emerald-600 focus:bg-white focus:outline-none"
+                          className="min-w-0 flex-1 rounded border border-transparent bg-transparent px-1 py-0.5 hover:border-slate-300 focus:border-brand-600 focus:bg-white focus:outline-none"
                           value={p.name}
                           onChange={(e) => setOverride(p.sku, { name: e.target.value })}
                         />
@@ -228,7 +228,7 @@ export function ShipmentImportForm({ locations }: { locations: InvLocation[] }) 
       )}
 
       {result && (
-        <p className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+        <p className="rounded-lg border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-900">
           {result.created} barang baru, {result.updated} diperbarui.
           {result.stockIn ? ` Barang masuk ${result.stockIn.referenceNumber}: ${result.stockIn.items} barang.` : ""}
         </p>

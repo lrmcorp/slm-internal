@@ -7,7 +7,7 @@
  *   APP_COMPANY_NAME    nama badan usaha di kop laporan & login (default "Aneka Jaya / SLM")
  * Komponen client tidak bisa membaca env server: pakai useBrand() dari components/brand/BrandProvider.
  */
-export type AppBrand = { name: string; initials: string; title: string; companyName: string };
+export type AppBrand = { name: string; initials: string; title: string; companyName: string; accent: string | null };
 
 const read = (key: string) => (typeof process !== "undefined" ? (process.env[key] || "").trim() : "");
 
@@ -17,7 +17,8 @@ export function getAppBrand(): AppBrand {
     name,
     initials: read("APP_BRAND_INITIALS") || "SLM",
     title: read("APP_BRAND_TITLE") || `${name} Internal App`,
-    companyName: read("APP_COMPANY_NAME") || "Aneka Jaya / SLM"
+    companyName: read("APP_COMPANY_NAME") || "Aneka Jaya / SLM",
+    accent: read("APP_BRAND_ACCENT") || null
   };
 }
 

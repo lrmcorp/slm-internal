@@ -209,7 +209,7 @@ export function UserManager({ users: initial }: { users: UserRow[] }) {
                   <span
                     className={`rounded-full px-2.5 py-1 text-xs font-semibold ${
                       user.isActive
-                        ? "bg-emerald-50 text-emerald-700"
+                        ? "bg-brand-50 text-brand-700"
                         : "bg-slate-100 text-slate-500"
                     }`}
                   >
@@ -219,7 +219,7 @@ export function UserManager({ users: initial }: { users: UserRow[] }) {
                 <td className="px-5 py-4 min-w-52">
                   <p
                     className={`mb-2 text-xs font-semibold ${
-                      user.hasPassword ? "text-emerald-700" : "text-amber-700"
+                      user.hasPassword ? "text-brand-700" : "text-amber-700"
                     }`}
                   >
                     {user.hasPassword ? "Sudah diset" : "Belum diset"}

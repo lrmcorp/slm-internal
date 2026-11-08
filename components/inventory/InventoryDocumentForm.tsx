@@ -35,7 +35,7 @@ const SUBMIT_LABEL: Record<Mode, string> = {
 };
 
 export const fieldClass =
-  "min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-emerald-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-1";
+  "min-h-11 w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm focus:border-brand-600 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-1";
 
 type Props = { mode: Mode; locations: InvLocation[]; products: InvProduct[]; initialLocationId?: string; initialProductId?: string; canSetKoli?: boolean };
 
@@ -380,12 +380,12 @@ export function InventoryDocumentForm({ mode, locations, products, initialLocati
                     <span>{unit}</span>
                     <span className="whitespace-nowrap text-xs text-slate-600 md:hidden">
                       {Number.isFinite(q) ? <>= <b>{q.toLocaleString("id-ID")}</b></> : null}
-                      {mode === "opname" && diff != null && diff !== 0 ? <> (<b className={diff < 0 ? "text-red-700" : "text-emerald-800"}>{diff > 0 ? "+" : ""}{diff.toLocaleString("id-ID")}</b>)</> : null}
+                      {mode === "opname" && diff != null && diff !== 0 ? <> (<b className={diff < 0 ? "text-red-700" : "text-brand-800"}>{diff > 0 ? "+" : ""}{diff.toLocaleString("id-ID")}</b>)</> : null}
                     </span>
                   </div>
                   <div className="hidden whitespace-nowrap text-right text-sm tabular-nums md:block">
                     {Number.isFinite(q) ? <b>{q.toLocaleString("id-ID")} {unit}</b> : <span className="text-slate-500">–</span>}
-                    {mode === "opname" && diff != null ? <span className={`ml-1 font-semibold ${diff < 0 ? "text-red-700" : diff > 0 ? "text-emerald-800" : "text-slate-500"}`}>{diff > 0 ? "+" : ""}{diff.toLocaleString("id-ID")}</span> : null}
+                    {mode === "opname" && diff != null ? <span className={`ml-1 font-semibold ${diff < 0 ? "text-red-700" : diff > 0 ? "text-brand-800" : "text-slate-500"}`}>{diff > 0 ? "+" : ""}{diff.toLocaleString("id-ID")}</span> : null}
                   </div>
                   {withCost && (
                     <input aria-label={`HPP per ${unit || "satuan"} ${p?.sku ?? ""} (opsional)`} placeholder="HPP (opsional)" className={`${fieldClass} hidden md:block`} inputMode="decimal" value={row.unitCost} onChange={(e) => updateRow(i, { unitCost: e.target.value })} />

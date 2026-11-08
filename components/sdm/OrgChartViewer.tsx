@@ -100,9 +100,9 @@ export function OrgChartViewer({
         <div
           className={`group relative mb-3 rounded-md border p-3 shadow-sm transition-all ${
             matchesDept
-              ? "border-slate-200 bg-white hover:border-emerald-500/50"
+              ? "border-slate-200 bg-white hover:border-brand-500/50"
               : "border-slate-200 bg-slate-50 opacity-60"
-          } ${matchesSearch && searchQuery ? "ring-2 ring-emerald-500/60" : ""} w-72`}
+          } ${matchesSearch && searchQuery ? "ring-2 ring-brand-500/60" : ""} w-72`}
         >
           <div className="flex items-start justify-between gap-2">
             <div>
@@ -138,7 +138,7 @@ export function OrgChartViewer({
 
             <div className="flex items-center gap-2">
               {node.subordinateCount > 0 && (
-                <span className="font-semibold text-emerald-700">
+                <span className="font-semibold text-brand-700">
                   {node.subordinateCount} bawahan
                 </span>
               )}

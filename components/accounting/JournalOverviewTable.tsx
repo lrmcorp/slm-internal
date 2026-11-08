@@ -94,7 +94,7 @@ export function JournalOverviewTable({ initialJournals, accounts }: Props) {
 
         <section className="aj-surface p-5">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Nilai Terbukukan (Aktif)</p>
-          <p className="mt-2 text-2xl font-black tracking-tight text-emerald-800 font-mono tabular-nums">
+          <p className="mt-2 text-2xl font-black tracking-tight text-brand-800 font-mono tabular-nums">
             {formatCurrency(summary.totalValue)}
           </p>
           <p className="mt-3 text-xs text-slate-500">Akumulasi debit jurnal berstatus POSTED</p>
@@ -209,7 +209,7 @@ export function JournalOverviewTable({ initialJournals, accounts }: Props) {
                         <span
                           className={`inline-flex items-center rounded px-2 py-0.5 text-[11px] font-semibold ${
                             j.status === "POSTED"
-                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              ? "bg-brand-50 text-brand-700 border border-brand-200"
                               : "bg-amber-50 text-amber-800 border border-amber-200"
                           }`}
                         >

@@ -109,7 +109,7 @@ export function ReconciliationView({ initialReport, employees }: Props) {
       <section
         className={`aj-surface p-5 border-l-4 ${
           report.isOverallReconciled
-            ? "border-l-emerald-600 bg-emerald-50/40"
+            ? "border-l-brand-600 bg-brand-50/40"
             : "border-l-amber-600 bg-amber-50/40"
         }`}
       >
@@ -118,7 +118,7 @@ export function ReconciliationView({ initialReport, employees }: Props) {
             <div className="flex items-center gap-2">
               <span
                 className={`text-base font-bold ${
-                  report.isOverallReconciled ? "text-emerald-900" : "text-amber-900"
+                  report.isOverallReconciled ? "text-brand-900" : "text-amber-900"
                 }`}
               >
                 {report.isOverallReconciled
@@ -128,7 +128,7 @@ export function ReconciliationView({ initialReport, employees }: Props) {
               <span
                 className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold ${
                   report.isOverallReconciled
-                    ? "bg-emerald-100 text-emerald-800 border border-emerald-300"
+                    ? "bg-brand-100 text-brand-800 border border-brand-300"
                     : "bg-amber-100 text-amber-800 border border-amber-300"
                 }`}
               >
@@ -230,13 +230,13 @@ export function ReconciliationView({ initialReport, employees }: Props) {
                   <tr key={item.id} className="border-t border-slate-100">
                     <td className="px-3 py-2 tabular-nums">{item.expenseDate}</td>
                     <td className="max-w-[320px] truncate px-3 py-2" title={`${item.vendorName} · ${item.description}`}>
-                      <Link href={`/pengeluaran/${item.id}`} className="font-semibold text-slate-900 hover:text-emerald-800 hover:underline">{item.description || item.category}</Link>
+                      <Link href={`/pengeluaran/${item.id}`} className="font-semibold text-slate-900 hover:text-brand-800 hover:underline">{item.description || item.category}</Link>
                       <span className="ml-1.5 text-xs text-slate-500">{item.vendorName}</span>
                     </td>
                     <td className="px-3 py-2 text-right tabular-nums">{formatCurrency(item.amount)}</td>
                     <td className="px-3 py-2"><span className="font-mono text-xs">{item.accountCode}</span> {item.accountName}</td>
                     <td className="px-3 py-2 text-xs">
-                      {item.blockedReason ? <span className="text-amber-800">{item.blockedReason}</span> : <span className="font-semibold text-emerald-800">Siap</span>}
+                      {item.blockedReason ? <span className="text-amber-800">{item.blockedReason}</span> : <span className="font-semibold text-brand-800">Siap</span>}
                     </td>
                   </tr>
                 ))}
@@ -302,7 +302,7 @@ export function ReconciliationView({ initialReport, employees }: Props) {
                         item.isReconciled
                           ? "text-slate-500"
                           : item.difference > 0
-                          ? "text-emerald-700"
+                          ? "text-brand-700"
                           : "text-red-700"
                       }
                     >
@@ -313,7 +313,7 @@ export function ReconciliationView({ initialReport, employees }: Props) {
                     <span
                       className={`inline-flex px-2 py-0.5 rounded text-[11px] font-bold ${
                         item.isReconciled
-                          ? "bg-emerald-100 text-emerald-800"
+                          ? "bg-brand-100 text-brand-800"
                           : "bg-red-100 text-red-800"
                       }`}
                     >
@@ -323,7 +323,7 @@ export function ReconciliationView({ initialReport, employees }: Props) {
                   <td className="py-3 px-3 text-center">
                     <Link
                       href={`/akuntansi/buku-besar?account=${item.accountCode}`}
-                      className="text-emerald-600 hover:text-emerald-800 font-semibold underline"
+                      className="text-brand-600 hover:text-brand-800 font-semibold underline"
                     >
                       Buku Besar
                     </Link>
@@ -349,7 +349,7 @@ export function ReconciliationView({ initialReport, employees }: Props) {
         </div>
 
         {report.legacyAuditItems.length === 0 ? (
-          <div className="rounded border border-emerald-200 bg-emerald-50/50 p-6 text-center text-xs text-emerald-800">
+          <div className="rounded border border-brand-200 bg-brand-50/50 p-6 text-center text-xs text-brand-800">
             ✓ Seluruh pengeluaran historis telah terklasifikasi dengan benar. Tidak ada antrean review manual.
           </div>
         ) : (

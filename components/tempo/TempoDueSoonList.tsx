@@ -63,7 +63,7 @@ export async function TempoDueSoonList({ page, keyword }: { page: number; keywor
                         href={`https://wa.me/${contacts.get(row.id)?.phone}?text=${encodeURIComponent(reminderText(row.customerName, contacts.get(row.id)?.nota ?? row.salesId, row.dueDate))}`}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex min-h-11 items-center rounded-lg bg-emerald-700 px-3 text-sm font-semibold text-white hover:bg-emerald-800"
+                        className="inline-flex min-h-11 items-center rounded-lg bg-brand-700 px-3 text-sm font-semibold text-white hover:bg-brand-800"
                       >
                         WhatsApp
                       </a>

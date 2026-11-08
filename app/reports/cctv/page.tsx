@@ -72,7 +72,7 @@ export default async function CctvReportsMultiTabPage({ searchParams }: Props) {
       <div className="mb-6 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div>
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-100 shrink-0">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-700 border border-brand-100 shrink-0">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
               </svg>
@@ -105,7 +105,7 @@ export default async function CctvReportsMultiTabPage({ searchParams }: Props) {
           href={pageHref(params, { tab: "outbound", page: 1 })}
           className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
             activeTab === "outbound"
-              ? "bg-emerald-600 text-white shadow-xs"
+              ? "bg-brand-600 text-white shadow-xs"
               : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
           }`}
         >
@@ -119,7 +119,7 @@ export default async function CctvReportsMultiTabPage({ searchParams }: Props) {
           href={pageHref(params, { tab: "anomalies", page: 1 })}
           className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
             activeTab === "anomalies"
-              ? "bg-emerald-600 text-white shadow-xs"
+              ? "bg-brand-600 text-white shadow-xs"
               : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
           }`}
         >
@@ -133,7 +133,7 @@ export default async function CctvReportsMultiTabPage({ searchParams }: Props) {
           href={pageHref(params, { tab: "cameras", page: 1 })}
           className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-bold transition-all ${
             activeTab === "cameras"
-              ? "bg-emerald-600 text-white shadow-xs"
+              ? "bg-brand-600 text-white shadow-xs"
               : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
           }`}
         >
@@ -156,7 +156,7 @@ export default async function CctvReportsMultiTabPage({ searchParams }: Props) {
               <p className="mt-2 text-2xl font-black text-slate-900 sm:text-3xl">
                 {outboundData.summary.totalOutboundPackages.toLocaleString("id-ID")}
               </p>
-              <p className="mt-1 text-[11px] text-emerald-600 font-semibold flex items-center gap-1">
+              <p className="mt-1 text-[11px] text-brand-600 font-semibold flex items-center gap-1">
                 <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                 </svg>
@@ -193,8 +193,8 @@ export default async function CctvReportsMultiTabPage({ searchParams }: Props) {
               <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                 Status Verifikasi Visual
               </p>
-              <p className="mt-2 text-2xl font-black text-emerald-700 sm:text-3xl">100%</p>
-              <p className="mt-1 text-[11px] text-emerald-600 font-semibold">
+              <p className="mt-2 text-2xl font-black text-brand-700 sm:text-3xl">100%</p>
+              <p className="mt-1 text-[11px] text-brand-600 font-semibold">
                 Tervalidasi AI Meja Packing
               </p>
             </div>
@@ -264,7 +264,7 @@ export default async function CctvReportsMultiTabPage({ searchParams }: Props) {
                           {sale ? (
                             <Link
                               href={`/penjualan/${sale.id}`}
-                              className="font-mono text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:underline"
+                              className="font-mono text-xs font-bold text-brand-600 hover:text-brand-700 hover:underline"
                             >
                               {sale.transactionNumber || item.invoiceNumber || sale.id}
                             </Link>
@@ -343,8 +343,8 @@ export default async function CctvReportsMultiTabPage({ searchParams }: Props) {
                         </td>
 
                         <td className="px-5 py-4 text-center whitespace-nowrap">
-                          <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-1 text-xs font-bold text-emerald-700 border border-emerald-200">
-                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-600 animate-pulse" />
+                          <span className="inline-flex items-center gap-1 rounded-full bg-brand-50 px-2.5 py-1 text-xs font-bold text-brand-700 border border-brand-200">
+                            <span className="h-1.5 w-1.5 rounded-full bg-brand-600 animate-pulse" />
                             Terverifikasi
                           </span>
                         </td>
@@ -385,7 +385,7 @@ export default async function CctvReportsMultiTabPage({ searchParams }: Props) {
                 {page < outboundData.totalPages && (
                   <Link
                     href={pageHref(params, { tab: "outbound", page: page + 1 })}
-                    className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
+                    className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700"
                   >
                     Selanjutnya →
                   </Link>
@@ -517,7 +517,7 @@ export default async function CctvReportsMultiTabPage({ searchParams }: Props) {
                   {anomaliesData.items.length === 0 && (
                     <tr>
                       <td colSpan={6} className="px-5 py-12 text-center text-slate-500">
-                        <svg className="w-10 h-10 text-emerald-500 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg className="w-10 h-10 text-brand-500 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <p className="font-medium text-slate-700">Tidak ada catatan anomali atau resi bermasalah.</p>
@@ -548,7 +548,7 @@ export default async function CctvReportsMultiTabPage({ searchParams }: Props) {
                 {page < anomaliesData.totalPages && (
                   <Link
                     href={pageHref(params, { tab: "anomalies", page: page + 1 })}
-                    className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-emerald-700"
+                    className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-700"
                   >
                     Selanjutnya →
                   </Link>
@@ -582,9 +582,9 @@ export default async function CctvReportsMultiTabPage({ searchParams }: Props) {
                     </svg>
                   </div>
                   <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-bold ${
-                    cam.isOnline ? "bg-emerald-50 text-emerald-700 border border-emerald-200" : "bg-slate-100 text-slate-500 border border-slate-200"
+                    cam.isOnline ? "bg-brand-50 text-brand-700 border border-brand-200" : "bg-slate-100 text-slate-500 border border-slate-200"
                   }`}>
-                    <span className={`h-1.5 w-1.5 rounded-full ${cam.isOnline ? "bg-emerald-500 animate-pulse" : "bg-slate-400"}`} />
+                    <span className={`h-1.5 w-1.5 rounded-full ${cam.isOnline ? "bg-brand-500 animate-pulse" : "bg-slate-400"}`} />
                     {cam.isOnline ? "Aktif / Online" : "Standby"}
                   </span>
                 </div>
@@ -595,7 +595,7 @@ export default async function CctvReportsMultiTabPage({ searchParams }: Props) {
                 <div className="mt-4 grid grid-cols-2 gap-2 text-xs">
                   <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100">
                     <p className="text-[10px] uppercase font-bold text-slate-400">Hari Ini</p>
-                    <p className="text-lg font-black text-emerald-700 mt-0.5">{cam.totalToday} paket</p>
+                    <p className="text-lg font-black text-brand-700 mt-0.5">{cam.totalToday} paket</p>
                   </div>
                   <div className="rounded-xl bg-slate-50 p-2.5 border border-slate-100">
                     <p className="text-[10px] uppercase font-bold text-slate-400">Total Akumulasi</p>

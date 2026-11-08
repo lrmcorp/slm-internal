@@ -205,7 +205,7 @@ export function SavingsManager({
           <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
             Total Saldo Tersimpan
           </p>
-          <p className="mt-2 text-2xl font-bold tracking-tight text-emerald-700 tabular-nums">
+          <p className="mt-2 text-2xl font-bold tracking-tight text-brand-700 tabular-nums">
             {formatCurrency(summary.totalBalance)}
           </p>
           <p className="mt-1 text-xs text-slate-500">Kewajiban internal perusahaan (COA 2-1003)</p>
@@ -300,14 +300,14 @@ export function SavingsManager({
                         {acc.employee.department}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-right font-bold text-emerald-700 tabular-nums">
+                    <td className="px-4 py-3 text-right font-bold text-brand-700 tabular-nums">
                       {formatCurrency(Number(acc.balance))}
                     </td>
                     <td className="px-4 py-3 text-center">
                       <span
                         className={`inline-block px-2 py-0.5 rounded text-[10px] font-semibold uppercase ${
                           acc.isActive
-                            ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                            ? "bg-brand-50 text-brand-700 border border-brand-200"
                             : "bg-slate-100 text-slate-500"
                         }`}
                       >
@@ -390,7 +390,7 @@ export function SavingsManager({
                         <span
                           className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
                             isDeposit
-                              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                              ? "bg-brand-50 text-brand-700 border border-brand-200"
                               : "bg-rose-50 text-rose-700 border border-rose-200"
                           }`}
                         >
@@ -399,7 +399,7 @@ export function SavingsManager({
                       </td>
                       <td
                         className={`px-4 py-3 text-right font-bold tabular-nums ${
-                          isDeposit ? "text-emerald-700" : "text-rose-600"
+                          isDeposit ? "text-brand-700" : "text-rose-600"
                         }`}
                       >
                         {isDeposit ? "+" : "-"} {formatCurrency(Number(trx.amount))}

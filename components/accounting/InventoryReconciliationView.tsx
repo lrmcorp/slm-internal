@@ -113,7 +113,7 @@ export function InventoryReconciliationView({ report: r, canManage }: { report: 
           <h3 className="font-semibold text-slate-900">Usulan koreksi historis</h3>
           <div className="flex gap-1 text-sm">
             {(["EQUIPMENT", "MERCHANDISE"] as const).map((k) => (
-              <button key={k} onClick={() => setKind(k)} className={`min-h-10 rounded-lg px-3 font-semibold ${kind === k ? "bg-emerald-700 text-white" : "text-slate-700 hover:bg-slate-100"}`}>
+              <button key={k} onClick={() => setKind(k)} className={`min-h-10 rounded-lg px-3 font-semibold ${kind === k ? "bg-brand-700 text-white" : "text-slate-700 hover:bg-slate-100"}`}>
                 {k === "EQUIPMENT" ? "Peralatan → aset tetap" : "Barang dagang → persediaan"} ({openCount(k)})
               </button>
             ))}

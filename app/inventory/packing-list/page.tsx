@@ -17,7 +17,7 @@ export default async function PackingListImportPage() {
     <AppShell>
       <InventoryHeader
         title="Import Packing List"
-        description={<>Unggah packing list supplier. Kode barang, nama, isi pcs, harga RMB dan CBM dibaca dari file, modal dihitung otomatis. Cek dulu tabelnya, ubah isi pcs atau nama bila perlu, lalu simpan. <Link className="text-emerald-800 underline" href="/inventory/produk">Kurs RMB & tarif CBM</Link></>}
+        description={<>Unggah packing list supplier. Kode barang, nama, isi pcs, harga RMB dan CBM dibaca dari file, modal dihitung otomatis. Cek dulu tabelnya, ubah isi pcs atau nama bila perlu, lalu simpan. <Link className="text-brand-800 underline" href="/inventory/produk">Kurs RMB & tarif CBM</Link></>}
       />
       <ShipmentImportForm locations={locations} />
     </AppShell>

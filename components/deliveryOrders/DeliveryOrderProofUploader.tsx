@@ -319,8 +319,8 @@ export function DeliveryOrderProofUploader({
           Foto Resi / Bukti Pengiriman {required ? <span className="text-rose-600 font-bold ml-0.5">* Wajib</span> : ""} {photos.length > 0 ? `(${photos.length} Foto)` : ""}
         </label>
         {photos.length > 0 && (
-          <span className="inline-flex items-center gap-1 text-[11px] text-emerald-700 font-medium">
-            <svg className="w-3.5 h-3.5 text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <span className="inline-flex items-center gap-1 text-[11px] text-brand-700 font-medium">
+            <svg className="w-3.5 h-3.5 text-brand-600 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
             <span>Tersimpan {photos.length} foto</span>
@@ -335,7 +335,7 @@ export function DeliveryOrderProofUploader({
           type="button"
           onClick={handleSmartCameraClick}
           disabled={disabled || isUploading}
-          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700 active:bg-emerald-800 disabled:opacity-50 transition-colors shadow-xs"
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-brand-600 text-white hover:bg-brand-700 active:bg-brand-800 disabled:opacity-50 transition-colors shadow-xs"
           title="Buka kamera perangkat untuk mengambil foto resi atau surat jalan"
         >
           <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -362,8 +362,8 @@ export function DeliveryOrderProofUploader({
 
       {/* Uploading Status Banner */}
       {isUploading && (
-        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 animate-pulse">
-          <svg className="w-4 h-4 animate-spin text-emerald-600 shrink-0" fill="none" viewBox="0 0 24 24">
+        <div className="flex items-center gap-2 p-2.5 rounded-lg bg-brand-50 border border-brand-200 text-xs text-brand-800 animate-pulse">
+          <svg className="w-4 h-4 animate-spin text-brand-600 shrink-0" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
           </svg>
@@ -399,7 +399,7 @@ export function DeliveryOrderProofUploader({
                     href={photoUrl}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex items-center gap-1 font-semibold text-emerald-700 hover:text-emerald-800 hover:underline"
+                    className="inline-flex items-center gap-1 font-semibold text-brand-700 hover:text-brand-800 hover:underline"
                     title="Buka foto ukuran penuh di tab baru"
                   >
                     <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -431,7 +431,7 @@ export function DeliveryOrderProofUploader({
                 type="button"
                 onClick={handleSmartCameraClick}
                 disabled={isUploading}
-                className="flex aspect-[4/3] flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/60 p-2 text-center text-slate-500 hover:border-emerald-500 hover:bg-emerald-50/30 hover:text-emerald-700 transition-all cursor-pointer"
+                className="flex aspect-[4/3] flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/60 p-2 text-center text-slate-500 hover:border-brand-500 hover:bg-brand-50/30 hover:text-brand-700 transition-all cursor-pointer"
                 title="Ambil foto tambahan dengan kamera"
               >
                 <svg className="w-5 h-5 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -480,7 +480,7 @@ export function DeliveryOrderProofUploader({
           <div className="w-full max-w-lg rounded-2xl bg-white p-4 shadow-xl space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shrink-0" />
+                <span className="w-2.5 h-2.5 rounded-full bg-brand-500 shrink-0" />
                 <h3 className="text-sm font-bold text-slate-800">Kamera Bukti Pengiriman</h3>
               </div>
               <button
@@ -517,7 +517,7 @@ export function DeliveryOrderProofUploader({
                         handleCloseCameraModal();
                         nativeCameraInputRef.current?.click();
                       }}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-emerald-600 text-white hover:bg-emerald-700"
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-brand-600 text-white hover:bg-brand-700"
                     >
                       Kamera HP (Native)
                     </button>
@@ -560,7 +560,7 @@ export function DeliveryOrderProofUploader({
                     type="button"
                     onClick={handleCaptureSnapshot}
                     disabled={!!cameraError}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-emerald-600 text-white hover:bg-emerald-700 active:scale-95 transition-all shadow-md disabled:opacity-50"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-brand-600 text-white hover:bg-brand-700 active:scale-95 transition-all shadow-md disabled:opacity-50"
                   >
                     <span className="w-3 h-3 rounded-full bg-white animate-pulse" />
                     Jepret Foto
@@ -586,7 +586,7 @@ export function DeliveryOrderProofUploader({
                   <button
                     type="button"
                     onClick={handleConfirmCapturedPhoto}
-                    className="inline-flex items-center gap-1.5 px-5 py-2.5 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-md"
+                    className="inline-flex items-center gap-1.5 px-5 py-2.5 text-xs font-bold text-white bg-brand-600 hover:bg-brand-700 rounded-xl shadow-md"
                   >
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />

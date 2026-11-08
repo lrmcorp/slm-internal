@@ -21,7 +21,7 @@ export function TipeManager({ types: initial, rekenings }: Props) {
   const rekeningsForTipe = (id: string) => rekenings.filter((r) => r.tipeIds.includes(id));
   const rekeningNamesForTipe = (id: string) => rekeningsForTipe(id).map((r) => r.name).join(", ") || "-";
   const statusBadge = (active: boolean) => (
-    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${active ? "bg-emerald-50 text-emerald-700" : "bg-slate-100 text-slate-500"}`}>
+    <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${active ? "bg-brand-50 text-brand-700" : "bg-slate-100 text-slate-500"}`}>
       {active ? "Aktif" : "Nonaktif"}
     </span>
   );
@@ -109,7 +109,7 @@ export function TipeManager({ types: initial, rekenings }: Props) {
                 className={`mt-4 min-h-9 w-full rounded-sm border px-3 py-2 text-sm font-semibold transition-colors cursor-pointer ${
                   tipe.isActive
                     ? "border-rose-300 bg-white text-rose-700 hover:bg-rose-50"
-                    : "border-neutral-300 bg-white text-emerald-700 hover:bg-emerald-50"
+                    : "border-neutral-300 bg-white text-brand-700 hover:bg-brand-50"
                 }`}
               >
                 {tipe.isActive ? "Nonaktifkan" : "Aktifkan"}
@@ -141,7 +141,7 @@ export function TipeManager({ types: initial, rekenings }: Props) {
                       type="button"
                       onClick={() => setTipeToToggle({ tipe, targetStatus: !tipe.isActive })}
                       className={`text-sm font-semibold cursor-pointer transition-colors ${
-                        tipe.isActive ? "text-rose-600 hover:text-rose-800" : "text-emerald-700 hover:text-emerald-800"
+                        tipe.isActive ? "text-rose-600 hover:text-rose-800" : "text-brand-700 hover:text-brand-800"
                       }`}
                     >
                       {tipe.isActive ? "Nonaktifkan" : "Aktifkan"}

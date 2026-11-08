@@ -157,7 +157,7 @@ export function IncomeStatementViewer({ initialReport, tipeOptions }: Props) {
 
               <div className="flex justify-between py-2.5 font-bold text-slate-900 border-t border-slate-200">
                 <span>TOTAL PENDAPATAN BERSIH</span>
-                <span className="tabular-nums font-mono text-emerald-700">
+                <span className="tabular-nums font-mono text-brand-700">
                   {formatCurrency(report.revenue.netRevenue)}
                 </span>
               </div>
@@ -196,7 +196,7 @@ export function IncomeStatementViewer({ initialReport, tipeOptions }: Props) {
             </div>
             <span
               className={`tabular-nums font-mono ${
-                report.grossProfit >= 0 ? "text-emerald-700" : "text-rose-600"
+                report.grossProfit >= 0 ? "text-brand-700" : "text-rose-600"
               }`}
             >
               {formatCurrency(report.grossProfit)}
@@ -283,14 +283,14 @@ export function IncomeStatementViewer({ initialReport, tipeOptions }: Props) {
           <div
             className={`rounded-md border p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
               isNetProfit
-                ? "border-emerald-500/40 bg-emerald-50"
+                ? "border-brand-500/40 bg-brand-50"
                 : "border-rose-500/40 bg-rose-50"
             }`}
           >
             <div>
               <p
                 className={`text-xs font-bold uppercase tracking-widest ${
-                  isNetProfit ? "text-emerald-700" : "text-rose-700"
+                  isNetProfit ? "text-brand-700" : "text-rose-700"
                 }`}
               >
                 {isNetProfit ? "LABA BERSIH OPERASIONAL" : "RUGI BERSIH OPERASIONAL"}
@@ -303,7 +303,7 @@ export function IncomeStatementViewer({ initialReport, tipeOptions }: Props) {
             <div className="text-right">
               <span
                 className={`text-2xl font-bold font-mono tracking-tight tabular-nums ${
-                  isNetProfit ? "text-emerald-700" : "text-rose-700"
+                  isNetProfit ? "text-brand-700" : "text-rose-700"
                 }`}
               >
                 {formatCurrency(report.netOperatingIncome)}

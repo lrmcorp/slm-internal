@@ -225,7 +225,7 @@ export function PurchaseOrderModal({ isOpen, onClose, suppliers, onSuccess }: Pr
               <button
                 type="button"
                 onClick={handleAddItem}
-                className="text-xs font-semibold text-emerald-700 hover:text-emerald-900"
+                className="text-xs font-semibold text-brand-700 hover:text-brand-900"
               >
                 + Tambah Baris Barang
               </button>
@@ -340,7 +340,7 @@ export function PurchaseOrderModal({ isOpen, onClose, suppliers, onSuccess }: Pr
                   {currency} {totalOriginal.toLocaleString("en-US", { minimumFractionDigits: 2 })}
                 </span>
               </div>
-              <div className="text-base font-bold text-emerald-800 font-sans">
+              <div className="text-base font-bold text-brand-800 font-sans">
                 Estimasi IDR: Rp {totalIdr.toLocaleString("id-ID")}
               </div>
             </div>
