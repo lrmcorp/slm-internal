@@ -8,6 +8,7 @@ import { TransactionCancelButton } from "@/components/transactions/TransactionCa
 import { formatJakartaDateTime } from "@/lib/date/jakarta";
 import { parseReceiptPhotos } from "@/lib/deliveryOrders/photos";
 import { approvalLabel } from "@/lib/sales/approvalLabel";
+import { waNumber } from "@/lib/tempo/whatsapp";
 
 type Props = {
   sales: Sale[];
@@ -498,6 +499,11 @@ export function SalesHistoryList({
                 <Link className="grid h-9 min-w-0 flex-1 place-items-center rounded-md border border-brand-300 bg-brand-50 text-xs font-bold text-brand-800" href={`/print/sales/${sale.id}/continuous`}>
                   Cetak
                 </Link>
+                {waNumber(sale.customerPhone) && (
+                  <a className="grid h-9 min-w-0 flex-1 place-items-center rounded-md border border-slate-300 bg-white text-xs font-bold text-slate-700" href={`https://wa.me/${waNumber(sale.customerPhone)}`} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp ${sale.customerName}`}>
+                    WhatsApp
+                  </a>
+                )}
                 {canManage && sale.source !== "MJ" && sale.approvalStatus !== "cancelled" && (
                   <>
                     <Link className="grid h-9 min-w-0 flex-1 place-items-center rounded-md border border-slate-300 bg-white text-xs font-bold text-slate-700" href={`/penjualan/${sale.id}/edit`}>
@@ -586,6 +592,11 @@ export function SalesHistoryList({
                         >
                           Cetak{sale.isPrinted && <span className="sr-only"> (sudah dicetak)</span>}
                         </Link>
+                        {waNumber(sale.customerPhone) && (
+                          <a className={rowLink} href={`https://wa.me/${waNumber(sale.customerPhone)}`} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp ${sale.customerName}`}>
+                            WA
+                          </a>
+                        )}
                         {editable && (
                           <Link className={rowLink} href={`/penjualan/${sale.id}/edit`}>
                             Edit

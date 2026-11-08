@@ -44,6 +44,8 @@ export const productSchema = z.object({
   ownership: z.enum(["OWN", "CONSIGNMENT"]).optional(),
   consignorName: optionalText(160),
   sellingPrice: z.coerce.number().min(0).default(0),
+  /** Harga promo Katalog Online per satuan (sebelum markup MJ); null = tanpa promo. */
+  katalogPromoPrice: z.coerce.number().positive("Harga promo harus lebih dari 0").optional().nullable(),
   erpProductId: z.coerce.number().int().positive().optional().nullable(),
   isActive: z.boolean().default(true),
   notes: optionalText(1000),

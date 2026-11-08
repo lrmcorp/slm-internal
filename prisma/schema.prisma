@@ -1324,6 +1324,8 @@ model InventoryProduct {
   /// Tarif CBM khusus barang ini (Rp per CBM); kosong = tarif CBM global.
   cbmRateIdr   Decimal? @db.Decimal(18, 2)
   sellingPrice Decimal  @default(0) @db.Decimal(18, 2)
+  /// Harga promo khusus Katalog Online (sebelum markup MJ). Kosong = tanpa promo.
+  katalogPromoPrice Decimal? @db.Decimal(18, 2)
   erpProductId Int?     @unique
   /// Foto barang (path /uploads/products/...), diunggah dari Master Barang / Stok.
   photoUrl     String?

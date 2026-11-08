@@ -10,7 +10,7 @@ import { defaultPcsPerUnit } from "@/lib/inventory/costCalculator";
 
 export type ProductRow = {
   id: string; sku: string; name: string; category: string | null; brand: string | null; unit: string;
-  unitsPerKoli: number | null; minimumStock: number; costPrice: number; priceRmb: number | null; extraCostIdr: number; sellingPrice: number;
+  unitsPerKoli: number | null; minimumStock: number; costPrice: number; priceRmb: number | null; extraCostIdr: number; sellingPrice: number; katalogPromoPrice?: number | null;
   cbmPerUnit?: number | null; cbmRateIdr?: number | null; pcsPerUnit?: number | null;
   ownership?: string; consignorName?: string | null;
   totalQuantity: number; totalKoliText: string; erpProductId: number | null;
@@ -82,7 +82,7 @@ function ProductEditor({ row, rate, cbmRate, onDone }: { row: ProductRow; rate: 
     pcsPerUnit: s(initialPcs),
     // Harga RMB diisi per pcs; yang disimpan per satuan (per pcs × isi pcs).
     rmbPerPcs: row.priceRmb != null && initialPcs ? s(Math.round((row.priceRmb / initialPcs) * 10000) / 10000) : "",
-    priceRmb: s(row.priceRmb), extraCostIdr: s(row.extraCostIdr || null), costPrice: s(row.costPrice), sellingPrice: s(row.sellingPrice), minimumStock: s(row.minimumStock), cbmPerUnit: s(row.cbmPerUnit), cbmRateIdr: s(row.cbmRateIdr), ownership: row.ownership ?? "OWN", consignorName: row.consignorName ?? "" });
+    priceRmb: s(row.priceRmb), extraCostIdr: s(row.extraCostIdr || null), costPrice: s(row.costPrice), sellingPrice: s(row.sellingPrice), katalogPromoPrice: s(row.katalogPromoPrice), minimumStock: s(row.minimumStock), cbmPerUnit: s(row.cbmPerUnit), cbmRateIdr: s(row.cbmRateIdr), ownership: row.ownership ?? "OWN", consignorName: row.consignorName ?? "" });
   const [busy, setBusy] = useState(false);
   const pcs = Number(f.pcsPerUnit) > 0 ? Number(f.pcsPerUnit) : null;
   const rmbPerPcs = f.rmbPerPcs.trim() === "" ? null : Number(f.rmbPerPcs.replace(",", "."));
@@ -110,6 +110,7 @@ function ProductEditor({ row, rate, cbmRate, onDone }: { row: ProductRow; rate: 
         consignorName: f.ownership === "CONSIGNMENT" ? f.consignorName.trim() || undefined : undefined,
         costPrice: Number(f.costPrice) || 0,
         sellingPrice: Number(f.sellingPrice) || 0,
+        katalogPromoPrice: f.katalogPromoPrice.trim() === "" ? null : Number(f.katalogPromoPrice),
         minimumStock: Number(f.minimumStock) || 0
       };
       const res = await fetch(`/api/inventory/products/${row.id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
@@ -139,6 +140,7 @@ function ProductEditor({ row, rate, cbmRate, onDone }: { row: ProductRow; rate: 
         {field(`Biaya lain per ${f.unit || "Lusin"} (Rp)`, "extraCostIdr", { inputMode: "decimal", placeholder: "0" })}
         {field(`Modal per ${f.unit || "Lusin"} (Rp)`, "costPrice", { inputMode: "decimal", disabled: previewCost != null })}
         {field(`Harga Jual per ${f.unit || "Lusin"} (Rp)`, "sellingPrice", { inputMode: "decimal" })}
+        {field(`Harga promo katalog per ${f.unit || "Lusin"} (Rp)`, "katalogPromoPrice", { inputMode: "decimal", placeholder: "kosong = tanpa promo" })}
         <label className="space-y-1 text-xs font-semibold text-slate-700"><span>Kepemilikan</span>
           <select className={input} value={f.ownership} onChange={(e) => setF({ ...f, ownership: e.target.value })}>
             <option value="OWN">Milik SLM</option>

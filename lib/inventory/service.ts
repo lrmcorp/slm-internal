@@ -239,10 +239,15 @@ export async function listProducts(options: { keyword?: string; page?: number; p
     prisma.inventoryProduct.count({ where }),
     prisma.inventoryProduct.findMany({ where, orderBy: { name: "asc" }, skip: (page - 1) * pageSize, take: pageSize, include: { balances: { select: { quantity: true } } } })
   ]);
+  // Tanggal barang masuk terakhir (penerimaan pembelian atau stok masuk) untuk bagian "Baru masuk stok" di katalog.
+  const lastIn = rows.length
+    ? await prisma.inventoryMovement.groupBy({ by: ["productId"], where: { productId: { in: rows.map((r) => r.id) }, type: { in: ["PURCHASE_RECEIPT", "ADJUSTMENT_IN"] }, quantity: { gt: 0 } }, _max: { movementDate: true } })
+    : [];
+  const lastInById = new Map(lastIn.map((r) => [r.productId, r._max.movementDate]));
   return {
     data: rows.map(({ balances, ...p }) => {
       const totalQuantity = round2(balances.reduce((s, b) => s + num(b.quantity), 0));
-      return { ...serializeProduct(p), totalQuantity, totalKoliText: koliInfo(totalQuantity, p.unitsPerKoli, p.unit).koliText };
+      return { ...serializeProduct(p), totalQuantity, totalKoliText: koliInfo(totalQuantity, p.unitsPerKoli, p.unit).koliText, lastStockInAt: lastInById.get(p.id)?.toISOString() ?? null };
     }),
     meta: { page, pageSize, total, totalPages: Math.max(1, Math.ceil(total / pageSize)) }
   };
@@ -311,9 +316,10 @@ export async function updateProduct(idOrSku: string, input: Partial<Omit<Product
   }));
 }
 
-function serializeProduct<T extends { minimumStock: Prisma.Decimal; costPrice: Prisma.Decimal; sellingPrice: Prisma.Decimal; unitsPerKoli: Prisma.Decimal | null; priceRmb: Prisma.Decimal | null; extraCostIdr: Prisma.Decimal; cbmPerUnit?: Prisma.Decimal | null; cbmRateIdr?: Prisma.Decimal | null }>(p: T) {
+function serializeProduct<T extends { minimumStock: Prisma.Decimal; costPrice: Prisma.Decimal; sellingPrice: Prisma.Decimal; unitsPerKoli: Prisma.Decimal | null; priceRmb: Prisma.Decimal | null; extraCostIdr: Prisma.Decimal; cbmPerUnit?: Prisma.Decimal | null; cbmRateIdr?: Prisma.Decimal | null; katalogPromoPrice?: Prisma.Decimal | null }>(p: T) {
   return {
     ...p,
+    katalogPromoPrice: p.katalogPromoPrice == null ? null : num(p.katalogPromoPrice),
     cbmPerUnit: p.cbmPerUnit == null ? null : num(p.cbmPerUnit),
     cbmRateIdr: p.cbmRateIdr == null ? null : num(p.cbmRateIdr),
     minimumStock: num(p.minimumStock),
