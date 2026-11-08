@@ -4,7 +4,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { InlineNameForm } from "@/components/inventory/InlineNameForm";
 import { ProductPhoto } from "@/components/inventory/ProductPhoto";
 import { InventoryHeader, Pager, filterButton, filterInput, fmtQty } from "@/components/inventory/ui";
-import { can } from "@/lib/auth/roles";
+import { can, canEditProductPhoto } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { stockMatrix } from "@/lib/inventory/service";
 import { inventorySource, stockViewType } from "@/lib/inventory/config";
@@ -18,6 +18,7 @@ export default async function InventoryStockPage({ searchParams }: { searchParam
   const params = await searchParams;
   const canMovement = can(role, "inventory.movement.view");
   const canEditMaster = can(role, "inventory.master");
+  const canEditPhoto = canEditProductPhoto(role);
   const canAdjust = can(role, "inventory.adjust");
   const missingName = canEditMaster && params.missing === "1";
   const typeParam = stockViewType(params.type, role);
@@ -69,6 +70,7 @@ export default async function InventoryStockPage({ searchParams }: { searchParam
                 : [["Gudang", row.warehouseTotal, row.warehouseKoliText], ["Toko", row.storeTotal, row.storeKoliText]]}
             canMovement={canMovement}
             canEditMaster={canEditMaster}
+            canEditPhoto={canEditPhoto}
             canAdjust={canAdjust}
           />
         ))}
@@ -97,7 +99,7 @@ export default async function InventoryStockPage({ searchParams }: { searchParam
               return (
                 <tr key={row.productId} className={`border-t border-slate-100 ${row.lowStock ? "bg-red-50" : ""}`}>
                   <td className={`sticky left-0 z-10 px-3 py-2 ${row.lowStock ? "bg-red-50" : "bg-white"}`}>
-                    <ProductCell row={row} canMovement={canMovement} canEditMaster={canEditMaster} canAdjust={canAdjust} />
+                    <ProductCell row={row} canMovement={canMovement} canEditMaster={canEditMaster} canEditPhoto={canEditPhoto} canAdjust={canAdjust} />
                   </td>
                   {typeParam !== "ALL" && (
                     <td className={`whitespace-nowrap px-3 py-2 text-right font-bold tabular-nums ${row.lowStock ? "text-red-800" : "text-slate-900"}`}>
@@ -145,13 +147,13 @@ function LowChip() {
 type MatrixRow = { productId: string; sku: string; name: string; photoUrl?: string | null; category: string | null; hasName: boolean; unit: string; unitsPerKoli: number | null; lowStock: boolean };
 
 /** Kode tanpa nama ditandai agar mudah dilengkapi. */
-function ProductCell({ row, canMovement, canEditMaster, canAdjust }: { row: MatrixRow; canMovement: boolean; canEditMaster: boolean; canAdjust: boolean }) {
+function ProductCell({ row, canMovement, canEditMaster, canEditPhoto, canAdjust }: { row: MatrixRow; canMovement: boolean; canEditMaster: boolean; canEditPhoto: boolean; canAdjust: boolean }) {
   const title = row.hasName
     ? <span className="font-semibold leading-snug text-slate-900">{row.name}</span>
     : <span className="text-sm italic text-slate-600">Nama belum diisi</span>;
   return (
     <div className="flex items-start gap-2.5">
-    <ProductPhoto productId={row.productId} sku={row.sku} photoUrl={row.photoUrl} canEdit={canEditMaster} />
+    <ProductPhoto productId={row.productId} sku={row.sku} photoUrl={row.photoUrl} canEdit={canEditPhoto} />
     <div className={row.hasName || !canEditMaster ? "min-w-[200px] max-w-[300px]" : "w-[240px] sm:w-[300px]"}>
       <div className="flex flex-wrap items-center gap-2">
         {canMovement && row.hasName ? <Link href={`/inventory/mutasi?productId=${row.productId}`} className="hover:text-brand-800">{title}</Link> : title}
@@ -174,7 +176,7 @@ function ProductCell({ row, canMovement, canEditMaster, canAdjust }: { row: Matr
 type MobileRow = MatrixRow & { perLocation: Record<string, number> };
 
 /** Satu barang = satu kartu 2 baris: nama + stok lokasi yang difilter, lalu kode, lokasi lain, dan aksi. */
-function MobileStockRow({ row, scopeLabel, scopeQty, scopeKoli, parts, canMovement, canEditMaster, canAdjust }: {
+function MobileStockRow({ row, scopeLabel, scopeQty, scopeKoli, parts, canMovement, canEditMaster, canEditPhoto, canAdjust }: {
   row: MobileRow;
   scopeLabel: string;
   scopeQty: number;
@@ -182,6 +184,7 @@ function MobileStockRow({ row, scopeLabel, scopeQty, scopeKoli, parts, canMoveme
   parts: Array<[string, number, string]>;
   canMovement: boolean;
   canEditMaster: boolean;
+  canEditPhoto: boolean;
   canAdjust: boolean;
 }) {
   const short = (qty: number, koli: string) => (qty === 0 ? "–" : row.unitsPerKoli && koli.includes("koli") ? koli : `${fmtQty(qty)} ${row.unit}`);
@@ -189,7 +192,7 @@ function MobileStockRow({ row, scopeLabel, scopeQty, scopeKoli, parts, canMoveme
   return (
     <li className={`px-4 py-3 ${row.lowStock ? "bg-red-50" : ""}`}>
       <div className="flex items-start gap-3">
-        <ProductPhoto productId={row.productId} sku={row.sku} photoUrl={row.photoUrl} canEdit={canEditMaster} />
+        <ProductPhoto productId={row.productId} sku={row.sku} photoUrl={row.photoUrl} canEdit={canEditPhoto} />
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5">
             {canMovement && row.hasName

@@ -100,3 +100,10 @@ export function landingPageForRole(role: Role) {
   return "/no-access";
 }
 
+/**
+ * Siapa yang boleh menambah/ganti/hapus FOTO barang. Pengelola Master Barang, ditambah Admin (Sales)
+ * untuk sementara atas permintaan pemilik (8 Nov 2026). Hanya foto; hak Master Barang lain tidak berubah.
+ */
+export function canEditProductPhoto(role: Role) {
+  return can(role, "inventory.master") || role === "ADMIN";
+}

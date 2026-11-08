@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
-import { can } from "@/lib/auth/roles";
+import { canEditProductPhoto } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
 import { saveLocalImage } from "@/lib/opencloud/storage";
 
-/** Unggah/ganti foto barang (Super Admin / pengelola Master Barang). */
+/** Unggah/ganti foto barang (pengelola Master Barang dan Admin/Sales). */
 export async function POST(request: Request, context: { params: Promise<{ id: string }> }) {
-  if (!can(await getCurrentRole(), "inventory.master")) {
-    return NextResponse.json({ success: false, message: "Hanya pengelola Master Barang yang bisa mengubah foto." }, { status: 403 });
+  if (!canEditProductPhoto(await getCurrentRole())) {
+    return NextResponse.json({ success: false, message: "Hanya pengelola Master Barang atau Admin yang bisa mengubah foto." }, { status: 403 });
   }
   const { id } = await context.params;
   const product = await prisma.inventoryProduct.findUnique({ where: { id }, select: { id: true, sku: true } });
@@ -21,8 +21,8 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 }
 
 export async function DELETE(_request: Request, context: { params: Promise<{ id: string }> }) {
-  if (!can(await getCurrentRole(), "inventory.master")) {
-    return NextResponse.json({ success: false, message: "Hanya pengelola Master Barang yang bisa mengubah foto." }, { status: 403 });
+  if (!canEditProductPhoto(await getCurrentRole())) {
+    return NextResponse.json({ success: false, message: "Hanya pengelola Master Barang atau Admin yang bisa mengubah foto." }, { status: 403 });
   }
   const { id } = await context.params;
   await prisma.inventoryProduct.update({ where: { id }, data: { photoUrl: null } });
