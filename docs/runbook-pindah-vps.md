@@ -12,7 +12,7 @@ Lama pengerjaan: persiapan 1–2 jam (bisa kapan saja), pindahan final sekitar 3
 - Catat IP-nya.
 
 ### A2. Siapkan repo kode
-- Pakai `lrmcorp/SLM-INTERNAL-NEW`. Jadikan **private** (Settings > General > Danger Zone > Change visibility).
+- Pakai `lrmcorp/slm-internal`. Jadikan **private** (Settings > General > Danger Zone > Change visibility).
 - Settings > Collaborators: pastikan hanya orang yang Anda percaya.
 - Deploy key dibuat otomatis oleh skrip di langkah B2 (read-only, hanya untuk server ini).
 
@@ -49,7 +49,7 @@ Hasilnya di `/root/slm-audit-*.txt`. Yang dicari: SSH key asing, crontab yang me
 ### B2. Setup VPS baru
 Di VPS baru sebagai root:
 ```bash
-curl -fsSL https://raw.githubusercontent.com/lrmcorp/SLM-INTERNAL-NEW/main/scripts/server/setup-new.sh -o setup-new.sh
+curl -fsSL https://raw.githubusercontent.com/lrmcorp/slm-internal/main/scripts/server/setup-new.sh -o setup-new.sh
 ```
 Kalau repo sudah private, link di atas tidak bisa dibuka: salin `setup-new.sh` dengan `scp` dari komputer Anda.
 
@@ -110,7 +110,7 @@ Di VPS baru:
 ```bash
 cd /opt/slm && bash update.sh && bash scripts/server/verify.sh
 ```
-Kode hanya ditarik dari repo Anda (`lrmcorp/SLM-INTERNAL-NEW`) lewat deploy key read-only.
+Kode hanya ditarik dari repo Anda (`lrmcorp/slm-internal`) lewat deploy key read-only.
 
 ## Kalau ada masalah saat pindahan
 - **Belum ganti DNS:** server lama tetap melayani. Cukup lanjutkan transaksi di server lama dan ulangi export nanti.

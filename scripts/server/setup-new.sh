@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # Jalankan di VPS BARU (Ubuntu 22.04/24.04) sebagai root. Aman diulang: langkah yang sudah selesai dilewati.
 #
-#   bash setup-new.sh --bundle /root/slm-bundle-XXXX.tar [--domain slm.playgo.id] [--repo git@github.com:lrmcorp/SLM-INTERNAL-NEW.git]
+#   bash setup-new.sh --bundle /root/slm-bundle-XXXX.tar [--domain slm.playgo.id] [--repo git@github.com:lrmcorp/slm-internal.git]
 #
 # Yang dikerjakan: paket server, firewall, clone repo (deploy key), restore database + foto + data,
 # secret baru, build & start aplikasi, Nginx, cron job, backup harian, lalu verifikasi.
 set -euo pipefail
 
 DOMAIN="slm.playgo.id"
-REPO="git@github.com:lrmcorp/SLM-INTERNAL-NEW.git"
+REPO="git@github.com:lrmcorp/slm-internal.git"
 BRANCH="main"
 APP_DIR="/opt/slm"
 BUNDLE=""
