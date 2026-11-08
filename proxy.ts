@@ -36,7 +36,7 @@ const PROTECTED: Array<{ path: string; permission: Parameters<typeof can>[1] | P
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  if (pathname.startsWith("/api/") || pathname.startsWith("/_next/") || pathname.startsWith("/uploads/") || pathname.startsWith("/downloads/") || pathname === "/" || pathname === "/no-access" || pathname === "/login" || pathname === "/favicon.ico" || pathname === "/icon.svg") return NextResponse.next();
+  if (pathname.startsWith("/api/") || pathname.startsWith("/_next/") || pathname.startsWith("/uploads/") || pathname.startsWith("/downloads/") || pathname === "/" || pathname === "/no-access" || pathname === "/login" || pathname === "/favicon.ico" || pathname === "/icon.svg" || pathname === "/brand-icon.svg") return NextResponse.next();
   const provider = resolveAuthProvider();
   const trustedHeaderMode = provider === "trusted_header";
   const localCredentialsMode = provider === "local_credentials" || provider === "anika_erp";
@@ -62,4 +62,4 @@ export function proxy(request: NextRequest) {
   return NextResponse.next();
 }
 
-export const config = { matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.svg|uploads).*)"] };
+export const config = { matcher: ["/((?!_next/static|_next/image|favicon.ico|icon.svg|brand-icon.svg|uploads).*)"] };
