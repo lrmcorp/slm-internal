@@ -9,7 +9,7 @@ export async function GET(request: Request) {
     const account = await getKatalogPaymentAccount();
     return Response.json({
       success: true,
-      data: account ? { bank_name: account.bankName, account_number: account.accountNumber, account_holder: account.accountHolder } : null
+      data: account ? { rekening_id: account.rekeningId, bank_name: account.bankName, account_number: account.accountNumber, account_holder: account.accountHolder } : null
     }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     return mjErrorResponse(error);

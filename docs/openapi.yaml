@@ -1151,7 +1151,7 @@ paths:
       security: [{ mjBearer: [] }]
       responses:
         "200":
-          description: "{ success: true, data: { bank_name, account_number, account_holder } | null }"
+          description: "{ success: true, data: { rekening_id, bank_name, account_number, account_holder } | null }; rekening_id = ID rekening SLM (dipetakan ke rekening MJ lewat slmRekeningId)."
         "401":
           description: AUTH_INVALID
   /api/integrations/mj/products/{id}/photo:
