@@ -1144,6 +1144,16 @@ paths:
           description: AUTH_INVALID
         "429":
           description: RATE_LIMITED
+  /api/integrations/mj/katalog-payment:
+    get:
+      summary: Rekening tujuan transfer Katalog Online.
+      description: Diatur di Pengaturan, Rekening Katalog Online. data null bila belum diatur atau rekeningnya nonaktif.
+      security: [{ mjBearer: [] }]
+      responses:
+        "200":
+          description: "{ success: true, data: { bank_name, account_number, account_holder } | null }"
+        "401":
+          description: AUTH_INVALID
   /api/integrations/mj/products/{id}/photo:
     post:
       summary: Unggah atau ganti foto barang dari MJ.
@@ -2312,6 +2322,35 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+  /api/settings/katalog-payment:
+    get:
+      summary: Membaca rekening tujuan transfer Katalog Online beserta pilihan rekening aktif.
+      description: Permission settings.rekening.manage.
+      responses:
+        "200":
+          description: "{ success: true, data: { rekeningId, accountHolder, options[] } }"
+        "403":
+          description: Tidak punya akses.
+    put:
+      summary: Menyimpan rekening tujuan transfer Katalog Online.
+      description: Permission settings.rekening.manage. rekeningId kosong = mengosongkan.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [rekeningId, accountHolder]
+              properties:
+                rekeningId: { type: string }
+                accountHolder: { type: string }
+      responses:
+        "200":
+          description: Tersimpan.
+        "400":
+          description: Rekening tidak aktif atau nama pemilik kosong.
+        "403":
+          description: Tidak punya akses.
   /api/settings/profit-slm:
     get:
       summary: Membaca setting Profit Operasional.

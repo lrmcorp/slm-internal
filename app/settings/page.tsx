@@ -35,6 +35,14 @@ export default async function SettingsPage() {
           tone: "emerald",
         }
       : null,
+    can(role, "settings.rekening.manage")
+      ? {
+          href: "/settings/katalog-payment",
+          title: "Rekening Katalog Online",
+          description: "Rekening tujuan transfer pesanan mjkatalog.xyz",
+          tone: "emerald",
+        }
+      : null,
     can(role, "settings.profit.manage")
       ? {
           href: "/settings/profit-slm",
