@@ -4,6 +4,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { can } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import {
+  listMjSaleIds,
   listTempoReceivablesPage,
   listTempoTipeOptions,
   getTempoMetricsSummary,
@@ -53,6 +54,7 @@ function filtersFromParams(params: SearchParams): TempoReceivableFilters {
     keyword: valueOf(params, "keyword") || undefined,
     tipe: valueOf(params, "tipe") || undefined,
     status: valueOf(params, "status") || undefined,
+    origin: valueOf(params, "asal") === "mj" ? "mj" : valueOf(params, "asal") === "aj" ? "aj" : undefined,
     dueFrom: valueOf(params, "dueFrom") || undefined,
     dueTo: valueOf(params, "dueTo") || undefined,
     includeFinal: valueOf(params, "includeFinal") === "1"
@@ -64,6 +66,7 @@ function activeFilterLabels(params: SearchParams) {
     valueOf(params, "keyword") ? `Keyword: ${valueOf(params, "keyword")}` : null,
     valueOf(params, "tipe") ? `Tipe: ${valueOf(params, "tipe")}` : null,
     valueOf(params, "status") ? `Status: ${valueOf(params, "status")}` : null,
+    valueOf(params, "asal") === "mj" ? "Asal: MJ" : valueOf(params, "asal") === "aj" ? "Asal: Aneka Jaya" : null,
     valueOf(params, "dueFrom") ? `Jatuh tempo dari ${valueOf(params, "dueFrom")}` : null,
     valueOf(params, "dueTo") ? `Jatuh tempo sampai ${valueOf(params, "dueTo")}` : null,
     valueOf(params, "includeFinal") === "1" ? "Termasuk final" : null
@@ -100,6 +103,7 @@ export default async function TempoPage({ searchParams }: { searchParams?: Promi
   const rupiah = (value: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(value);
   const activeFilters = activeFilterLabels(params);
 
+  const mjSaleIds = await listMjSaleIds(paged.map((row) => row.salesId));
   const currentStatus = valueOf(params, "status");
   const currentDueFrom = valueOf(params, "dueFrom");
   const currentDueTo = valueOf(params, "dueTo");
@@ -247,6 +251,7 @@ export default async function TempoPage({ searchParams }: { searchParams?: Promi
       >
         <label className="text-sm font-medium text-slate-700">Keyword<Input name="keyword" defaultValue={valueOf(params, "keyword") || ""} placeholder="Customer / No tempo / No sales" className="mt-1" /></label>
         <label className="text-sm font-medium text-slate-700">Tipe<Select name="tipe" defaultValue={valueOf(params, "tipe") || ""} className="mt-1"><option value="">Semua</option>{tipeOptions.map((item) => <option key={item} value={item}>{item}</option>)}</Select></label>
+        <label className="text-sm font-medium text-slate-700">Asal<Select name="asal" defaultValue={valueOf(params, "asal") || ""} className="mt-1"><option value="">Semua</option><option value="aj">Aneka Jaya</option><option value="mj">MJ</option></Select></label>
         <label className="text-sm font-medium text-slate-700">Status<Select name="status" defaultValue={valueOf(params, "status") || ""} className="mt-1"><option value="">Semua</option>{["open", "overdue", "partial_paid", "paid", "cancelled", "written_off"].map((item) => <option key={item} value={item}>{item}</option>)}</Select></label>
         <label className="text-sm font-medium text-slate-700">Jatuh tempo dari<Input type="date" name="dueFrom" defaultValue={valueOf(params, "dueFrom") || ""} className="mt-1" /></label>
         <label className="text-sm font-medium text-slate-700">Jatuh tempo sampai<Input type="date" name="dueTo" defaultValue={valueOf(params, "dueTo") || ""} className="mt-1" /></label>
@@ -256,10 +261,10 @@ export default async function TempoPage({ searchParams }: { searchParams?: Promi
         <div className="border-b border-slate-200 px-5 py-4 text-sm text-slate-600">Menampilkan {paged.length} dari {meta.total} tempo.</div>
         <div className="space-y-3 p-4 md:hidden">
           {paged.map((row) => (
-            <article key={row.id} className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs">
+            <article key={row.id} className={`rounded-xl p-4 shadow-xs ${mjSaleIds.has(row.salesId) ? "border-2 border-amber-300 bg-amber-50/60" : "border border-slate-200 bg-white"}`}>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="truncate font-bold text-slate-900">{row.customerName}</p>
+                  <p className="flex items-center gap-1.5 truncate font-bold text-slate-900">{mjSaleIds.has(row.salesId) && <span className="inline-flex shrink-0 items-center rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-xs">MJ</span>}<span className="truncate">{row.customerName}</span></p>
                   <p className="mt-1 font-mono text-xs text-slate-500">{row.id}</p>
                 </div>
                 <span className={`shrink-0 rounded-full px-2.5 py-1 text-xs font-bold ${statusBadgeClass(row.status)}`}>{row.status}</span>
@@ -283,7 +288,7 @@ export default async function TempoPage({ searchParams }: { searchParams?: Promi
           {paged.length === 0 && <p className="py-8 text-center text-sm text-slate-500">Tidak ada Tempo sesuai filter.</p>}
         </div>
         <div className="hidden overflow-x-auto md:block">
-          <table className="min-w-full text-left text-sm"><thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wider text-slate-500"><tr><th className="px-5 py-3">Customer</th><th className="px-5 py-3">Tipe</th><th className="px-5 py-3">Original</th><th className="px-5 py-3">Paid</th><th className="px-5 py-3">Remaining</th><th className="px-5 py-3">Jatuh Tempo</th><th className="px-5 py-3">Status</th><th className="px-5 py-3">Action</th></tr></thead><tbody>{paged.map((row) => <tr key={row.id} className="border-b border-slate-100 hover:bg-slate-50/70 transition-colors"><td className="px-5 py-4"><b>{row.customerName}</b><p className="mt-0.5 font-mono text-xs text-slate-500">{row.id}</p></td><td className="px-5 py-4"><span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">{row.tipeCodeSnapshot}</span></td><td className="px-5 py-4 font-medium">{rupiah(row.originalAmount)}</td><td className="px-5 py-4 font-medium text-brand-700">{rupiah(row.paidAmount)}</td><td className="px-5 py-4 font-bold text-slate-900">{rupiah(row.remainingAmount)}</td><td className="px-5 py-4 text-slate-600">{new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta" }).format(new Date(row.dueDate))}</td><td className="px-5 py-4"><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${statusBadgeClass(row.status)}`}>{row.status}</span></td><td className="px-5 py-4"><div className="flex items-center gap-2">{!["paid", "cancelled", "written_off"].includes(row.status) ? (<Link href={`/tempo/${row.id}`} className="inline-flex items-center justify-center rounded-lg bg-brand-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-brand-700 transition-colors">Bayar</Link>) : (<Link href={`/tempo/${row.id}`} className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors">Detail</Link>)}<Link href={`/print/tempo/${row.id}`} className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors">Cetak</Link></div></td></tr>)}{paged.length === 0 && <tr><td colSpan={8} className="px-5 py-10 text-center text-slate-500">Tidak ada Tempo sesuai filter.</td></tr>}</tbody></table>
+          <table className="min-w-full text-left text-sm"><thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wider text-slate-500"><tr><th className="px-5 py-3">Customer</th><th className="px-5 py-3">Tipe</th><th className="px-5 py-3">Original</th><th className="px-5 py-3">Paid</th><th className="px-5 py-3">Remaining</th><th className="px-5 py-3">Jatuh Tempo</th><th className="px-5 py-3">Status</th><th className="px-5 py-3">Action</th></tr></thead><tbody>{paged.map((row) => <tr key={row.id} className={`border-b transition-colors ${mjSaleIds.has(row.salesId) ? "border-amber-200/90 bg-amber-50/80 hover:bg-amber-100/70" : "border-slate-100 hover:bg-slate-50/70"}`}><td className="px-5 py-4"><b className="inline-flex items-center gap-1.5">{mjSaleIds.has(row.salesId) && <span className="inline-flex items-center rounded bg-amber-500 px-1.5 py-0.5 text-[10px] font-bold text-white shadow-xs">MJ</span>}{row.customerName}</b><p className="mt-0.5 font-mono text-xs text-slate-500">{row.id}</p></td><td className="px-5 py-4"><span className="rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">{row.tipeCodeSnapshot}</span></td><td className="px-5 py-4 font-medium">{rupiah(row.originalAmount)}</td><td className="px-5 py-4 font-medium text-brand-700">{rupiah(row.paidAmount)}</td><td className="px-5 py-4 font-bold text-slate-900">{rupiah(row.remainingAmount)}</td><td className="px-5 py-4 text-slate-600">{new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta" }).format(new Date(row.dueDate))}</td><td className="px-5 py-4"><span className={`rounded-full px-2.5 py-1 text-xs font-bold ${statusBadgeClass(row.status)}`}>{row.status}</span></td><td className="px-5 py-4"><div className="flex items-center gap-2">{!["paid", "cancelled", "written_off"].includes(row.status) ? (<Link href={`/tempo/${row.id}`} className="inline-flex items-center justify-center rounded-lg bg-brand-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-brand-700 transition-colors">Bayar</Link>) : (<Link href={`/tempo/${row.id}`} className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors">Detail</Link>)}<Link href={`/print/tempo/${row.id}`} className="inline-flex items-center rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors">Cetak</Link></div></td></tr>)}{paged.length === 0 && <tr><td colSpan={8} className="px-5 py-10 text-center text-slate-500">Tidak ada Tempo sesuai filter.</td></tr>}</tbody></table>
         </div>
         <div className="flex items-center justify-between border-t border-slate-200 px-5 py-4 text-sm"><span className="text-slate-500">Halaman {page} dari {totalPages}</span><div className="flex gap-2">{page > 1 && <Link className="rounded-lg border border-slate-300 px-3 py-1.5 font-bold text-slate-700 hover:bg-slate-50" href={pageHref(params, page - 1)}>Sebelumnya</Link>}{page < totalPages && <Link className="rounded-lg border border-slate-300 px-3 py-1.5 font-bold text-slate-700 hover:bg-slate-50" href={pageHref(params, page + 1)}>Berikutnya</Link>}</div></div>
       </section>

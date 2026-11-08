@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { can } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
-import { getTempoReceivable, listTempoPaymentReversals, listTempoPayments } from "@/lib/tempo/store";
+import { getTempoReceivable, listMjSaleIds, listTempoPaymentReversals, listTempoPayments } from "@/lib/tempo/store";
 import { getSalesRecord } from "@/lib/sales/store";
 import { listRekeningAccounts } from "@/lib/business/masterData";
 import { TempoPayForm } from "@/components/tempo/TempoPayForm";
@@ -45,6 +45,7 @@ export default async function TempoDetailPage({ params }: { params: Promise<{ id
     listTempoPaymentReversals(),
     tempo.salesId ? getSalesRecord(tempo.salesId) : undefined
   ]);
+  const isMjTempo = tempo.salesId ? (await listMjSaleIds([tempo.salesId])).has(tempo.salesId) : false;
 
   const rupiah = (value: number) => new Intl.NumberFormat("id-ID", { style: "currency", currency: "IDR", maximumFractionDigits: 0 }).format(value);
 
@@ -62,7 +63,7 @@ export default async function TempoDetailPage({ params }: { params: Promise<{ id
             <span className="text-slate-300">•</span>
             <span className="font-mono text-xs font-semibold text-slate-500">{tempo.id}</span>
           </div>
-          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900">{tempo.customerName}</h2>
+          <h2 className="flex items-center gap-2 text-2xl sm:text-3xl font-extrabold text-slate-900">{isMjTempo && <span className="inline-flex items-center rounded bg-amber-500 px-2 py-0.5 text-xs font-bold text-white shadow-xs">MJ</span>}{tempo.customerName}</h2>
           <p className="mt-1 text-sm text-slate-500">
             Tipe Pembukuan: <span className="font-semibold text-slate-700">{tempo.tipeNameSnapshot || tempo.tipeCodeSnapshot}</span>
             {sale?.customerLocation && <span> • Lokasi: <span className="font-semibold text-slate-700">{sale.customerLocation}</span></span>}

@@ -27,6 +27,7 @@ const mocks = vi.hoisted(() => ({
     meta: { page: 1, pageSize: 10, total: 28, totalPages: 3 }
   }),
   listTempoTipeOptions: vi.fn().mockResolvedValue(["SLM", "MJ"]),
+  listMjSaleIds: vi.fn().mockResolvedValue(new Set<string>()),
   getTempoMetricsSummary: vi.fn(),
   redirect: vi.fn((path: string) => {
     throw new Error(`redirect:${path}`);
@@ -42,6 +43,7 @@ vi.mock("next/navigation", () => ({
 }));
 
 vi.mock("@/lib/tempo/store", () => ({
+  listMjSaleIds: mocks.listMjSaleIds,
   listTempoReceivablesPage: mocks.listTempoReceivablesPage,
   listTempoTipeOptions: mocks.listTempoTipeOptions,
   getTempoMetricsSummary: mocks.getTempoMetricsSummary
@@ -108,5 +110,37 @@ describe("TempoPage KPI summary widgets", () => {
 
     // Overdue card should have active ring
     expect(html).toContain("ring-2 ring-rose-600");
+  });
+});
+
+describe("TempoPage asal MJ", () => {
+  beforeEach(() => {
+    mocks.role = "OWNER";
+    mocks.getTempoMetricsSummary.mockResolvedValue(mocks.metricsSummary);
+  });
+
+  const row = (id: string, salesId: string, customerName: string) => ({
+    id, salesId, customerName, tipeCodeSnapshot: "SLM", originalAmount: 100_000, paidAmount: 0, remainingAmount: 100_000,
+    dueDate: "2026-12-01", status: "open"
+  });
+
+  it("menandai tempo dari penjualan MJ dengan baris kuning dan badge MJ", async () => {
+    mocks.listTempoReceivablesPage.mockResolvedValueOnce({
+      data: [row("TMP-1", "SALE-MJ", "Toko Mekar"), row("TMP-2", "SALE-AJ", "Toko Aneka")],
+      meta: { page: 1, pageSize: 10, total: 2, totalPages: 1 }
+    });
+    mocks.listMjSaleIds.mockResolvedValueOnce(new Set(["SALE-MJ"]));
+    const { default: TempoPage } = await import("@/app/tempo/page");
+    const html = renderToStaticMarkup(await TempoPage({}));
+    expect(mocks.listMjSaleIds).toHaveBeenCalledWith(["SALE-MJ", "SALE-AJ"]);
+    expect(html).toContain("bg-amber-50/80");
+    expect(html).toMatch(/>MJ<\/span>Toko Mekar/);
+    expect(html).not.toMatch(/>MJ<\/span>Toko Aneka/);
+  });
+
+  it("filter Asal MJ meneruskan origin ke daftar tempo", async () => {
+    const { default: TempoPage } = await import("@/app/tempo/page");
+    await TempoPage({ searchParams: Promise.resolve({ asal: "mj" }) });
+    expect(mocks.listTempoReceivablesPage).toHaveBeenCalledWith(expect.objectContaining({ filters: expect.objectContaining({ origin: "mj" }) }));
   });
 });

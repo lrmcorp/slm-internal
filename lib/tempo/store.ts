@@ -90,6 +90,8 @@ export type TempoReceivableFilters = {
   dueFrom?: string;
   dueTo?: string;
   includeFinal?: boolean;
+  /** Asal tempo: "mj" = dari penjualan MJ, "aj" = penjualan Aneka Jaya sendiri. */
+  origin?: "mj" | "aj";
 };
 export type PaginatedTempoReceivables = {
   data: TempoReceivable[];
@@ -686,11 +688,28 @@ export async function listTempoReceivables(): Promise<TempoReceivable[]> {
   return Array.from(bySalesId.values()).map(applyOverdueStatus).sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 }
 
+/** Penjualan yang berasal dari MJ (dikirim lewat integrasi MJ). Ditandai kuning di daftar SLM. */
+const MJ_SALE_WHERE: Prisma.SalesRecordWhereInput = { OR: [{ source: "MJ" }, { createdByUserId: "integration:mj" }] };
+
+/** Dari daftar salesId, kembalikan yang berasal dari MJ. */
+export async function listMjSaleIds(salesIds: string[]): Promise<Set<string>> {
+  if (!isProductionMode() || salesIds.length === 0) return new Set();
+  const rows = await prisma.salesRecord.findMany({ where: { AND: [{ id: { in: salesIds } }, MJ_SALE_WHERE] }, select: { id: true } });
+  return new Set(rows.map((row) => row.id));
+}
+
 export async function listTempoReceivablesPage(input: { page?: number; pageSize?: number; filters?: TempoReceivableFilters } = {}): Promise<PaginatedTempoReceivables> {
   const page = cleanPage(input.page);
   const pageSize = cleanPageSize(input.pageSize);
   if (isProductionMode()) {
     const where = buildTempoWhere(input.filters || {});
+    const origin = input.filters?.origin;
+    if (origin === "mj" || origin === "aj") {
+      const mjSales = await prisma.salesRecord.findMany({ where: MJ_SALE_WHERE, select: { id: true } });
+      const ids = mjSales.map((sale) => sale.id);
+      const originWhere: Prisma.TempoReceivableWhereInput = origin === "mj" ? { salesId: { in: ids } } : { salesId: { notIn: ids } };
+      where.AND = [...(Array.isArray(where.AND) ? where.AND : where.AND ? [where.AND] : []), originWhere];
+    }
     const [total, rows] = await Promise.all([
       prisma.tempoReceivable.count({ where }),
       prisma.tempoReceivable.findMany({
