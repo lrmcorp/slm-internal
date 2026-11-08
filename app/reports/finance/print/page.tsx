@@ -1,3 +1,4 @@
+import { APP_COMPANY_NAME } from "@/lib/appBrand";
 import { redirect } from "next/navigation";
 import { can } from "@/lib/auth/roles";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -83,7 +84,7 @@ export default async function FinanceReportPrintPage({
           <div className="flex items-start justify-between gap-4">
             <div>
               <h1 className="text-2xl font-black tracking-tight text-slate-950 uppercase">
-                ANEKA JAYA / SLM
+                {APP_COMPANY_NAME}
               </h1>
               <p className="text-xs font-semibold text-slate-700 uppercase tracking-widest">
                 Sistem Manajemen Keuangan &amp; Kas

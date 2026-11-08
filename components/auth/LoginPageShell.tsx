@@ -53,7 +53,7 @@ export function LoginPageShell() {
             <div className="mt-7 lg:mt-0">
               <p className="hidden text-sm font-bold text-neutral-950 lg:block">{APP_BRAND_TITLE}</p>
               <h2 className="mt-2 text-2xl font-bold leading-tight text-neutral-950">Masuk ke sistem</h2>
-              <p className="mt-2 text-sm leading-6 text-neutral-500">Masuk dengan username dan password akun SLM Anda.</p>
+              <p className="mt-2 text-sm leading-6 text-neutral-500">Masuk dengan username dan password akun {APP_BRAND_NAME} Anda.</p>
             </div>
 
             <LoginForm className="mt-6" />

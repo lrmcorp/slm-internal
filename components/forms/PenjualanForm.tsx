@@ -30,7 +30,8 @@ import type {
   BookkeepingType,
   RekeningAccount,
 } from "@/lib/business/masterData";
-import { APP_BRAND_NAME, EXTERNAL_ERP_NAME } from "@/lib/appBrand";
+import { EXTERNAL_ERP_NAME } from "@/lib/appBrand";
+import { useBrand } from "@/components/brand/BrandProvider";
 import { useRouter } from "next/navigation";
 import { jakartaDateTimeLocalValue, jakartaTimestampFromLocal } from "@/lib/date/jakarta";
 
@@ -176,6 +177,7 @@ export function PenjualanForm({
   sale,
   localCatalog = false,
 }: Props) {
+  const brand = useBrand();
   const router = useRouter();
   const isEdit = Boolean(sale);
   const erpTypeCodeSet = useMemo(
@@ -1048,7 +1050,7 @@ export function PenjualanForm({
               : `Data penjualan berhasil dikirim ke ${EXTERNAL_ERP_NAME}.`
             : result.data?.approvalStatus === "pending_approval"
               ? "Data berhasil disimpan dan menunggu approval."
-              : `Data penjualan berhasil disimpan di sistem ${APP_BRAND_NAME}.`,
+              : `Data penjualan berhasil disimpan di sistem ${brand.name}.`,
       });
     } finally {
       isSubmittingRef.current = false;
@@ -1193,7 +1195,7 @@ export function PenjualanForm({
           </>
         ) : (
           <>
-            <b>Sistem {APP_BRAND_NAME}</b>. Tipe ini disimpan lokal.
+            <b>Sistem {brand.name}</b>. Tipe ini disimpan lokal.
           </>
         )}
         {selectedLooksAj && !targetsErp && (

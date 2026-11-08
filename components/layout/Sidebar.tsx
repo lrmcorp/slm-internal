@@ -2,12 +2,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { roleLabel, type Role } from "@/lib/auth/roles";
-import { APP_BRAND_INITIALS, APP_BRAND_NAME } from "@/lib/appBrand";
+import { useBrand } from "@/components/brand/BrandProvider";
 import { activeNavSection, visibleNavSections } from "./navigation";
 import { NavCountBadge } from "./NavCountBadge";
 import type { NavBadges } from "@/lib/layout/navBadges";
 
 export function Sidebar({ role, badges = {} }: { role: Role; badges?: NavBadges }) {
+  const brand = useBrand();
   const pathname = usePathname();
   const groups = visibleNavSections(role);
   const current = activeNavSection(pathname, groups.flatMap((g) => g.sections)).section;
@@ -18,10 +19,10 @@ export function Sidebar({ role, badges = {} }: { role: Role; badges?: NavBadges 
         {/* Brand Header */}
         <div className="flex items-center gap-3 border-b border-neutral-100 px-6 py-6">
           <span className="grid h-9 w-9 place-items-center rounded-xl bg-emerald-600 text-sm font-black tracking-tighter text-white shadow-sm">
-            {APP_BRAND_INITIALS}
+            {brand.initials}
           </span>
           <div className="min-w-0">
-            <p className="truncate text-sm font-bold text-neutral-900">{APP_BRAND_NAME}</p>
+            <p className="truncate text-sm font-bold text-neutral-900">{brand.name}</p>
             <p className="truncate text-[11px] text-neutral-500">{roleLabel(role)}</p>
           </div>
         </div>

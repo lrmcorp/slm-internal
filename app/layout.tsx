@@ -1,19 +1,19 @@
 import type { Metadata } from "next";
-import { APP_BRAND_TITLE, APP_BRAND_NAME } from "@/lib/appBrand";
+import { getAppBrand } from "@/lib/appBrand";
+import { BrandProvider } from "@/components/brand/BrandProvider";
 import { TopLoadingBar } from "@/components/ui/TopLoadingBar";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import { Suspense } from "react";
 import "./globals.css";
 
-export const metadata: Metadata = {
-  title: APP_BRAND_TITLE,
-  description: `Aplikasi operasional internal ${APP_BRAND_NAME}`,
-  icons: {
-    icon: "/icon.svg",
-    shortcut: "/icon.svg",
-    apple: "/icon.svg"
-  }
-};
+export function generateMetadata(): Metadata {
+  const brand = getAppBrand();
+  return {
+    title: brand.title,
+    description: `Aplikasi operasional internal ${brand.companyName}`,
+    icons: { icon: "/brand-icon.svg", shortcut: "/brand-icon.svg", apple: "/brand-icon.svg" }
+  };
+}
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
@@ -22,7 +22,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <Suspense fallback={null}>
           <TopLoadingBar />
         </Suspense>
-        <ToastProvider>{children}</ToastProvider>
+        <BrandProvider brand={getAppBrand()}>
+          <ToastProvider>{children}</ToastProvider>
+        </BrandProvider>
       </body>
     </html>
   );
