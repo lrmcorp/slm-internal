@@ -14,9 +14,9 @@ android {
         applicationId "id.playgo.slm"
         minSdk 24
         targetSdk 35
-        versionCode 1
-        versionName "1.0"
-        buildConfigField "String", "SLM_URL", "\"${project.findProperty("slmUrl") ?: "https://slm.playgo.id"}\""
+        versionCode 2
+        versionName "2.0"
+        buildConfigField "String", "SLM_URL", "\"${project.findProperty("slmUrl") ?: "https://slm.lrmint.xyz"}\""
     }
 
     signingConfigs {
