@@ -192,4 +192,16 @@ describe("proxy permission enforcement", () => {
     const response = proxy(makeRequest("/uploads/receipts/test.jpg"));
     expect(response.headers.get("location")).toBeNull();
   });
+
+  it("lets Finance open Bagan Akun but not the rest of Akuntansi, and keeps Barang Keluar to sales roles", () => {
+    vi.stubEnv("AUTH_PROVIDER", "demo");
+    const statusFor = (role: string, path: string) => {
+      vi.stubEnv("APP_DEFAULT_ROLE", role);
+      return proxy(makeRequest(path)).headers.get("location");
+    };
+    expect(statusFor("FINANCE", "/akuntansi/coa")).toBeNull();
+    expect(statusFor("FINANCE", "/akuntansi/jurnal")).not.toBeNull();
+    expect(statusFor("ADMIN", "/inventory/barang-keluar")).toBeNull();
+    expect(statusFor("DELIVERY_DRIVER", "/inventory/barang-keluar")).not.toBeNull();
+  });
 });

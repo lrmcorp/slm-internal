@@ -27,6 +27,7 @@ describe("global navigation", () => {
       ["/tempo", "Tempo & Piutang"],
       ["/inventory", "Stok Gudang & Toko"],
       ["/inventory/permintaan-gudang", "Permintaan Barang Gudang"],
+      ["/inventory/barang-keluar", "Barang Keluar"],
       ["/inventory/transfer", "Transfer Stok"],
       ["/inventory/opname", "Stock Opname"],
     ]);

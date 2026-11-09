@@ -7,19 +7,20 @@ const inventoryMenu = (role: Role) => visibleNavLinks(role).filter((l) => l.cate
 describe("menu inventory per role", () => {
   it("Super Admin melihat semua menu", () => {
     expect(inventoryMenu("OWNER")).toEqual([
-      "Stok Gudang & Toko", "Permintaan Barang Gudang", "Mutasi / Kartu Stok", "Transfer Stok", "Barang Masuk", "Stock Opname",
+      "Stok Gudang & Toko", "Permintaan Barang Gudang", "Barang Keluar", "Mutasi / Kartu Stok", "Transfer Stok", "Barang Masuk", "Stock Opname",
       "Import Opname Excel", "Stock Adjustment", "Master Barang", "Kalkulator Modal", "Lokasi Stok"
     ]);
   });
 
-  it("Admin hanya stok, opname, transfer", () => {
-    expect(inventoryMenu("ADMIN")).toEqual(["Stok Gudang & Toko", "Permintaan Barang Gudang", "Transfer Stok", "Stock Opname"]);
+  it("Admin hanya stok, barang keluar, opname, transfer", () => {
+    expect(inventoryMenu("ADMIN")).toEqual(["Stok Gudang & Toko", "Permintaan Barang Gudang", "Barang Keluar", "Transfer Stok", "Stock Opname"]);
   });
 
   it("Manager & Supervisor semua kecuali Master Barang, Gudang & Toko (dan Import)", () => {
     const expected = ["Stok Gudang & Toko", "Permintaan Barang Gudang", "Mutasi / Kartu Stok", "Transfer Stok", "Barang Masuk", "Stock Opname", "Stock Adjustment"];
     expect(inventoryMenu("MANAGER")).toEqual(expected);
-    expect(inventoryMenu("SUPERVISOR")).toEqual(expected);
+    // Barang Keluar memuat nota penjualan, jadi hanya untuk role yang boleh melihat penjualan.
+    expect(inventoryMenu("SUPERVISOR")).toEqual(["Stok Gudang & Toko", "Permintaan Barang Gudang", "Barang Keluar", ...expected.slice(2)]);
   });
 
   it("Petugas DO (packing) hanya stok dan mutasi", () => {
