@@ -411,6 +411,8 @@ export function formatSaleDotMatrix(
     maxItemsMultiPage?: number;
     unitFormat?: UnitFormat;
     showTearLine?: boolean;
+    /** Cetak penjualan Tempo sebagai invoice biasa (tanpa kepala Nota Tempo dan baris DP/sisa). */
+    tempoAsInvoice?: boolean;
   } = {},
 ) {
   const itemLayout = options.itemLayout || "double";
@@ -447,7 +449,7 @@ export function formatSaleDotMatrix(
             )}${column("TOTAL", 22, "right")}`,
           ];
 
-    const isTempo = sale.paymentMethod === "Tempo";
+    const isTempo = sale.paymentMethod === "Tempo" && !options.tempoAsInvoice;
     const formattedDueDate = sale.dueDate
       ? (/^\d{2}\/\d{2}\/\d{4}$/.test(sale.dueDate.trim())
           ? sale.dueDate.trim()
@@ -528,7 +530,7 @@ export function formatSaleDotMatrix(
       rows.push(
         amountLine("TOTAL", sale.total),
 
-        ...(sale.paymentMethod === "Tempo"
+        ...(isTempo
           ? [
               amountLine("DP", sale.initialPaymentAmount || 0),
               amountLine(

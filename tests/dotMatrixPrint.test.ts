@@ -160,6 +160,41 @@ describe("dot matrix print formatter", () => {
     expect(text).toContain("Tanda Tangan:");
   });
 
+  it("prints a tempo sale as a normal sales invoice when the instance asks for it (ANKJY)", () => {
+    const tempoSale = {
+      id: "S-TEST-002",
+      saleDate: "2026-06-27",
+      customerName: "Toko Contoh",
+      customerLocation: "Jakarta",
+      shippingMethod: "di Tempat",
+      paymentMethod: "Tempo",
+      dueDate: "2026-07-04",
+      initialPaymentAmount: 50000,
+      approvalStatus: "approved",
+      total: 300000,
+      items: [{ productRef: "LEM-1", quantity: 2, unitPrice: 150000, discount: 0 }]
+    } as const;
+    const text = formatSaleDotMatrix(tempoSale as never, { tempoAsInvoice: true });
+
+    expectFixedWidth(text);
+    expect(text).toContain("INVOICE PENJUALAN");
+    expect(text).toContain("Bayar Tempo");
+    expect(text).not.toContain("Nota Tempo");
+    expect(text).not.toContain("Jatuh tempo tanggal");
+    expect(text).not.toContain("DP:");
+    expect(text).not.toContain("SISA TEMPO");
+    expect(text).toContain("Rp 300.000");
+    expect(formatSaleDotMatrix(tempoSale as never)).toContain("Nota Tempo");
+  });
+
+  it("reads PRINT_TEMPO_AS_INVOICE per instance", async () => {
+    const { tempoPrintsAsInvoice } = await import("@/lib/print/tempoPrintMode");
+    expect(tempoPrintsAsInvoice({ PRINT_TEMPO_AS_INVOICE: "true" })).toBe(true);
+    expect(tempoPrintsAsInvoice({ PRINT_TEMPO_AS_INVOICE: " TRUE " })).toBe(true);
+    expect(tempoPrintsAsInvoice({})).toBe(false);
+    expect(tempoPrintsAsInvoice({ PRINT_TEMPO_AS_INVOICE: "false" })).toBe(false);
+  });
+
   it("uses compact million currency notation like Aneka Jaya ERP", () => {
     const text = formatSaleDotMatrix({
       id: "S-COMPACT",

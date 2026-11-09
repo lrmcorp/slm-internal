@@ -2,6 +2,7 @@ import { getSalesRecordForUser } from "@/lib/sales/access";
 import { can } from "@/lib/auth/roles";
 import { getCurrentUser } from "@/lib/auth/session";
 import { formatSaleDotMatrix, toEscPosPrn } from "@/lib/print/dotMatrix";
+import { tempoPrintsAsInvoice } from "@/lib/print/tempoPrintMode";
 import { listAllRekeningAccounts } from "@/lib/business/masterData";
 import { salesRekeningLabel } from "@/lib/sales/rekening";
 import { recordSalesPrintLog } from "@/lib/sales/store";
@@ -52,6 +53,7 @@ export async function GET(
       maxItemsMultiPage: maxMulti,
       unitFormat,
       showTearLine,
+      tempoAsInvoice: tempoPrintsAsInvoice(),
     },
   );
   const isPrn = url.searchParams.get("format") === "prn";

@@ -57,6 +57,8 @@ export type TransactionInvoiceProps = {
   dueDate?: string;
   dateTime?: string;
   isTempo?: boolean;
+  /** Instance yang mencetak penjualan Tempo sebagai invoice biasa (PRINT_TEMPO_AS_INVOICE). */
+  tempoAsInvoice?: boolean;
 };
 
 function formatRupiah(value: number, includeFraction = false) {
@@ -88,13 +90,14 @@ export function TransactionInvoiceView({
   dueDate,
   dateTime,
   isTempo,
+  tempoAsInvoice = false,
 }: TransactionInvoiceProps) {
   const invoiceRef = useRef<HTMLDivElement>(null);
   const [isExportingImage, setIsExportingImage] = useState(false);
   const [exportError, setExportError] = useState<string | null>(null);
 
   const isSales = kind === "sales";
-  const isTempoSale = isSales && (isTempo || payment.method === "Tempo");
+  const isTempoSale = isSales && !tempoAsInvoice && (isTempo || payment.method === "Tempo");
   const title = isTempoSale ? "Nota Tempo" : isSales ? "INVOICE" : "BUKTI PENGELUARAN";
   const listUrl = isSales ? "/penjualan" : "/pengeluaran";
   const inputUrl = isSales ? "/penjualan/input" : "/pengeluaran/input";
