@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Semua langkah impor simulasi penjualan v9 ke instance lcr, dijalankan sekali di VPS dari folder repo SLM:
+# Semua langkah impor simulasi penjualan v12 ke instance lcr, dijalankan sekali di VPS dari folder repo SLM:
 #   bash scripts/lcr-import-all.sh
 # 1) matikan notifikasi & DO di env lcr, 2) jalankan ulang container lcr, 3) pastikan lcr sudah versi
 # terbaru, 4) cek data, 5) setelah Anda setuju, simpan. Username & password owner lcr ditanyakan di layar.
-# Opsional: LCR_URL (bawaan https://lcr.lrmint.xyz), LCR_CONTAINER, REKENING=<id rekening>, TIPE=<kode tipe>.
+# Tujuan selalu https://lcr.lrmint.xyz. Opsional: LCR_CONTAINER, REKENING=<id rekening>, TIPE=<kode tipe>.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-URL="${LCR_URL:-https://lcr.lrmint.xyz}"
+URL="https://lcr.lrmint.xyz"
 say() { printf '\n== %s\n' "$*"; }
 die() { printf '\nBERHENTI: %s\n' "$*" >&2; exit 1; }
 
@@ -71,12 +71,12 @@ run_import() {
 }
 if ! run_import; then
   echo
-  echo "Cek belum lolos. Kalau ada barang tidak ditemukan: upload Master_Barang_lcr_simulasi_v9.xlsx lewat"
+  echo "Cek belum lolos. Kalau ada barang tidak ditemukan: upload Master_Barang_lcr_simulasi_v12.xlsx lewat"
   echo "Inventory > Import Opname Excel di lcr. Kalau rekening lebih dari satu: REKENING=<id> bash scripts/lcr-import-all.sh"
   exit 1
 fi
 
-say "5/5 Simpan 1.483 nota ke lcr"
+say "5/5 Simpan 1.464 nota ke lcr"
 read -rp "Ketik SIMPAN untuk lanjut: " ok
 [ "$ok" = "SIMPAN" ] || die "Dibatalkan, tidak ada yang disimpan."
 run_import --commit

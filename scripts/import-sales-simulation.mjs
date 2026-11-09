@@ -3,7 +3,7 @@
  * Impor penjualan simulasi Aneka Jaya (Jul–Des 2026) ke satu instance lewat API Input Penjualan,
  * jadi nomor nota, potong stok, jurnal, dan DO dibuat sama seperti input dari kasir.
  *
- * Data: scripts/data/simulasi-penjualan-aj-v9-jul-des-2026.json.gz (file v9 ArusKas, 1.483 nota,
+ * Data: scripts/data/simulasi-penjualan-aj-v12-jul-des-2026.json.gz (file v12, 1.464 nota,
  * tanpa hari Minggu). Jam diacak 09:00–15:35. Harga jual dan cara bayar (Tunai/Transfer) dari file.
  *
  * Pakai (default hanya cek, tidak menyimpan apa pun):
@@ -13,7 +13,7 @@
  *   ... --rekening <id|nama> rekening penerima nota Transfer (bawaan: satu-satunya rekening bank tipe itu)
  *   ... --limit 5           hanya N nota pertama (uji coba)
  *
- * Aman diulang: tiap nota memakai clientRequestId SIM-<no nota>, jadi nota yang sudah masuk dilewati.
+ * Aman diulang: tiap nota memakai clientRequestId SIM12-<no nota>, jadi nota yang sudah masuk dilewati.
  * Nama customer selalu "Walk In"; kode pelanggan di file ditaruh di catatan nota.
  * Barang dicocokkan ke Master Barang instance tujuan lewat SKU = ID barang di file (J-01, S-001, ...).
  */
@@ -30,14 +30,22 @@ const opt = (name, fallback) => {
 };
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const BASE = (opt("url", process.env.IMPORT_URL) || "").replace(/\/+$/, "");
-const FILE = opt("file", path.join(here, "data", "simulasi-penjualan-aj-v9-jul-des-2026.json.gz"));
+const BASE = (opt("url", process.env.IMPORT_URL) || "https://lcr.lrmint.xyz").replace(/\/+$/, "");
+const FILE = opt("file", path.join(here, "data", "simulasi-penjualan-aj-v12-jul-des-2026.json.gz"));
 const COMMIT = flag("commit");
 const LIMIT = Number(opt("limit", "0")) || 0;
 const TIPE = opt("tipe", "");
 const REKENING = opt("rekening", "");
 const USER = process.env.IMPORT_USER || "";
 const PASSWORD = process.env.IMPORT_PASSWORD || "";
+
+// Data simulasi ini hanya untuk lcr.lrmint.xyz; domain lain ditolak supaya SLM/MJ/ANKJY tidak ikut terisi.
+const ALLOWED_HOST = "lcr.lrmint.xyz";
+const targetHost = (() => { try { return new URL(BASE).hostname.toLowerCase(); } catch { return ""; } })();
+if (BASE && targetHost !== ALLOWED_HOST && !(flag("test-host") && targetHost === "localhost")) {
+  console.error(`Skrip ini hanya untuk https://${ALLOWED_HOST} (diminta: ${BASE}).`);
+  process.exit(2);
+}
 
 if (!BASE || !USER || !PASSWORD) {
   console.error("Isi --url https://<domain> dan env IMPORT_USER / IMPORT_PASSWORD (akun Super Admin).");
@@ -201,7 +209,7 @@ async function main() {
         paymentMethod: transfer ? "TF" : "Cash",
         ...(transfer ? { rekeningId: rekening.id, rekeningNameSnapshot: rekening.name } : {}),
         notes: `Impor simulasi ${n.nota} · ${n.customer}`,
-        clientRequestId: `SIM-${n.nota}`,
+        clientRequestId: `SIM12-${n.nota}`,
         allowDuplicate: true,
         items
       }
