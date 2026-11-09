@@ -79,6 +79,8 @@ export type Sale = {
   integrationPayloadHash?: string;
   integrationClientId?: string;
   integrationProcessingMode?: "slm_process_aj" | "aj_already_processed" | "record_only";
+  /** Nota MJ: "slm" bila MJ mengirim harga SLM (sejak 9 Nov 2026); kosong = harga MJ yang sudah termasuk markup. */
+  mjPriceBasis?: "slm";
   externalCustomerId?: string;
   erpCustomerId?: number;
   customerSyncStatus?: string;

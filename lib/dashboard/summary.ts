@@ -312,14 +312,16 @@ function modalWajar(item: NonNullable<Sale["items"]>[number], petaHargaModal: Ma
 
 /**
  * Laba satu nota: Omset − Modal.
- * - Omset = nilai nota; untuk transaksi MJ hanya bagian SLM (nota ÷ 1,1).
+ * - Omset = nilai nota; untuk nota MJ lama (berharga MJ) hanya bagian SLM (nota ÷ 1,1).
  * - Modal per barang dari Master Barang. Bila 0, ≤ Rp 1.000, atau lebih dari 2× harga jual per satuan,
  *   modal = omset barang × (100% − GP%) sesuai pengaturan estimasi GP.
  * - Omset nota di luar rincian barang (mis. ongkir yang ditagihkan) memakai aturan GP yang sama.
  */
 export function hitungLabaNota(penjualan: Sale, persenGp: number, petaHargaModal: Map<string, number>): LabaNota {
   const gp = Number.isFinite(persenGp) ? Math.min(100, Math.max(0, persenGp)) : 0;
-  const bagianSlm = (n: number) => (isTransaksiMj(penjualan) ? Math.round(n / MJ_MARKUP) : n);
+  // Nota MJ lama berharga MJ (sudah +10%); nota baru sudah berharga SLM sehingga tidak dibagi lagi.
+  const hargaMj = isTransaksiMj(penjualan) && penjualan.mjPriceBasis !== "slm";
+  const bagianSlm = (n: number) => (hargaMj ? Math.round(n / MJ_MARKUP) : n);
   const modalEstimasi = (omset: number) => Math.round(omset * (1 - gp / 100));
   const omsetNota = bagianSlm(Number(penjualan.total) || 0);
 

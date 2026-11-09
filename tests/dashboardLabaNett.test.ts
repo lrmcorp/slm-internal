@@ -45,6 +45,12 @@ describe("dashboard laba & nett profit", () => {
     expect(r).toMatchObject({ omset: 100_000, modal: 60_000, laba: 40_000 });
   });
 
+  it("nota MJ yang sudah berharga SLM tidak dibagi 1,1 lagi", () => {
+    const mj = { ...sale("MJ2", "2026-11-09", 1, 100_000), source: "MJ", mjPriceBasis: "slm" } as unknown as Sale;
+    const r = hitungLabaNota(mj, 11, new Map([["sku-1", 60_000]]));
+    expect(r).toMatchObject({ omset: 100_000, modal: 60_000, laba: 40_000 });
+  });
+
   it("grafik bulanan memakai angka & filter yang sama dengan ringkasan", () => {
     const sales = [sale("S1", "2026-11-06", 2, 150_000), { ...sale("AJ", "2026-11-05", 1, 999_000), tipeId: "AJ", tipeCodeSnapshot: "AJ" } as unknown as Sale];
     const expenses = [

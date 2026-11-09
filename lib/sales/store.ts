@@ -301,6 +301,12 @@ export function filterSalesRecordsInMemory(sales: Sale[], filters: SalesRecordFi
   });
 }
 
+function mjPriceBasisOf(metadata: Record<string, unknown>) {
+  const payload = metadata.payload && typeof metadata.payload === "object" ? (metadata.payload as Record<string, unknown>) : null;
+  const payloadMeta = payload?.metadata && typeof payload.metadata === "object" ? (payload.metadata as Record<string, unknown>) : null;
+  return payloadMeta?.mj_price_basis === "slm";
+}
+
 function toSale(row: SalesRecordWithItems): Sale {
   const metadata = row.integrationMetadata && typeof row.integrationMetadata === "object"
     ? (row.integrationMetadata as Record<string, unknown>)
@@ -363,6 +369,7 @@ function toSale(row: SalesRecordWithItems): Sale {
     integrationPayloadHash: row.integrationPayloadHash || undefined,
     integrationClientId: row.integrationClientId || undefined,
     integrationProcessingMode: row.integrationProcessingMode as Sale["integrationProcessingMode"] || undefined,
+    ...(mjPriceBasisOf(metadata) ? { mjPriceBasis: "slm" as const } : {}),
     externalCustomerId: row.externalCustomerId || undefined,
     erpCustomerId: row.erpCustomerId || undefined,
     customerSyncStatus: row.customerSyncStatus,
