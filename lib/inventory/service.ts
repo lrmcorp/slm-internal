@@ -7,7 +7,7 @@ export { hasRealName } from "./math";
 import { applyRmbCost } from "./pricing";
 import { ensureOpeningLayer, productHasLayers, valueMovement } from "./costing";
 import { postInventoryDocumentJournalSafely } from "@/lib/accounting/inventoryPosting";
-import { JAKARTA_TIME_ZONE, jakartaMonthKey } from "@/lib/date/jakarta";
+import { JAKARTA_TIME_ZONE, jakartaDateKey, jakartaMonthKey } from "@/lib/date/jakarta";
 import { DEFAULT_UNIT } from "./config";
 import type {
   AdjustmentInput,
@@ -90,7 +90,8 @@ export async function postMovement(tx: Tx, line: MovementLine, actor?: Inventory
   // Lapisan saldo awal dibuat dari stok sebelum pergerakan ini, jadi harus sebelum saldo diperbarui.
   const hadLayersBefore = valued ? (await ensureOpeningLayer(tx, line.productId)) || (await productHasLayers(tx, line.productId)) : true;
   await tx.inventoryBalance.update({ where: { id: balance.id }, data: { quantity: next.quantity, avgCost: next.avgCost } });
-  const changes = stockChangesByTx.get(tx);
+  // Notifikasi stok minimum hanya untuk pergerakan hari ini; impor transaksi lama/ke depan tidak membanjiri notifikasi.
+  const changes = jakartaDateKey(line.movementDate) === jakartaDateKey() ? stockChangesByTx.get(tx) : undefined;
   if (changes) changes.set(line.productId, (changes.get(line.productId) ?? 0) + (next.quantity - balance.quantity));
   const movement = await tx.inventoryMovement.create({
     data: {

@@ -27,9 +27,11 @@ export async function notifyNewSale(saleId: string) {
   try {
     const sale = await prisma.salesRecord.findUnique({
       where: { id: saleId },
-      select: { id: true, isTestTransaction: true, total: true, customerName: true, customerLocation: true },
+      select: { id: true, isTestTransaction: true, total: true, customerName: true, customerLocation: true, transactionDateKey: true, saleDate: true },
     });
     if (!sale || sale.isTestTransaction) return;
+    // Nota bertanggal lain (input susulan, impor data lama, atau tanggal ke depan) tidak dikabarkan.
+    if ((sale.transactionDateKey ?? jakartaDateKey(sale.saleDate)) !== jakartaDateKey()) return;
     const location = sale.customerLocation?.trim();
     await sendPushToRoles(PUSH_AUDIENCE.newSale, {
       title: "Transaksi Baru",
