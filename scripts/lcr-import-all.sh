@@ -71,7 +71,7 @@ run_import() {
 }
 if ! run_import; then
   echo
-  echo "Cek belum lolos. Kalau ada barang tidak ditemukan: upload Master_Barang_lcr_simulasi_v12.xlsx lewat"
+  echo "Cek belum lolos. Kalau ada barang tidak ditemukan: upload scripts/data/Master_Barang_lcr_simulasi_v12.xlsx lewat"
   echo "Inventory > Import Opname Excel di lcr. Kalau rekening lebih dari satu: REKENING=<id> bash scripts/lcr-import-all.sh"
   exit 1
 fi
