@@ -502,6 +502,14 @@ describe("DeliveryOrderDetailView UI", () => {
     updatedAt: "2026-09-07T08:00:00Z"
   };
 
+  it("hides the CCTV packing widget on an instance without CCTV", () => {
+    const render = (showCctv?: boolean) => renderToStaticMarkup(
+      <DeliveryOrderDetailView initialDetail={sampleDetail} officers={sampleOfficers} canAssign={true} canProcess={true} currentUserRole="ADMIN" showCctv={showCctv} />
+    );
+    expect(render()).toContain("Verifikasi Meja Packing CCTV");
+    expect(render(false)).not.toContain("Verifikasi Meja Packing CCTV");
+  });
+
   it("does not auto-check item checkboxes by default on initial render", () => {
     const html = renderToStaticMarkup(
       <DeliveryOrderDetailView

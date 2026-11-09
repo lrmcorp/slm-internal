@@ -3,12 +3,14 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { Role } from "@/lib/auth/roles";
+import { useBrand } from "@/components/brand/BrandProvider";
 import { activeNavSection, visibleNavSections } from "./navigation";
 
 /** Tab halaman di dalam modul yang sedang dibuka; tidak tampil untuk modul satu halaman. */
 export function SectionTabs({ role }: { role: Role }) {
   const pathname = usePathname();
-  const sections = visibleNavSections(role).flatMap((g) => g.sections);
+  const brand = useBrand();
+  const sections = visibleNavSections(role, { cctv: brand.cctvEnabled }).flatMap((g) => g.sections);
   const { section, href: activeHref } = activeNavSection(pathname, sections);
   if (!section || section.links.length < 2) return null;
   return (

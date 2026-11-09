@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cctvEnabled } from "@/lib/features";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/Button";
@@ -147,7 +148,7 @@ export default async function DashboardPage({ searchParams }: { searchParams?: P
     listRekeningAccounts(),
     listTempoPayments(),
     listTempoPaymentReversals(),
-    isOwner ? getCctvDashboardSummary().catch(() => null) : Promise.resolve(null),
+    isOwner && cctvEnabled() ? getCctvDashboardSummary().catch(() => null) : Promise.resolve(null),
   ]);
   const canViewOperationalProfit = can(role, "settings.profit.manage");
   const rekeningLabels = rekeningLabelMap(allRekenings);

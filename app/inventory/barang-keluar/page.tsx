@@ -42,7 +42,7 @@ export default async function BarangKeluarPage({ searchParams }: { searchParams:
   const p = await searchParams;
   const today = jakartaDateKey();
   const monthStart = `${today.slice(0, 8)}01`;
-  const from = p.from && DATE.test(p.from) ? p.from : monthStart;
+  const from = p.from && DATE.test(p.from) ? p.from : today;
   const to = p.to && DATE.test(p.to) ? p.to : today;
   const q = p.q?.trim() ?? "";
   const showNumber = user.role === "OWNER";
@@ -63,7 +63,7 @@ export default async function BarangKeluarPage({ searchParams }: { searchParams:
     <AppShell>
       <InventoryHeader
         title="Barang Keluar"
-        description="Barang yang terjual dalam periode ini: siapa pembelinya, di nota mana, dan berapa nilainya. Klik barang untuk melihat rinciannya."
+        description="Barang yang terjual dalam periode ini: siapa pembelinya, di nota mana, dan berapa nilainya. Nilainya sama dengan omset di dashboard (nota disetujui, bagian SLM). Klik barang untuk melihat rinciannya."
       />
 
       <section className="aj-surface mb-5 p-4 sm:p-5">
@@ -92,9 +92,14 @@ export default async function BarangKeluarPage({ searchParams }: { searchParams:
 
       <section className="aj-surface mb-5 grid grid-cols-2 sm:grid-cols-3">
         <div className="col-span-2 border-b border-slate-100 p-4 sm:col-span-1 sm:border-b-0 sm:border-r sm:p-5">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Nilai terjual</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Nilai barang terjual</p>
           <p className="mt-1 text-2xl font-bold tabular-nums text-slate-950">{rupiah(report.totals.amount)}</p>
           <p className="mt-1 text-xs text-slate-500">{periodLabel(from, to)}</p>
+          {report.totals.otherAmount > 0 && (
+            <p className="mt-1 text-xs text-slate-500">
+              + {rupiah(report.totals.otherAmount)} tagihan di luar barang (ongkir, dll.) = omset {rupiah(report.totals.amount + report.totals.otherAmount)}
+            </p>
+          )}
         </div>
         <div className="border-r border-slate-100 p-4 sm:p-5">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Nota</p>

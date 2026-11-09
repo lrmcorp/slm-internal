@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { cctvEnabled } from "@/lib/features";
 import { notFound, redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { TransactionCancelButton } from "@/components/transactions/TransactionCancelButton";
@@ -70,7 +71,7 @@ export default async function SalesDetailPage({ params }: { params: Promise<{ id
         items: { select: { id: true } }
       }
     }).catch(() => null),
-    getCctvDetectionForSales(sale.id, sale.transactionNumber || undefined).catch(() => null),
+    cctvEnabled() ? getCctvDetectionForSales(sale.id, sale.transactionNumber || undefined).catch(() => null) : Promise.resolve(null),
     prisma.salesRecord.findUnique({
       where: { id: sale.id },
       select: {
@@ -154,9 +155,7 @@ export default async function SalesDetailPage({ params }: { params: Promise<{ id
       </div>
 
       {/* Widget Verifikasi Meja Packing CCTV */}
-      <CctvPackingWidget
-        detection={cctvData as any}
-      />
+      {cctvEnabled() && <CctvPackingWidget detection={cctvData as any} />}
 
       <div className="grid gap-5 lg:grid-cols-2 mb-5">
         {/* Card 1: Informasi Transaksi & Pelanggan */}

@@ -454,8 +454,17 @@ const CATEGORY_ORDER: NavCategory[] = [
   "SISTEM & MONITORING",
 ];
 
-export function visibleNavLinks(role: Role): NavLink[] {
+export type NavOptions = { cctv?: boolean };
+
+const CCTV_HREFS = ["/cctv-monitoring", "/reports/cctv", "/reports/cctv-outbound"];
+
+function isCctvLink(href: string) {
+  return CCTV_HREFS.some((h) => href === h || href.startsWith(`${h}/`));
+}
+
+export function visibleNavLinks(role: Role, options: NavOptions = {}): NavLink[] {
   return NAV_LINKS.filter((link) => {
+    if (options.cctv === false && isCctvLink(link.href)) return false;
     if (link.ownerOnly && role !== "OWNER") return false;
     if (!can(role, link.permission) && !(link.anyPermission ?? []).some((p) => can(role, p))) return false;
     if (link.hideForRoles?.includes(role)) return false;
@@ -551,8 +560,8 @@ const SECTION_GROUP_ORDER: NavSectionGroup[] = ["Utama", "Penjualan & Kas", "Sto
 export type VisibleNavSection = { id: string; label: string; href: string; links: NavLink[] };
 
 /** Modul yang punya minimal satu halaman yang boleh dibuka role ini, dengan tab-tabnya. */
-export function visibleNavSections(role: Role): { group: NavSectionGroup; sections: VisibleNavSection[] }[] {
-  const allowed = new Map(visibleNavLinks(role).map((l) => [l.href, l]));
+export function visibleNavSections(role: Role, options: NavOptions = {}): { group: NavSectionGroup; sections: VisibleNavSection[] }[] {
+  const allowed = new Map(visibleNavLinks(role, options).map((l) => [l.href, l]));
   const sections = NAV_SECTIONS.map((s) => {
     const links = s.hrefs.map((h) => allowed.get(h)).filter((l): l is NavLink => Boolean(l)).map((l) => ({ ...l, label: s.tabs?.[l.href] ?? l.label }));
     const href = s.home && allowed.has(s.home) ? s.home : links[0]?.href;

@@ -301,7 +301,7 @@ export function filterSalesRecordsInMemory(sales: Sale[], filters: SalesRecordFi
   });
 }
 
-function mjPriceBasisOf(metadata: Record<string, unknown>) {
+export function mjPriceBasisOf(metadata: Record<string, unknown>) {
   const payload = metadata.payload && typeof metadata.payload === "object" ? (metadata.payload as Record<string, unknown>) : null;
   const payloadMeta = payload?.metadata && typeof payload.metadata === "object" ? (payload.metadata as Record<string, unknown>) : null;
   return payloadMeta?.mj_price_basis === "slm";

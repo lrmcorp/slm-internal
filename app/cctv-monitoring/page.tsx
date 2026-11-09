@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { cctvEnabled } from "@/lib/features";
 import { AppShell } from "@/components/layout/AppShell";
 import { Input } from "@/components/ui/Input";
 import { ResponsiveFilterPanel } from "@/components/ui/ResponsiveFilterPanel";
@@ -49,6 +50,7 @@ function activeFilterLabels(params: Record<string, string | string[] | undefined
 
 export default async function CctvMonitoringPage({ searchParams }: Props) {
   const role = await getCurrentRole();
+  if (!cctvEnabled()) notFound();
   if (!can(role, "audit.view")) redirect("/no-access");
 
   const params = (await searchParams) || {};

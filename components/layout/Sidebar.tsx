@@ -10,7 +10,7 @@ import type { NavBadges } from "@/lib/layout/navBadges";
 export function Sidebar({ role, badges = {} }: { role: Role; badges?: NavBadges }) {
   const brand = useBrand();
   const pathname = usePathname();
-  const groups = visibleNavSections(role);
+  const groups = visibleNavSections(role, { cctv: brand.cctvEnabled });
   const current = activeNavSection(pathname, groups.flatMap((g) => g.sections)).section;
 
   return (

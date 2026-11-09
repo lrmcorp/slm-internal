@@ -1,3 +1,5 @@
+import { cctvEnabled } from "@/lib/features";
+
 /**
  * Identitas aplikasi. Satu image dipakai beberapa instance (SLM, SLMJ, ANKJY), jadi identitas dibaca
  * dari environment server saat aplikasi berjalan, bukan saat build.
@@ -7,7 +9,7 @@
  *   APP_COMPANY_NAME    nama badan usaha di kop laporan & login (default "Aneka Jaya / SLM")
  * Komponen client tidak bisa membaca env server: pakai useBrand() dari components/brand/BrandProvider.
  */
-export type AppBrand = { name: string; initials: string; title: string; companyName: string; accent: string | null };
+export type AppBrand = { name: string; initials: string; title: string; companyName: string; accent: string | null; cctvEnabled: boolean };
 
 const read = (key: string) => (typeof process !== "undefined" ? (process.env[key] || "").trim() : "");
 
@@ -18,7 +20,8 @@ export function getAppBrand(): AppBrand {
     initials: read("APP_BRAND_INITIALS") || "SLM",
     title: read("APP_BRAND_TITLE") || `${name} Internal App`,
     companyName: read("APP_COMPANY_NAME") || "Aneka Jaya / SLM",
-    accent: read("APP_BRAND_ACCENT") || null
+    accent: read("APP_BRAND_ACCENT") || null,
+    cctvEnabled: cctvEnabled()
   };
 }
 

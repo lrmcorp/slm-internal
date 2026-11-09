@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { cctvEnabled } from "@/lib/features";
 import { AppShell } from "@/components/layout/AppShell";
 import { can } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
@@ -40,6 +41,7 @@ function pageHref(params: Record<string, string | string[] | undefined>, newPara
 
 export default async function CctvReportsMultiTabPage({ searchParams }: Props) {
   const role = await getCurrentRole();
+  if (!cctvEnabled()) notFound();
   if (!can(role, "reports.view")) redirect("/no-access");
 
   const params = await searchParams;

@@ -13,7 +13,7 @@ export function MobileNavigationDrawer({ role, userName, badges = {} }: { role: 
   const pathname = usePathname();
   const [drawerState, setDrawerState] = useState({ open: false, pathname });
   const open = drawerState.open && drawerState.pathname === pathname;
-  const groups = visibleNavSections(role);
+  const groups = visibleNavSections(role, { cctv: brand.cctvEnabled });
   const current = activeNavSection(pathname, groups.flatMap((g) => g.sections)).section;
   const pending = groups.flatMap((g) => g.sections).reduce((sum, s) => sum + (badges[s.id]?.count ?? 0), 0);
   const setOpen = (nextOpen: boolean) => setDrawerState({ open: nextOpen, pathname });

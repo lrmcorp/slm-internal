@@ -1,4 +1,5 @@
 import { notFound, redirect } from "next/navigation";
+import { cctvEnabled } from "@/lib/features";
 import { prisma } from "@/lib/db/prisma";
 import { AppShell } from "@/components/layout/AppShell";
 import { can } from "@/lib/auth/roles";
@@ -38,10 +39,9 @@ export default async function DeliveryOrderDetailPage({
 
   const [officers, cctvDetectionRaw] = await Promise.all([
     listDeliveryOfficers(),
-    getCctvDetectionForSales(
-      detail.salesRecordId,
-      detail.sale?.transactionNumber || undefined
-    ).catch(() => null),
+    cctvEnabled()
+      ? getCctvDetectionForSales(detail.salesRecordId, detail.sale?.transactionNumber || undefined).catch(() => null)
+      : Promise.resolve(null),
   ]);
 
   const cctvDetection = cctvDetectionRaw;
@@ -56,6 +56,7 @@ export default async function DeliveryOrderDetailPage({
           initialDetail={detail}
           officers={officers}
           cctvDetection={cctvDetection as any}
+          showCctv={cctvEnabled()}
           canAssign={canAssign}
           canProcess={canProcess}
           currentUserRole={user.role}

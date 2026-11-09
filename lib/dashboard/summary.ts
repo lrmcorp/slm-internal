@@ -237,7 +237,7 @@ function kodeTipe(baris: { tipeId?: string; tipeCodeSnapshot?: string }): string
 }
 
 /** Menentukan apakah transaksi adalah penjualan operasional SLM (bukan konsinyasi/internal AJ) */
-function apakahPenjualanOperasional(baris: Pick<Sale, "tipeId" | "tipeCodeSnapshot" | "syncTarget">): boolean {
+export function apakahPenjualanOperasional(baris: Pick<Sale, "tipeId" | "tipeCodeSnapshot" | "syncTarget">): boolean {
   return kodeTipe(baris) !== "AJ";
 }
 

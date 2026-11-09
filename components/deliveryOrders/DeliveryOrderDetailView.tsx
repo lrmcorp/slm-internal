@@ -24,6 +24,8 @@ type Props = {
   initialDetail: DeliveryOrderData;
   officers: Officer[];
   cctvDetection?: CctvDetectionData | null;
+  /** false di instance tanpa CCTV (CCTV_ENABLED=false). */
+  showCctv?: boolean;
   canAssign: boolean;
   canProcess: boolean;
   currentUserRole: string;
@@ -34,6 +36,7 @@ export function DeliveryOrderDetailView({
   initialDetail,
   officers,
   cctvDetection,
+  showCctv = true,
   canAssign,
   canProcess,
   currentUserRole,
@@ -585,11 +588,13 @@ export function DeliveryOrderDetailView({
       </div>
 
       {/* Verifikasi Meja Packing CCTV */}
-      <CctvPackingWidget
-        detection={cctvDetection}
-        title="Verifikasi Meja Packing CCTV (Surat Jalan)"
-        subtitle="Dokumentasi fisik paket & visual AI Vision sebelum diserahkan ke kurir / ekspedisi"
-      />
+      {showCctv && (
+        <CctvPackingWidget
+          detection={cctvDetection}
+          title="Verifikasi Meja Packing CCTV (Surat Jalan)"
+          subtitle="Dokumentasi fisik paket & visual AI Vision sebelum diserahkan ke kurir / ekspedisi"
+        />
+      )}
 
 
       {/* Zero items alert banner */}
