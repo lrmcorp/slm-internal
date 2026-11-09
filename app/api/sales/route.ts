@@ -11,6 +11,8 @@ export async function POST(request: Request) {
   if (!parsed.success) return NextResponse.json({ success: false, message: "Mohon lengkapi data yang wajib diisi.", code: "VALIDATION", details: parsed.error.flatten() }, { status: 400 });
   try {
     const response = await createSale(parsed.data);
+    const created = response.success && response.data && typeof response.data === "object" && !("idempotentReplay" in response.data) ? (response.data as { id?: string }).id : undefined;
+    if (created) void import("@/lib/push/notify").then(({ notifyNewSale }) => notifyNewSale(created)).catch(() => undefined);
     const status = response.success
       ? (response.data && typeof response.data === "object" && "idempotentReplay" in response.data ? 200 : 201)
       : response.code === "DUPLICATE_SUSPECTED" || response.code === "TRANSACTION_IN_FLIGHT"

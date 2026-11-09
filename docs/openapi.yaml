@@ -2292,6 +2292,29 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+  /api/push/subscription:
+    post:
+      summary: Simpan langganan notifikasi push perangkat ini.
+      description: User yang sedang login. Body berupa PushSubscription.toJSON() (endpoint dan keys p256dh/auth). Aktif bila VAPID_PUBLIC_KEY dan VAPID_PRIVATE_KEY diisi di server.
+      responses:
+        "200":
+          description: Langganan tersimpan.
+        "400":
+          description: Data langganan tidak valid.
+        "401":
+          description: Belum login.
+        "503":
+          description: Notifikasi belum diaktifkan di server.
+    delete:
+      summary: Berhenti menerima notifikasi push di perangkat ini.
+      description: Body berisi endpoint langganan milik user yang sedang login.
+      responses:
+        "200":
+          description: Langganan dihapus.
+        "400":
+          description: Endpoint wajib diisi.
+        "401":
+          description: Belum login.
   /api/rekening:
     get:
       summary: Daftar rekening pembayaran.

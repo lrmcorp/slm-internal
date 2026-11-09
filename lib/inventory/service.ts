@@ -90,6 +90,8 @@ export async function postMovement(tx: Tx, line: MovementLine, actor?: Inventory
   // Lapisan saldo awal dibuat dari stok sebelum pergerakan ini, jadi harus sebelum saldo diperbarui.
   const hadLayersBefore = valued ? (await ensureOpeningLayer(tx, line.productId)) || (await productHasLayers(tx, line.productId)) : true;
   await tx.inventoryBalance.update({ where: { id: balance.id }, data: { quantity: next.quantity, avgCost: next.avgCost } });
+  const changes = stockChangesByTx.get(tx);
+  if (changes) changes.set(line.productId, (changes.get(line.productId) ?? 0) + (next.quantity - balance.quantity));
   const movement = await tx.inventoryMovement.create({
     data: {
       movementDate: line.movementDate,
@@ -133,10 +135,21 @@ function isRetryableConflict(error: unknown) {
 }
 
 /** Transaksi inventory; otomatis diulang bila nomor dokumen otomatis bentrok karena input bersamaan. */
+/** Perubahan bersih stok per barang dalam satu transaksi, untuk notifikasi stok minimum setelah tersimpan. */
+const stockChangesByTx = new WeakMap<object, Map<string, number>>();
+
 export async function runInventoryTransaction<T>(fn: (tx: Tx) => Promise<T>, client: PrismaClient = prisma): Promise<T> {
   for (let attempt = 1; ; attempt++) {
+    const changes = new Map<string, number>();
     try {
-      return await client.$transaction(fn, { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted, timeout: 30_000, maxWait: 10_000 });
+      const result = await client.$transaction((tx) => {
+        stockChangesByTx.set(tx, changes);
+        return fn(tx);
+      }, { isolationLevel: Prisma.TransactionIsolationLevel.ReadCommitted, timeout: 30_000, maxWait: 10_000 });
+      if (changes.size > 0) {
+        void import("@/lib/push/notify").then(({ notifyLowStockCrossings }) => notifyLowStockCrossings(changes)).catch(() => undefined);
+      }
+      return result;
     } catch (error) {
       if (attempt < 4 && (isDocumentNumberConflict(error) || isRetryableConflict(error))) continue;
       throw error;

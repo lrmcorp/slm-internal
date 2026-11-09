@@ -3,6 +3,8 @@ import { AppShell } from "@/components/layout/AppShell";
 import { getCurrentUser } from "@/lib/auth/session";
 import { roleLabel } from "@/lib/auth/roles";
 import { getUserProfile } from "@/lib/users/profile";
+import { PushNotificationToggle } from "@/components/push/PushNotificationToggle";
+import { PUSH_AUDIENCE, pushConfig } from "@/lib/push/config";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +12,11 @@ export default async function ProfilePage() {
   const user = await getCurrentUser();
   if (user.id === "unauthenticated") redirect("/login");
   const profile = await getUserProfile(user);
+  const push = pushConfig();
+  const topics = [
+    (PUSH_AUDIENCE.newSale as readonly string[]).includes(user.role) ? "Penjualan baru" : null,
+    (PUSH_AUDIENCE.lowStock as readonly string[]).includes(user.role) ? "Barang menyentuh stok minimum" : null,
+  ].filter((topic): topic is string => Boolean(topic));
 
   return (
     <AppShell>
@@ -27,6 +34,11 @@ export default async function ProfilePage() {
           <ProfileRow label="Login terakhir" value={profile.lastLoginAt ? new Intl.DateTimeFormat("id-ID", { dateStyle: "long", timeStyle: "short", timeZone: "Asia/Jakarta" }).format(profile.lastLoginAt) : "-"} />
         </dl>
       </section>
+      {push.enabled && topics.length > 0 && (
+        <section className="aj-surface mt-5 max-w-2xl overflow-hidden">
+          <PushNotificationToggle publicKey={push.publicKey} topics={topics} />
+        </section>
+      )}
     </AppShell>
   );
 }

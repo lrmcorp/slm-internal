@@ -287,6 +287,10 @@ export async function updateApprovalStatus(id: string, action: ApprovalAction, r
       return after;
     });
 
+    if (result.module === "penjualan" && result.status === "approved") {
+      void import("@/lib/push/notify").then(({ notifyNewSale }) => notifyNewSale(result.entityId)).catch(() => undefined);
+    }
+
     if (result.module === "pengeluaran") {
       if (result.status === "approved") {
         await postExpenseJournal(result.entityId, user).catch((err) => {

@@ -399,7 +399,10 @@ export async function createOrResumeMjInvoice(input: MjInvoiceInput, principal: 
   if (row && row.integrationPayloadHash !== hash && !await normalizeLegacyHash(row, input, hash)) {
     throw new MjIntegrationError("REFERENCE_CONFLICT", "external_reference sudah digunakan dengan payload immutable atau processing_mode berbeda.", 409, invoiceSnapshot(row));
   }
-  if (!row) row = await createLocalInvoice(input, principal, hash);
+  if (!row) {
+    row = await createLocalInvoice(input, principal, hash);
+    void import("@/lib/push/notify").then(({ notifyNewSale }) => notifyNewSale(row!.id)).catch(() => undefined);
+  }
 
   const isSyncEnabled = await isErpTransactionSyncEnabled();
   const shouldProcessAj = input.processing_mode === "slm_process_aj" && mjMode === "process_aj" && isSyncEnabled;
