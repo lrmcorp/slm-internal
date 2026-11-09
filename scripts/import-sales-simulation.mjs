@@ -4,13 +4,12 @@
  * jadi nomor nota, potong stok, jurnal, dan DO dibuat sama seperti input dari kasir.
  *
  * Data: scripts/data/simulasi-penjualan-aj-v12-jul-des-2026.json.gz (file v12, 1.464 nota,
- * tanpa hari Minggu). Jam diacak 09:00–15:35. Harga jual dan cara bayar (Tunai/Transfer) dari file.
+ * tanpa hari Minggu). Jam diacak 09:00–15:35. Harga jual dari file; semua nota dibayar Cash.
  *
  * Pakai (default hanya cek, tidak menyimpan apa pun):
  *   IMPORT_USER=owner IMPORT_PASSWORD=... node scripts/import-sales-simulation.mjs --url https://lcr.lrmint.xyz
  *   ... --commit            simpan sungguhan
  *   ... --tipe <id|kode>    tipe pembukuan (bawaan: tipe pertama yang bukan AJ)
- *   ... --rekening <id|nama> rekening penerima nota Transfer (bawaan: satu-satunya rekening bank tipe itu)
  *   ... --limit 5           hanya N nota pertama (uji coba)
  *
  * Aman diulang: tiap nota memakai clientRequestId SIM12-<no nota>, jadi nota yang sudah masuk dilewati.
@@ -35,7 +34,6 @@ const FILE = opt("file", path.join(here, "data", "simulasi-penjualan-aj-v12-jul-
 const COMMIT = flag("commit");
 const LIMIT = Number(opt("limit", "0")) || 0;
 const TIPE = opt("tipe", "");
-const REKENING = opt("rekening", "");
 const USER = process.env.IMPORT_USER || "";
 const PASSWORD = process.env.IMPORT_PASSWORD || "";
 
@@ -151,19 +149,8 @@ async function main() {
   console.log(`Tipe tersedia: ${types.map((t) => `${t.code} (${t.id})`).join(", ") || "-"}`);
   if (!tipe) throw new Error(TIPE ? `Tipe ${TIPE} tidak ditemukan.` : "Tidak ada tipe selain AJ. Pilih dengan --tipe.");
   if (norm(tipe.code) === "aj") throw new Error("Tipe AJ dikirim ke ERP Aneka Jaya. Pilih tipe lain dengan --tipe.");
-  console.log(`Dipakai: tipe ${tipe.code} (${tipe.name})`);
+  console.log(`Dipakai: tipe ${tipe.code} (${tipe.name}), pembayaran Cash`);
 
-  const needsTransfer = selected.some((n) => n.payment === "Transfer");
-  let rekening;
-  if (needsTransfer) {
-    const rekRes = await api("GET", `/api/rekening?tipeId=${encodeURIComponent(tipe.id)}`);
-    if (!rekRes.json.success) throw new Error(`Gagal membaca Rekening: ${rekRes.json.message}`);
-    const banks = rekRes.json.data.filter((r) => r.isActive !== false && !r.isCash);
-    console.log(`Rekening bank tipe ${tipe.code}: ${banks.map((r) => `${r.bank} ${r.name} (${r.id})`).join(", ") || "-"}`);
-    rekening = REKENING ? banks.find((r) => norm(r.id) === norm(REKENING) || norm(r.name) === norm(REKENING)) : banks.length === 1 ? banks[0] : undefined;
-    if (!rekening) throw new Error(REKENING ? `Rekening ${REKENING} tidak ditemukan untuk tipe ${tipe.code}.` : banks.length ? "Ada lebih dari satu rekening bank. Pilih dengan --rekening <id>." : `Belum ada rekening bank untuk tipe ${tipe.code}. Tambahkan di Pengaturan > Rekening.`);
-    console.log(`Nota Transfer masuk ke: ${rekening.bank} ${rekening.name}`);
-  }
 
   const products = await loadProducts();
   console.log(`Master Barang: ${products.length} barang aktif`);
@@ -194,7 +181,6 @@ async function main() {
       return { ...line, unitPrice, discount: Math.max(0, Math.round((unitPrice * line.quantity - amount) * 100) / 100) };
     });
     total += items.reduce((s, i) => s + i.quantity * i.unitPrice - i.discount, 0);
-    const transfer = n.payment === "Transfer";
     payloads.push({
       nota: n.nota,
       body: {
@@ -206,8 +192,7 @@ async function main() {
         customerName: "Walk In",
         customerLocation: n.area,
         shippingMethod: "di Tempat",
-        paymentMethod: transfer ? "TF" : "Cash",
-        ...(transfer ? { rekeningId: rekening.id, rekeningNameSnapshot: rekening.name } : {}),
+        paymentMethod: "Cash",
         notes: `Impor simulasi ${n.nota} · ${n.customer}`,
         clientRequestId: `SIM12-${n.nota}`,
         allowDuplicate: true,
@@ -218,7 +203,7 @@ async function main() {
 
   console.log(`Barang cocok lewat: ${[...via].map(([k, v]) => `${k} ${v} baris`).join(", ") || "-"}`);
   const fileTotal = selected.reduce((s, n) => s + n.items.reduce((t, i) => t + i.amount, 0), 0);
-  console.log(`Total penjualan: ${rupiah(total)} (di file ${rupiah(fileTotal)}) · Transfer ${selected.filter((n) => n.payment === "Transfer").length} nota, Tunai ${selected.filter((n) => n.payment !== "Transfer").length} nota`);
+  console.log(`Total penjualan: ${rupiah(total)} (di file ${rupiah(fileTotal)}) · semua Cash`);
   const report = (title, map) => { if (map.size) { console.log(`\n${title} (${map.size}):`); for (const v of map.values()) console.log(`  - ${v}`); } };
   report("Barang di file yang TIDAK ditemukan di Master Barang", unmatched);
   report("Satuan berbeda (cek)", unitWarn);

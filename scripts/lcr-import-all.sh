@@ -3,7 +3,7 @@
 #   bash scripts/lcr-import-all.sh
 # 1) matikan notifikasi & DO di env lcr, 2) jalankan ulang container lcr, 3) pastikan lcr sudah versi
 # terbaru, 4) cek data, 5) setelah Anda setuju, simpan. Username & password owner lcr ditanyakan di layar.
-# Tujuan selalu https://lcr.lrmint.xyz. Opsional: LCR_CONTAINER, REKENING=<id rekening>, TIPE=<kode tipe>.
+# Tujuan selalu https://lcr.lrmint.xyz. Semua nota dibayar Cash. Opsional: LCR_CONTAINER, TIPE=<kode tipe>.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
@@ -60,7 +60,6 @@ read -rp "Username owner lcr: " IMPORT_USER
 read -rsp "Password: " IMPORT_PASSWORD; echo
 export IMPORT_USER IMPORT_PASSWORD
 EXTRA=()
-[ -n "${REKENING:-}" ] && EXTRA+=(--rekening "$REKENING")
 [ -n "${TIPE:-}" ] && EXTRA+=(--tipe "$TIPE")
 run_import() {
   if command -v node >/dev/null 2>&1; then
@@ -72,7 +71,7 @@ run_import() {
 if ! run_import; then
   echo
   echo "Cek belum lolos. Kalau ada barang tidak ditemukan: upload scripts/data/Master_Barang_lcr_simulasi_v12.xlsx lewat"
-  echo "Inventory > Import Opname Excel di lcr. Kalau rekening lebih dari satu: REKENING=<id> bash scripts/lcr-import-all.sh"
+  echo "Inventory > Import Opname Excel di lcr."
   exit 1
 fi
 
