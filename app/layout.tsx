@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { brandHex, getAppBrand } from "@/lib/appBrand";
+import { iphoneStartupImages } from "@/lib/pwa/splash";
 import { BrandProvider } from "@/components/brand/BrandProvider";
 import { TopLoadingBar } from "@/components/ui/TopLoadingBar";
 import { ToastProvider } from "@/components/ui/ToastProvider";
@@ -15,7 +16,7 @@ export function generateMetadata(): Metadata {
     icons: { icon: "/brand-icon.svg", shortcut: "/brand-icon.svg", apple: "/pwa-icon/180" },
     // Dipasang di iPhone lewat Safari > Bagikan > Tambah ke Layar Utama: terbuka layar penuh tanpa App Store.
     manifest: "/manifest.webmanifest",
-    appleWebApp: { capable: true, title: brand.name, statusBarStyle: "default" }
+    appleWebApp: { capable: true, title: brand.name, statusBarStyle: "default", startupImage: iphoneStartupImages() }
   };
 }
 

@@ -12,7 +12,13 @@ const nextConfig = {
   experimental: {
     cpus: 1,
   },
-  async headers() { return [{ source: "/:path*", headers: securityHeaders }]; }
+  async headers() {
+    return [
+      { source: "/:path*", headers: securityHeaders },
+      // nginx menahan seluruh jawaban sebelum diteruskan; tanpa ini kerangka muat (loading.tsx) baru tiba bersama isi halaman.
+      { source: "/:path*", headers: [{ key: "X-Accel-Buffering", value: "no" }] },
+    ];
+  }
 };
 
 export default nextConfig;
