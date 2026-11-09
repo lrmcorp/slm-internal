@@ -14,7 +14,7 @@ export default async function ProfilePage() {
   const profile = await getUserProfile(user);
   const push = pushConfig();
   const topics = [
-    (PUSH_AUDIENCE.newSale as readonly string[]).includes(user.role) ? "Penjualan baru" : null,
+    (PUSH_AUDIENCE.newSale as readonly string[]).includes(user.role) ? "Transaksi baru di Riwayat Penjualan" : null,
     (PUSH_AUDIENCE.lowStock as readonly string[]).includes(user.role) ? "Barang menyentuh stok minimum" : null,
   ].filter((topic): topic is string => Boolean(topic));
 

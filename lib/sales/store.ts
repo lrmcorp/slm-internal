@@ -1025,12 +1025,8 @@ async function assertNoPostedReturns(saleId: string, action: string) {
 }
 
 export async function updateSalesRecord(id: string, input: PenjualanInput): Promise<Sale> {
-  const previous = await getSalesRecord(id);
-  const previousName = previous?.customerName;
+  const previousName = (await getSalesRecord(id))?.customerName;
   const after = await updateSalesRecordInner(id, input);
-  if (previous?.approvalStatus === "draft" && after.approvalStatus === "approved") {
-    void import("@/lib/push/notify").then(({ notifyNewSale }) => notifyNewSale(id)).catch(() => undefined);
-  }
   // Edit transaksi lama tidak menambah jumlah order, kecuali customer-nya diganti.
   await rememberCustomerFromSale(after, { countOrder: customerNameKey(after.customerName) !== customerNameKey(previousName) });
   return after;

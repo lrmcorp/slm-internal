@@ -12,22 +12,21 @@ function qty(value: number) {
 }
 
 /**
- * Notifikasi "Penjualan baru" untuk nota yang sudah disetujui. Draft dan yang menunggu persetujuan dikirim
- * saat disetujui. Dipanggil setelah transaksi tersimpan; tidak pernah melempar error.
+ * Notifikasi "Transaksi Baru" setiap ada baris baru di Riwayat Penjualan (draft, menunggu persetujuan,
+ * atau disetujui; juga nota dari MJ). Dipanggil sekali saat nota dibuat; tidak pernah melempar error.
  */
 export async function notifyNewSale(saleId: string) {
   if (!pushConfig().enabled) return;
   try {
     const sale = await prisma.salesRecord.findUnique({
       where: { id: saleId },
-      select: { id: true, approvalStatus: true, isTestTransaction: true, total: true, customerName: true, paymentMethod: true, createdByNameSnapshot: true, source: true, createdByUserId: true, _count: { select: { items: true } } },
+      select: { id: true, isTestTransaction: true, total: true, customerName: true, customerLocation: true },
     });
-    if (!sale || sale.approvalStatus !== "approved" || sale.isTestTransaction) return;
-    const isMj = sale.source === "MJ" || sale.createdByUserId === "integration:mj";
-    const parts = [sale.customerName, `${sale._count.items} barang`, sale.paymentMethod, isMj ? "dari MJ" : sale.createdByNameSnapshot ? `oleh ${sale.createdByNameSnapshot}` : ""].filter(Boolean);
+    if (!sale || sale.isTestTransaction) return;
+    const location = sale.customerLocation?.trim();
     await sendPushToRoles(PUSH_AUDIENCE.newSale, {
-      title: `Penjualan baru · ${rupiah(Number(sale.total) || 0)}`,
-      body: parts.join(" · "),
+      title: "Transaksi Baru",
+      body: `${rupiah(Number(sale.total) || 0)} dari ${sale.customerName}${location ? ` - ${location}` : ""}`,
       url: `/penjualan/${sale.id}`,
       tag: `sale-${sale.id}`,
     });

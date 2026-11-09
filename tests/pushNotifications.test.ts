@@ -52,15 +52,20 @@ describe("notifikasi push", () => {
     expect(payload).toMatchObject({ title: "Stok minimum: Ubur 50", body: "Sisa 18 Pak (batas 20 Pak) · UBUR-50", url: "/inventory?keyword=UBUR-50" });
   });
 
-  it("penjualan baru hanya untuk nota disetujui, ke Owner dan Supervisor", async () => {
-    mocks.saleFind.mockResolvedValueOnce({ id: "s1", approvalStatus: "approved", isTestTransaction: false, total: 1_250_000, customerName: "Budi", paymentMethod: "TF", createdByNameSnapshot: "Nia", source: "SLM", createdByUserId: "u", _count: { items: 3 } });
+  it("Transaksi Baru: total dari customer - lokasi, ke Owner dan Supervisor; transaksi tes tidak dikirim", async () => {
+    mocks.saleFind.mockResolvedValueOnce({ id: "s1", isTestTransaction: false, total: 1_250_000, customerName: "Budi", customerLocation: "Kupang (NTT)" });
     await notifyNewSale("s1");
     expect(mocks.subFindMany).toHaveBeenCalledWith({ where: { role: { in: ["OWNER", "SUPERVISOR"] } } });
-    expect(JSON.parse(mocks.sendNotification.mock.calls[0][1])).toMatchObject({ title: "Penjualan baru · Rp1.250.000", body: "Budi · 3 barang · TF · oleh Nia", url: "/penjualan/s1" });
+    expect(JSON.parse(mocks.sendNotification.mock.calls[0][1])).toEqual({ title: "Transaksi Baru", body: "Rp1.250.000 dari Budi - Kupang (NTT)", url: "/penjualan/s1", tag: "sale-s1" });
 
     mocks.sendNotification.mockClear();
-    mocks.saleFind.mockResolvedValueOnce({ id: "s2", approvalStatus: "draft", isTestTransaction: false, _count: { items: 1 } });
+    mocks.saleFind.mockResolvedValueOnce({ id: "s2", isTestTransaction: false, total: 50_000, customerName: "Walk In", customerLocation: " " });
     await notifyNewSale("s2");
+    expect(JSON.parse(mocks.sendNotification.mock.calls[0][1]).body).toBe("Rp50.000 dari Walk In");
+
+    mocks.sendNotification.mockClear();
+    mocks.saleFind.mockResolvedValueOnce({ id: "s3", isTestTransaction: true, total: 1, customerName: "Tes", customerLocation: null });
+    await notifyNewSale("s3");
     expect(mocks.sendNotification).not.toHaveBeenCalled();
   });
 
