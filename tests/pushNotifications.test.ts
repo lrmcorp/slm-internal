@@ -4,15 +4,14 @@ vi.mock("server-only", () => ({}));
 const mocks = vi.hoisted(() => ({
   sendNotification: vi.fn(), setVapidDetails: vi.fn(),
   subFindMany: vi.fn(), subUpdate: vi.fn(), subDelete: vi.fn(),
-  saleFind: vi.fn(), productFindMany: vi.fn(), balanceGroupBy: vi.fn(),
+  saleFind: vi.fn(), productFindMany: vi.fn(), balanceGroupBy: vi.fn(), tempoFindMany: vi.fn(), saleFindMany: vi.fn(),
 }));
-const tempo = vi.hoisted(() => ({ summary: vi.fn() }));
-vi.mock("@/lib/tempo/store", () => ({ getTempoMetricsSummary: tempo.summary }));
 vi.mock("web-push", () => ({ default: { sendNotification: mocks.sendNotification, setVapidDetails: mocks.setVapidDetails } }));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
     pushSubscription: { findMany: mocks.subFindMany, update: mocks.subUpdate, delete: mocks.subDelete },
-    salesRecord: { findUnique: mocks.saleFind },
+    salesRecord: { findUnique: mocks.saleFind, findMany: mocks.saleFindMany },
+    tempoReceivable: { findMany: mocks.tempoFindMany },
     inventoryProduct: { findMany: mocks.productFindMany },
     inventoryBalance: { groupBy: mocks.balanceGroupBy },
   },
@@ -83,23 +82,30 @@ describe("notifikasi push", () => {
     expect(mocks.sendNotification).not.toHaveBeenCalled();
   });
 
-  it("jatuh tempo: ringkasan lewat tempo dan ≤ 3 hari ke Owner, Supervisor, Finance; kosong = tidak dikirim", async () => {
-    expect(tempoDueMessage({ overdue: { count: 0, amount: 0 }, comingSoonH3: { count: 0, amount: 0 } })).toBeNull();
-    expect(tempoDueMessage({ overdue: { count: 0, amount: 0 }, comingSoonH3: { count: 3, amount: 12_500_000 } })?.body).toBe("Jatuh tempo ≤ 3 hari: 3 nota Rp12.500.000");
-
-    tempo.summary.mockResolvedValueOnce({ overdue: { count: 2, amount: 4_000_000 }, comingSoonH3: { count: 3, amount: 12_500_000 } });
-    await expect(notifyTempoDue()).resolves.toEqual({ sent: 1 });
-    expect(mocks.subFindMany).toHaveBeenCalledWith({ where: { role: { in: ["OWNER", "SUPERVISOR", "FINANCE"] } } });
-    expect(JSON.parse(mocks.sendNotification.mock.calls[0][1])).toEqual({
-      title: "Tempo Jatuh Tempo",
-      body: "Lewat jatuh tempo: 2 nota Rp4.000.000 · Jatuh tempo ≤ 3 hari: 3 nota Rp12.500.000",
-      url: "/tempo",
-      tag: "tempo-due",
+  it("jatuh tempo: satu notifikasi per nota (lewat tempo dan <= 3 hari) ke Owner, Supervisor, Finance", async () => {
+    expect(tempoDueMessage({ id: "t1", transactionNumber: "MJ-20261109-0007", remainingAmount: 1_250_000, customerName: "Budi", dueKey: "2026-11-12" })).toEqual({
+      title: "Jatuh Tempo",
+      body: "Nota MJ-20261109-0007 Rp1.250.000 atas nama Budi, jatuh tempo 12/11/2026",
+      url: "/tempo/t1",
+      tag: "tempo-t1",
     });
 
+    mocks.tempoFindMany.mockResolvedValueOnce([
+      { id: "t1", salesId: "s1", customerName: "Sari", remainingAmount: 500_000, dueDate: new Date("2026-11-05T00:00:00Z") },
+      { id: "t2", salesId: "s2", customerName: "Budi", remainingAmount: 1_250_000, dueDate: new Date("2026-11-12T00:00:00Z") },
+      { id: "t3", salesId: "s3", customerName: "Rina", remainingAmount: 900_000, dueDate: new Date("2026-11-13T00:00:00Z") },
+    ]);
+    mocks.saleFindMany.mockResolvedValueOnce([{ id: "s1", transactionNumber: "SLM-1" }, { id: "s2", transactionNumber: "SLM-2" }]);
+    await expect(notifyTempoDue("2026-11-09")).resolves.toEqual({ sent: 2 });
+    expect(mocks.subFindMany).toHaveBeenCalledWith({ where: { role: { in: ["OWNER", "SUPERVISOR", "FINANCE"] } } });
+    expect(mocks.sendNotification.mock.calls.map((call) => JSON.parse(call[1]).body)).toEqual([
+      "Nota SLM-1 Rp500.000 atas nama Sari, jatuh tempo 05/11/2026",
+      "Nota SLM-2 Rp1.250.000 atas nama Budi, jatuh tempo 12/11/2026",
+    ]);
+
     mocks.sendNotification.mockClear();
-    tempo.summary.mockResolvedValueOnce({ overdue: { count: 0, amount: 0 }, comingSoonH3: { count: 0, amount: 0 } });
-    await expect(notifyTempoDue()).resolves.toEqual({ sent: 0 });
+    mocks.tempoFindMany.mockResolvedValueOnce([]);
+    await expect(notifyTempoDue("2026-11-09")).resolves.toEqual({ sent: 0 });
     expect(mocks.sendNotification).not.toHaveBeenCalled();
   });
 });

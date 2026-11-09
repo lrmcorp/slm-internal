@@ -2,6 +2,13 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { PUSH_AUDIENCE, pushConfig } from "./config";
 import { sendPushToRoles } from "./send";
+import { jakartaDateKey } from "@/lib/date/jakarta";
+
+function addDaysKey(key: string, days: number) {
+  const date = new Date(`${key}T00:00:00Z`);
+  date.setUTCDate(date.getUTCDate() + days);
+  return date.toISOString().slice(0, 10);
+}
 
 function rupiah(value: number) {
   return `Rp${Math.round(value).toLocaleString("id-ID")}`;
@@ -76,24 +83,49 @@ export async function notifyLowStockCrossings(netDeltaByProduct: Map<string, num
   }
 }
 
-/** Ringkasan harian Tempo (dikirim bersama pengingat tempo pukul 09.00): lewat jatuh tempo dan jatuh tempo ≤ 3 hari. */
-export function tempoDueMessage(summary: { overdue: { count: number; amount: number }; comingSoonH3: { count: number; amount: number } }) {
-  const parts = [
-    summary.overdue.count > 0 ? `Lewat jatuh tempo: ${summary.overdue.count} nota ${rupiah(summary.overdue.amount)}` : null,
-    summary.comingSoonH3.count > 0 ? `Jatuh tempo ≤ 3 hari: ${summary.comingSoonH3.count} nota ${rupiah(summary.comingSoonH3.amount)}` : null,
-  ].filter(Boolean);
-  if (parts.length === 0) return null;
-  return { title: "Tempo Jatuh Tempo", body: parts.join(" · "), url: "/tempo", tag: "tempo-due" };
+function tanggal(key: string) {
+  const [y, m, d] = key.split("-");
+  return `${d}/${m}/${y}`;
 }
 
-export async function notifyTempoDue(): Promise<{ sent: number }> {
+/** Isi notifikasi satu nota tempo: "Nota <no> Rp<sisa> atas nama <customer>, jatuh tempo <dd/mm/yyyy>". */
+export function tempoDueMessage(row: { id: string; transactionNumber: string | null; remainingAmount: number; customerName: string; dueKey: string }) {
+  return {
+    title: "Jatuh Tempo",
+    body: `Nota ${row.transactionNumber || "-"} ${rupiah(row.remainingAmount)} atas nama ${row.customerName}, jatuh tempo ${tanggal(row.dueKey)}`,
+    url: `/tempo/${row.id}`,
+    tag: `tempo-${row.id}`,
+  };
+}
+
+/** Satu notifikasi per nota per pagi, paling lama dulu; cakupan sama dengan menu Tempo (lewat tempo dan <= 3 hari). */
+const MAX_TEMPO_NOTIFICATIONS = 20;
+
+export async function notifyTempoDue(today: string = jakartaDateKey()): Promise<{ sent: number }> {
   if (!pushConfig().enabled) return { sent: 0 };
   try {
-    const { getTempoMetricsSummary } = await import("@/lib/tempo/store");
-    const message = tempoDueMessage(await getTempoMetricsSummary({}));
-    if (!message) return { sent: 0 };
-    const result = await sendPushToRoles(PUSH_AUDIENCE.tempoDue, message);
-    return { sent: result.sent };
+    const limit = addDaysKey(today, 3);
+    const rows = await prisma.tempoReceivable.findMany({
+      where: { status: { in: ["open", "overdue", "partial_paid"] }, remainingAmount: { gt: 0 }, dueDate: { lte: new Date(`${addDaysKey(today, 4)}T23:59:59.999Z`) } },
+      select: { id: true, salesId: true, customerName: true, remainingAmount: true, dueDate: true },
+      orderBy: { dueDate: "asc" },
+    });
+    const due = rows.map((row) => ({ ...row, dueKey: jakartaDateKey(row.dueDate) })).filter((row) => row.dueKey <= limit).slice(0, MAX_TEMPO_NOTIFICATIONS);
+    if (due.length === 0) return { sent: 0 };
+    const sales = await prisma.salesRecord.findMany({ where: { id: { in: due.map((row) => row.salesId) } }, select: { id: true, transactionNumber: true } });
+    const numberById = new Map(sales.map((sale) => [sale.id, sale.transactionNumber]));
+    let sent = 0;
+    for (const row of due) {
+      const result = await sendPushToRoles(PUSH_AUDIENCE.tempoDue, tempoDueMessage({
+        id: row.id,
+        transactionNumber: numberById.get(row.salesId) ?? null,
+        remainingAmount: Number(row.remainingAmount) || 0,
+        customerName: row.customerName,
+        dueKey: row.dueKey,
+      }));
+      sent += result.sent;
+    }
+    return { sent };
   } catch (error) {
     console.error("[push] notifikasi tempo gagal:", error instanceof Error ? error.message : error);
     return { sent: 0 };
