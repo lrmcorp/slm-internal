@@ -88,11 +88,11 @@ function tanggal(key: string) {
   return `${d}/${m}/${y}`;
 }
 
-/** Isi notifikasi satu nota tempo: "Nota <no> Rp<sisa> atas nama <customer>, jatuh tempo <dd/mm/yyyy>". */
-export function tempoDueMessage(row: { id: string; transactionNumber: string | null; remainingAmount: number; customerName: string; dueKey: string }) {
+/** Isi notifikasi satu nota tempo: "Rp<sisa> atas nama <customer>, jatuh tempo <dd/mm/yyyy>". */
+export function tempoDueMessage(row: { id: string; remainingAmount: number; customerName: string; dueKey: string }) {
   return {
     title: "Jatuh Tempo",
-    body: `Nota ${row.transactionNumber || "-"} ${rupiah(row.remainingAmount)} atas nama ${row.customerName}, jatuh tempo ${tanggal(row.dueKey)}`,
+    body: `${rupiah(row.remainingAmount)} atas nama ${row.customerName}, jatuh tempo ${tanggal(row.dueKey)}`,
     url: `/tempo/${row.id}`,
     tag: `tempo-${row.id}`,
   };
@@ -107,18 +107,15 @@ export async function notifyTempoDue(today: string = jakartaDateKey()): Promise<
     const limit = addDaysKey(today, 3);
     const rows = await prisma.tempoReceivable.findMany({
       where: { status: { in: ["open", "overdue", "partial_paid"] }, remainingAmount: { gt: 0 }, dueDate: { lte: new Date(`${addDaysKey(today, 4)}T23:59:59.999Z`) } },
-      select: { id: true, salesId: true, customerName: true, remainingAmount: true, dueDate: true },
+      select: { id: true, customerName: true, remainingAmount: true, dueDate: true },
       orderBy: { dueDate: "asc" },
     });
     const due = rows.map((row) => ({ ...row, dueKey: jakartaDateKey(row.dueDate) })).filter((row) => row.dueKey <= limit).slice(0, MAX_TEMPO_NOTIFICATIONS);
     if (due.length === 0) return { sent: 0 };
-    const sales = await prisma.salesRecord.findMany({ where: { id: { in: due.map((row) => row.salesId) } }, select: { id: true, transactionNumber: true } });
-    const numberById = new Map(sales.map((sale) => [sale.id, sale.transactionNumber]));
     let sent = 0;
     for (const row of due) {
       const result = await sendPushToRoles(PUSH_AUDIENCE.tempoDue, tempoDueMessage({
         id: row.id,
-        transactionNumber: numberById.get(row.salesId) ?? null,
         remainingAmount: Number(row.remainingAmount) || 0,
         customerName: row.customerName,
         dueKey: row.dueKey,

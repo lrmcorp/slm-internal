@@ -83,9 +83,9 @@ describe("notifikasi push", () => {
   });
 
   it("jatuh tempo: satu notifikasi per nota (lewat tempo dan <= 3 hari) ke Owner, Supervisor, Finance", async () => {
-    expect(tempoDueMessage({ id: "t1", transactionNumber: "MJ-20261109-0007", remainingAmount: 1_250_000, customerName: "Budi", dueKey: "2026-11-12" })).toEqual({
+    expect(tempoDueMessage({ id: "t1", remainingAmount: 1_250_000, customerName: "Budi", dueKey: "2026-11-12" })).toEqual({
       title: "Jatuh Tempo",
-      body: "Nota MJ-20261109-0007 Rp1.250.000 atas nama Budi, jatuh tempo 12/11/2026",
+      body: "Rp1.250.000 atas nama Budi, jatuh tempo 12/11/2026",
       url: "/tempo/t1",
       tag: "tempo-t1",
     });
@@ -95,12 +95,11 @@ describe("notifikasi push", () => {
       { id: "t2", salesId: "s2", customerName: "Budi", remainingAmount: 1_250_000, dueDate: new Date("2026-11-12T00:00:00Z") },
       { id: "t3", salesId: "s3", customerName: "Rina", remainingAmount: 900_000, dueDate: new Date("2026-11-13T00:00:00Z") },
     ]);
-    mocks.saleFindMany.mockResolvedValueOnce([{ id: "s1", transactionNumber: "SLM-1" }, { id: "s2", transactionNumber: "SLM-2" }]);
     await expect(notifyTempoDue("2026-11-09")).resolves.toEqual({ sent: 2 });
     expect(mocks.subFindMany).toHaveBeenCalledWith({ where: { role: { in: ["OWNER", "SUPERVISOR", "FINANCE"] } } });
     expect(mocks.sendNotification.mock.calls.map((call) => JSON.parse(call[1]).body)).toEqual([
-      "Nota SLM-1 Rp500.000 atas nama Sari, jatuh tempo 05/11/2026",
-      "Nota SLM-2 Rp1.250.000 atas nama Budi, jatuh tempo 12/11/2026",
+      "Rp500.000 atas nama Sari, jatuh tempo 05/11/2026",
+      "Rp1.250.000 atas nama Budi, jatuh tempo 12/11/2026",
     ]);
 
     mocks.sendNotification.mockClear();
