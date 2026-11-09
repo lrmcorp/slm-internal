@@ -204,4 +204,12 @@ describe("proxy permission enforcement", () => {
     expect(statusFor("ADMIN", "/inventory/barang-keluar")).toBeNull();
     expect(statusFor("DELIVERY_DRIVER", "/inventory/barang-keluar")).not.toBeNull();
   });
+
+  it("serves the home-screen manifest and icons before login, but nothing else", () => {
+    vi.stubEnv("AUTH_PROVIDER", "local_credentials");
+    for (const path of ["/manifest.webmanifest", "/pwa-icon/180", "/pwa-icon/512"]) {
+      expect(proxy(makeRequest(path)).headers.get("location"), path).toBeNull();
+    }
+    expect(proxy(makeRequest("/dashboard")).headers.get("location")).toContain("/login");
+  });
 });

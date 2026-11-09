@@ -1,5 +1,5 @@
-import type { Metadata } from "next";
-import { getAppBrand } from "@/lib/appBrand";
+import type { Metadata, Viewport } from "next";
+import { brandHex, getAppBrand } from "@/lib/appBrand";
 import { BrandProvider } from "@/components/brand/BrandProvider";
 import { TopLoadingBar } from "@/components/ui/TopLoadingBar";
 import { ToastProvider } from "@/components/ui/ToastProvider";
@@ -11,8 +11,15 @@ export function generateMetadata(): Metadata {
   return {
     title: brand.title,
     description: `Aplikasi operasional internal ${brand.companyName}`,
-    icons: { icon: "/brand-icon.svg", shortcut: "/brand-icon.svg", apple: "/brand-icon.svg" }
+    icons: { icon: "/brand-icon.svg", shortcut: "/brand-icon.svg", apple: "/pwa-icon/180" },
+    // Dipasang di iPhone lewat Safari > Bagikan > Tambah ke Layar Utama: terbuka layar penuh tanpa App Store.
+    manifest: "/manifest.webmanifest",
+    appleWebApp: { capable: true, title: brand.name, statusBarStyle: "default" }
   };
+}
+
+export function generateViewport(): Viewport {
+  return { themeColor: brandHex() };
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

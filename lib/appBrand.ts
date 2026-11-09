@@ -25,6 +25,12 @@ export function getAppBrand(): AppBrand {
   };
 }
 
+/** Warna utama brand (hex) untuk ikon dan warna bilah status di HP. */
+export function brandHex(brand: Pick<AppBrand, "accent"> = getAppBrand()) {
+  const accentHex: Record<string, string> = { sky: "#0284c7" };
+  return (brand.accent && accentHex[brand.accent]) || "#059669";
+}
+
 const brand = getAppBrand();
 /** Hanya untuk kode server. */
 export const APP_BRAND_NAME = brand.name;
