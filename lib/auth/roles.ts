@@ -59,8 +59,8 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   FINANCE: [
     "pengeluaran.view", "pengeluaran.create", "tempo.view", "tempo.mark_paid",
     "master_data.view", "guide.view",
-    // Jenis beban (akun beban di Bagan Akun) dan Rekening boleh diatur Finance.
-    "accounting.coa.manage", "settings.view", "settings.rekening.manage",
+    // Bagan Akun, Tutup Buku, dan Rekening boleh diatur Finance.
+    "accounting.coa.manage", "accounting.period.manage", "settings.view", "settings.rekening.manage",
     "sdm.view", "sdm.kasbon.manage", "sdm.salary.view", "sdm.savings.manage",
     "purchasing.view", "purchasing.order.manage", "purchasing.invoice.manage", "purchasing.payment.manage"
   ],

@@ -6,7 +6,7 @@ import { periodClosingSchema } from "@/lib/validation/accountingSchema";
 
 export async function GET() {
   const user = await getCurrentUser();
-  if (!can(user.role, "accounting.view")) {
+  if (!can(user.role, "accounting.view") && !can(user.role, "accounting.period.manage")) {
     return NextResponse.json({ success: false, message: "Akses ditolak." }, { status: 403 });
   }
 
