@@ -75,3 +75,27 @@ export async function notifyLowStockCrossings(netDeltaByProduct: Map<string, num
     console.error("[push] notifikasi stok gagal:", error instanceof Error ? error.message : error);
   }
 }
+
+/** Ringkasan harian Tempo (dikirim bersama pengingat tempo pukul 09.00): lewat jatuh tempo dan jatuh tempo ≤ 3 hari. */
+export function tempoDueMessage(summary: { overdue: { count: number; amount: number }; comingSoonH3: { count: number; amount: number } }) {
+  const parts = [
+    summary.overdue.count > 0 ? `Lewat jatuh tempo: ${summary.overdue.count} nota ${rupiah(summary.overdue.amount)}` : null,
+    summary.comingSoonH3.count > 0 ? `Jatuh tempo ≤ 3 hari: ${summary.comingSoonH3.count} nota ${rupiah(summary.comingSoonH3.amount)}` : null,
+  ].filter(Boolean);
+  if (parts.length === 0) return null;
+  return { title: "Tempo Jatuh Tempo", body: parts.join(" · "), url: "/tempo", tag: "tempo-due" };
+}
+
+export async function notifyTempoDue(): Promise<{ sent: number }> {
+  if (!pushConfig().enabled) return { sent: 0 };
+  try {
+    const { getTempoMetricsSummary } = await import("@/lib/tempo/store");
+    const message = tempoDueMessage(await getTempoMetricsSummary({}));
+    if (!message) return { sent: 0 };
+    const result = await sendPushToRoles(PUSH_AUDIENCE.tempoDue, message);
+    return { sent: result.sent };
+  } catch (error) {
+    console.error("[push] notifikasi tempo gagal:", error instanceof Error ? error.message : error);
+    return { sent: 0 };
+  }
+}

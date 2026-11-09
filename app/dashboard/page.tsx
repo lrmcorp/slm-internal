@@ -133,24 +133,25 @@ export default async function DashboardPage({ searchParams }: { searchParams?: P
 
   const params = await searchParams || {};
   const filters = dashboardFilters(params);
-  const products = await listCatalogProducts();
   const cloud = getOpenCloudStatus();
-  const audit = await listAudit({ role });
-  const activities = audit.slice(0, 5);
-
   const todayStr = jakartaDateKey();
   const monthStr = jakartaMonthKey();
   const paymentPeriod = paymentPeriodFromParams(params, monthStr, todayStr);
-  const allSales = await listSalesRecords();
   const isOwner = role === "OWNER";
-  const [allExpenses, allRekenings, allTempoPayments, allTempoReversals, cctvSummary] = await Promise.all([
+  const canViewOperationalProfit = can(role, "settings.profit.manage");
+  // Semua sumber data tidak saling bergantung: diambil bersamaan supaya dashboard (halaman pembuka aplikasi) cepat tampil.
+  const [products, audit, allSales, allExpenses, allRekenings, allTempoPayments, allTempoReversals, cctvSummary, profitSetting] = await Promise.all([
+    listCatalogProducts(),
+    listAudit({ role }),
+    listSalesRecords(),
     listExpenseRecords(),
     listRekeningAccounts(),
     listTempoPayments(),
     listTempoPaymentReversals(),
     isOwner && cctvEnabled() ? getCctvDashboardSummary().catch(() => null) : Promise.resolve(null),
+    canViewOperationalProfit ? getOperationalProfitSetting() : Promise.resolve(null),
   ]);
-  const canViewOperationalProfit = can(role, "settings.profit.manage");
+  const activities = audit.slice(0, 5);
   const rekeningLabels = rekeningLabelMap(allRekenings);
   const filteredSales = filterDashboardSales(allSales, filters);
   const filteredExpenses = allExpenses.filter((expense) => {
@@ -158,7 +159,6 @@ export default async function DashboardPage({ searchParams }: { searchParams?: P
     if (filters.to && expense.expenseDate > filters.to) return false;
     return true;
   });
-  const profitSetting = canViewOperationalProfit ? await getOperationalProfitSetting() : null;
   const effectiveGrossProfitPercent = (profitSetting && profitSetting.grossProfitPercent > 0) ? profitSetting.grossProfitPercent : 10;
   const operationalProfit = canViewOperationalProfit && profitSetting
     ? buildOperationalProfitSummary(allSales, allExpenses, todayStr, monthStr, effectiveGrossProfitPercent, products.success ? products.data : [])

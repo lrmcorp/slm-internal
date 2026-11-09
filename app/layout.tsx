@@ -3,6 +3,7 @@ import { brandHex, getAppBrand } from "@/lib/appBrand";
 import { BrandProvider } from "@/components/brand/BrandProvider";
 import { TopLoadingBar } from "@/components/ui/TopLoadingBar";
 import { ToastProvider } from "@/components/ui/ToastProvider";
+import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 import { Suspense } from "react";
 import "./globals.css";
 
@@ -29,6 +30,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <Suspense fallback={null}>
           <TopLoadingBar />
         </Suspense>
+        <ServiceWorkerRegister />
         <BrandProvider brand={getAppBrand()}>
           <ToastProvider>{children}</ToastProvider>
         </BrandProvider>

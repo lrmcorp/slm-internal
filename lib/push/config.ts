@@ -14,4 +14,5 @@ export function pushConfig(env: Record<string, string | undefined> = process.env
 export const PUSH_AUDIENCE = {
   newSale: ["OWNER", "SUPERVISOR"],
   lowStock: ["OWNER", "SUPERVISOR", "MANAGER"],
+  tempoDue: ["OWNER", "SUPERVISOR", "FINANCE"],
 } as const;

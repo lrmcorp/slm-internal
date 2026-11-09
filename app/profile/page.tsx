@@ -16,6 +16,7 @@ export default async function ProfilePage() {
   const topics = [
     (PUSH_AUDIENCE.newSale as readonly string[]).includes(user.role) ? "Transaksi baru di Riwayat Penjualan" : null,
     (PUSH_AUDIENCE.lowStock as readonly string[]).includes(user.role) ? "Barang menyentuh stok minimum" : null,
+    (PUSH_AUDIENCE.tempoDue as readonly string[]).includes(user.role) ? "Tempo jatuh tempo (setiap pagi)" : null,
   ].filter((topic): topic is string => Boolean(topic));
 
   return (

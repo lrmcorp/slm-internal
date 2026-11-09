@@ -6,6 +6,8 @@ const mocks = vi.hoisted(() => ({
   subFindMany: vi.fn(), subUpdate: vi.fn(), subDelete: vi.fn(),
   saleFind: vi.fn(), productFindMany: vi.fn(), balanceGroupBy: vi.fn(),
 }));
+const tempo = vi.hoisted(() => ({ summary: vi.fn() }));
+vi.mock("@/lib/tempo/store", () => ({ getTempoMetricsSummary: tempo.summary }));
 vi.mock("web-push", () => ({ default: { sendNotification: mocks.sendNotification, setVapidDetails: mocks.setVapidDetails } }));
 vi.mock("@/lib/db/prisma", () => ({
   prisma: {
@@ -16,7 +18,7 @@ vi.mock("@/lib/db/prisma", () => ({
   },
 }));
 
-import { crossedLowStock, lowStockThreshold, notifyLowStockCrossings, notifyNewSale } from "@/lib/push/notify";
+import { crossedLowStock, lowStockThreshold, notifyLowStockCrossings, notifyNewSale, notifyTempoDue, tempoDueMessage } from "@/lib/push/notify";
 import { sendPushToRoles } from "@/lib/push/send";
 
 const sub = (id: string, role: string, failureCount = 0) => ({ id, endpoint: `https://push.example/${id}`, p256dh: "k", auth: "a", role, failureCount });
@@ -78,6 +80,26 @@ describe("notifikasi push", () => {
     vi.stubEnv("VAPID_PRIVATE_KEY", "");
     mocks.sendNotification.mockClear();
     await expect(sendPushToRoles(["OWNER"], { title: "t", body: "b", url: "/" })).resolves.toEqual({ sent: 0, removed: 0 });
+    expect(mocks.sendNotification).not.toHaveBeenCalled();
+  });
+
+  it("jatuh tempo: ringkasan lewat tempo dan ≤ 3 hari ke Owner, Supervisor, Finance; kosong = tidak dikirim", async () => {
+    expect(tempoDueMessage({ overdue: { count: 0, amount: 0 }, comingSoonH3: { count: 0, amount: 0 } })).toBeNull();
+    expect(tempoDueMessage({ overdue: { count: 0, amount: 0 }, comingSoonH3: { count: 3, amount: 12_500_000 } })?.body).toBe("Jatuh tempo ≤ 3 hari: 3 nota Rp12.500.000");
+
+    tempo.summary.mockResolvedValueOnce({ overdue: { count: 2, amount: 4_000_000 }, comingSoonH3: { count: 3, amount: 12_500_000 } });
+    await expect(notifyTempoDue()).resolves.toEqual({ sent: 1 });
+    expect(mocks.subFindMany).toHaveBeenCalledWith({ where: { role: { in: ["OWNER", "SUPERVISOR", "FINANCE"] } } });
+    expect(JSON.parse(mocks.sendNotification.mock.calls[0][1])).toEqual({
+      title: "Tempo Jatuh Tempo",
+      body: "Lewat jatuh tempo: 2 nota Rp4.000.000 · Jatuh tempo ≤ 3 hari: 3 nota Rp12.500.000",
+      url: "/tempo",
+      tag: "tempo-due",
+    });
+
+    mocks.sendNotification.mockClear();
+    tempo.summary.mockResolvedValueOnce({ overdue: { count: 0, amount: 0 }, comingSoonH3: { count: 0, amount: 0 } });
+    await expect(notifyTempoDue()).resolves.toEqual({ sent: 0 });
     expect(mocks.sendNotification).not.toHaveBeenCalled();
   });
 });
