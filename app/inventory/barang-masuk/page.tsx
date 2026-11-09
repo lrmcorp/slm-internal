@@ -3,6 +3,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { InventoryDocumentForm } from "@/components/inventory/InventoryDocumentForm";
 import { GrnPostAll, GrnPostForm } from "@/components/inventory/GrnPostForm";
 import { InventoryHeader, fmtDate, fmtQty } from "@/components/inventory/ui";
+import { AddPanel } from "@/components/inventory/AddPanel";
 import { can } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { listLocations, listPendingPurchaseReceipts, listProductOptions, listStockInHistory } from "@/lib/inventory/service";
@@ -15,7 +16,8 @@ export default async function BarangMasukPage() {
   const [locations, products, pending, history] = await Promise.all([listLocations(), listProductOptions(), listPendingPurchaseReceipts(), listStockInHistory()]);
   return (
     <AppShell>
-      <InventoryHeader title="Barang Masuk" description={<>Catat barang yang baru tiba di gudang atau toko. Barang dari PO yang sudah diterima di Pembelian muncul di bawah: pilih lokasi lalu klik <b>Masukkan ke stok</b>. Barang tanpa PO: isi form manual.</>} />
+      <InventoryHeader title="Barang Masuk" description={<>Catat barang yang baru tiba di gudang atau toko. Barang dari PO yang sudah diterima di Pembelian muncul di bawah: pilih lokasi lalu klik <b>Masukkan ke stok</b>. Barang tanpa PO: klik <b>Barang Masuk Manual</b>.</>} />
+      <AddPanel label="Barang Masuk Manual"><InventoryDocumentForm mode="stock-in" canSetKoli={can(role, "inventory.master")} locations={locations} products={products} /></AddPanel>
 
       <section className="mb-8">
         <h3 className="mb-3 font-bold text-slate-800">Penerimaan Pembelian (GRN) belum masuk stok</h3>
@@ -41,10 +43,7 @@ export default async function BarangMasukPage() {
         </div>
       </section>
 
-      <h3 className="mb-3 font-bold text-slate-800">Barang masuk manual (tanpa PO)</h3>
-      <InventoryDocumentForm mode="stock-in" canSetKoli={can(role, "inventory.master")} locations={locations} products={products} />
-
-      <section className="mt-8">
+      <section>
         <h3 className="mb-3 font-bold text-slate-800">Riwayat Barang Masuk</h3>
         <div className="aj-surface overflow-x-auto">
           <table className="min-w-full text-sm">

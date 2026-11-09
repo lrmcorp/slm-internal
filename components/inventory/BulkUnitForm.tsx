@@ -35,8 +35,8 @@ export function BulkUnitForm({ units }: { units: { unit: string; count: number }
 
   const input = "min-h-11 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm";
   return (
-    <details className="aj-surface mb-6 p-4">
-      <summary className="flex min-h-11 cursor-pointer items-center font-bold text-slate-800">Alat massal: ubah satuan</summary>
+    <div className="p-4">
+      <h3 className="font-bold text-slate-800">Ubah satuan banyak barang sekaligus</h3>
       <p className="mt-2 text-sm text-slate-600">Membetulkan satuan banyak barang sekaligus, mis. semua &quot;PCS&quot; menjadi &quot;Lusin&quot;. Hanya nama satuan yang berubah; jumlah stok tidak dikonversi. Untuk satu barang, pakai tombol <b>Ubah</b> di tabel.</p>
       <div className="mt-3 flex flex-wrap items-end gap-2">
         <label className="space-y-1 text-sm font-semibold"><span>Dari satuan</span>
@@ -69,6 +69,6 @@ export function BulkUnitForm({ units }: { units: { unit: string; count: number }
           <input className="mt-1 min-h-11 w-full rounded-lg border border-slate-300 px-3 text-sm" value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" />
         </label>
       </ConfirmationModal>
-    </details>
+    </div>
   );
 }

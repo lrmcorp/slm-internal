@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { InventoryDocumentForm } from "@/components/inventory/InventoryDocumentForm";
+import { AddPanel } from "@/components/inventory/AddPanel";
 import { InventoryActionButton } from "@/components/inventory/InventoryActionButton";
 import { InventoryHeader, Pager, filterButton, filterInput, fmtDate, fmtQty } from "@/components/inventory/ui";
 import { can } from "@/lib/auth/roles";
@@ -21,7 +22,7 @@ export default async function TransferPage({ searchParams }: { searchParams: SP 
   return (
     <AppShell>
       <InventoryHeader title="Transfer Stok" description="Pindahkan stok antar gudang dan toko. Transfer bisa langsung diterima, atau berstatus Dalam Perjalanan sampai dikonfirmasi diterima." />
-      {canTransfer && <div className="mb-8"><InventoryDocumentForm mode="transfer" canSetKoli={can(role, "inventory.master")} locations={locations} products={products} /></div>}
+      {canTransfer && <AddPanel label="Buat Transfer"><InventoryDocumentForm mode="transfer" canSetKoli={can(role, "inventory.master")} locations={locations} products={products} /></AddPanel>}
       <form className="mb-3 flex gap-2">
         <select name="status" defaultValue={status ?? ""} className={filterInput}>
           <option value="">Semua status</option>

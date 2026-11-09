@@ -30,7 +30,7 @@ export function CbmRateForm({ rate, updatedAt, updatedBy, canManage }: { rate: n
   }
 
   return (
-    <div className="aj-surface mb-6 flex flex-col gap-3 p-5 sm:flex-row sm:items-end sm:justify-between">
+    <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-end sm:justify-between">
       <div>
         <h3 className="font-bold text-slate-800">Tarif Ongkir per CBM</h3>
         <p className="mt-1 text-sm text-slate-600">Ongkir per satuan = <b>CBM per satuan × tarif</b>, ditambahkan ke modal. Barang dengan tarif khusus di Master Barang tidak ikut berubah.</p>
