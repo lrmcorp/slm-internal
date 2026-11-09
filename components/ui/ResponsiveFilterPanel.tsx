@@ -88,7 +88,7 @@ export function ResponsiveFilterPanel({
                 x
               </button>
             </div>
-            <form action={formAction} method="GET" className="max-h-[calc(88vh-73px)] overflow-y-auto p-5" onSubmit={() => setOpen(false)}>
+            <form action={formAction} method="GET" className="max-h-[calc(88vh-73px)] overflow-y-auto p-5">
               <div className="grid gap-3">
                 {children}
               </div>
