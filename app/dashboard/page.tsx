@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { cctvEnabled } from "@/lib/features";
+import { cctvEnabledForRequest } from "@/lib/features";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { Button } from "@/components/ui/Button";
@@ -114,6 +114,7 @@ function activeFilterLabels(params: SearchParams) {
 }
 
 export default async function DashboardPage({ searchParams }: { searchParams?: Promise<SearchParams> }) {
+  const showCctv = await cctvEnabledForRequest();
   const role = await getCurrentRole();
   if (!can(role, "dashboard.view")) redirect("/no-access");
   const user = await getCurrentUser();
@@ -148,7 +149,7 @@ export default async function DashboardPage({ searchParams }: { searchParams?: P
     listRekeningAccounts(),
     listTempoPayments(),
     listTempoPaymentReversals(),
-    isOwner && cctvEnabled() ? getCctvDashboardSummary().catch(() => null) : Promise.resolve(null),
+    isOwner && showCctv ? getCctvDashboardSummary().catch(() => null) : Promise.resolve(null),
     canViewOperationalProfit ? getOperationalProfitSetting() : Promise.resolve(null),
   ]);
   const activities = audit.slice(0, 5);

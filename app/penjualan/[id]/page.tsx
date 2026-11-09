@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { cctvEnabled } from "@/lib/features";
+import { cctvEnabledForRequest } from "@/lib/features";
 import { notFound, redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { TransactionCancelButton } from "@/components/transactions/TransactionCancelButton";
@@ -51,6 +51,7 @@ function stockReleaseBadge(status?: string) {
 }
 
 export default async function SalesDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const showCctv = await cctvEnabledForRequest();
   const user = await getCurrentUser();
   const role = user.role;
   if (!can(role, "penjualan.create") && !can(role, "reports.view")) redirect("/");
@@ -71,7 +72,7 @@ export default async function SalesDetailPage({ params }: { params: Promise<{ id
         items: { select: { id: true } }
       }
     }).catch(() => null),
-    cctvEnabled() ? getCctvDetectionForSales(sale.id, sale.transactionNumber || undefined).catch(() => null) : Promise.resolve(null),
+    showCctv ? getCctvDetectionForSales(sale.id, sale.transactionNumber || undefined).catch(() => null) : Promise.resolve(null),
     prisma.salesRecord.findUnique({
       where: { id: sale.id },
       select: {
@@ -155,7 +156,7 @@ export default async function SalesDetailPage({ params }: { params: Promise<{ id
       </div>
 
       {/* Widget Verifikasi Meja Packing CCTV */}
-      {cctvEnabled() && <CctvPackingWidget detection={cctvData as any} />}
+      {showCctv && <CctvPackingWidget detection={cctvData as any} />}
 
       <div className="grid gap-5 lg:grid-cols-2 mb-5">
         {/* Card 1: Informasi Transaksi & Pelanggan */}

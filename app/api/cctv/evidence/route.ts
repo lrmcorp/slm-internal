@@ -1,3 +1,4 @@
+import { cctvEnabled, requestHost } from "@/lib/features";
 import { NextRequest, NextResponse } from "next/server";
 import { CCTV_BASE_URL, CCTV_TOKEN, matchesToken } from "@/lib/cctv/client";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -25,6 +26,7 @@ function isAllowedHost(hostname: string): boolean {
 }
 
 export async function GET(req: NextRequest) {
+  if (!cctvEnabled(process.env, requestHost(req.headers) || req.nextUrl.hostname)) return new NextResponse("Not Found", { status: 404 });
   // Autentikasi session: pastikan user terautentikasi (atau token internal valid)
   const user = await getCurrentUser();
   const tokenHeader = req.headers.get("x-cctv-token");

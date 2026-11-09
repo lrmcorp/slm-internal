@@ -1,3 +1,4 @@
+import { cctvEnabled, requestHost } from "@/lib/features";
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentRole } from "@/lib/auth/session";
 import { can } from "@/lib/auth/roles";
@@ -10,6 +11,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ cameraId: string }> }
 ) {
+  if (!cctvEnabled(process.env, requestHost(req.headers) || req.nextUrl.hostname)) return new NextResponse("Not Found", { status: 404 });
   const role = await getCurrentRole();
   if (role !== "OWNER" || !can(role, "dashboard.view")) {
     return NextResponse.json(

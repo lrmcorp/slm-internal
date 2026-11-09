@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { cctvEnabled } from "@/lib/features";
+import { cctvEnabledForRequest } from "@/lib/features";
 import { prisma } from "@/lib/db/prisma";
 import { AppShell } from "@/components/layout/AppShell";
 import { can } from "@/lib/auth/roles";
@@ -15,6 +15,7 @@ export default async function DeliveryOrderDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const showCctv = await cctvEnabledForRequest();
   const user = await getCurrentUser();
   if (!can(user.role, "do.view")) {
     redirect("/");
@@ -39,7 +40,7 @@ export default async function DeliveryOrderDetailPage({
 
   const [officers, cctvDetectionRaw] = await Promise.all([
     listDeliveryOfficers(),
-    cctvEnabled()
+    showCctv
       ? getCctvDetectionForSales(detail.salesRecordId, detail.sale?.transactionNumber || undefined).catch(() => null)
       : Promise.resolve(null),
   ]);
@@ -56,7 +57,7 @@ export default async function DeliveryOrderDetailPage({
           initialDetail={detail}
           officers={officers}
           cctvDetection={cctvDetection as any}
-          showCctv={cctvEnabled()}
+          showCctv={showCctv}
           canAssign={canAssign}
           canProcess={canProcess}
           currentUserRole={user.role}

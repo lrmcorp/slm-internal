@@ -6,6 +6,7 @@ import { TopLoadingBar } from "@/components/ui/TopLoadingBar";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 import { Suspense } from "react";
+import { cctvEnabledForRequest } from "@/lib/features";
 import "./globals.css";
 
 export function generateMetadata(): Metadata {
@@ -24,7 +25,7 @@ export function generateViewport(): Viewport {
   return { themeColor: brandHex() };
 }
 
-export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
+export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="id" data-accent={getAppBrand().accent ?? undefined}>
       <body suppressHydrationWarning>
@@ -32,7 +33,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <TopLoadingBar />
         </Suspense>
         <ServiceWorkerRegister />
-        <BrandProvider brand={getAppBrand()}>
+        <BrandProvider brand={{ ...getAppBrand(), cctvEnabled: await cctvEnabledForRequest() }}>
           <ToastProvider>{children}</ToastProvider>
         </BrandProvider>
       </body>

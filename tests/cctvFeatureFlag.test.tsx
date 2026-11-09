@@ -4,12 +4,21 @@ import { visibleNavLinks, visibleNavSections } from "@/components/layout/navigat
 
 const hrefs = (cctv?: boolean) => visibleNavSections("OWNER", cctv === undefined ? {} : { cctv }).flatMap((g) => g.sections.flatMap((s) => s.links.map((l) => l.href)));
 
-describe("CCTV per instance (CCTV_ENABLED)", () => {
-  it("aktif kecuali diisi false", () => {
-    expect(cctvEnabled({})).toBe(true);
+describe("CCTV hanya untuk domain SLM", () => {
+  it("hanya aktif di domain SLM", () => {
+    expect(cctvEnabled({}, "slm.lrmint.xyz")).toBe(true);
+    expect(cctvEnabled({}, "SLM.lrmint.xyz:443")).toBe(true);
+    expect(cctvEnabled({}, "lcr.lrmint.xyz")).toBe(false);
+    expect(cctvEnabled({ CCTV_ENABLED: "true" }, "ankjy.lrmint.xyz")).toBe(false);
+    expect(cctvEnabled({ CCTV_ENABLED: "false" }, "slm.lrmint.xyz")).toBe(false);
+    expect(cctvEnabled({ CCTV_ENABLED: " FALSE " }, "slm.lrmint.xyz")).toBe(false);
+    expect(cctvEnabled({ CCTV_ALLOWED_HOSTS: "a.test, b.test" }, "b.test")).toBe(true);
+    expect(cctvEnabled({ CCTV_ALLOWED_HOSTS: "a.test" }, "slm.lrmint.xyz")).toBe(false);
+  });
+
+  it("tanpa request (skrip, job) hanya aktif bila CCTV_ENABLED=true", () => {
+    expect(cctvEnabled({})).toBe(false);
     expect(cctvEnabled({ CCTV_ENABLED: "true" })).toBe(true);
-    expect(cctvEnabled({ CCTV_ENABLED: "false" })).toBe(false);
-    expect(cctvEnabled({ CCTV_ENABLED: " FALSE " })).toBe(false);
   });
 
   it("menu dan tab CCTV hilang bila dimatikan, menu lain tetap", () => {

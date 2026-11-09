@@ -1,3 +1,4 @@
+import { cctvEnabled, requestHost } from "@/lib/features";
 import { NextRequest, NextResponse } from "next/server";
 import { CCTV_BASE_URL, CCTV_TOKEN, matchesToken } from "@/lib/cctv/client";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -8,6 +9,7 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ cameraId: string }> }
 ) {
+  if (!cctvEnabled(process.env, requestHost(req.headers) || req.nextUrl.hostname)) return new NextResponse("Not Found", { status: 404 });
   // Siaran langsung hanya untuk Super Admin (Owner) atau pemanggil dengan token CCTV, sama dengan route metadata.
   const user = await getCurrentUser();
   const tokenOk = matchesToken(req.headers.get("x-cctv-token"));
