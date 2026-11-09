@@ -3,17 +3,19 @@
  * Impor penjualan simulasi Aneka Jaya (Jul–Des 2026) ke satu instance lewat API Input Penjualan,
  * jadi nomor nota, potong stok, jurnal, dan DO dibuat sama seperti input dari kasir.
  *
- * Data: scripts/data/simulasi-penjualan-aj-jul-des-2026.json.gz (1.553 nota). Nota hari Minggu
- * sudah dipindah acak ke Sabtu/Senin, jam diacak 09:00–15:35.
+ * Data: scripts/data/simulasi-penjualan-aj-v9-jul-des-2026.json.gz (file v9 ArusKas, 1.483 nota,
+ * tanpa hari Minggu). Jam diacak 09:00–15:35. Harga jual dan cara bayar (Tunai/Transfer) dari file.
  *
  * Pakai (default hanya cek, tidak menyimpan apa pun):
  *   IMPORT_USER=owner IMPORT_PASSWORD=... node scripts/import-sales-simulation.mjs --url https://lcr.lrmint.xyz
  *   ... --commit            simpan sungguhan
  *   ... --tipe <id|kode>    tipe pembukuan (bawaan: tipe pertama yang bukan AJ)
+ *   ... --rekening <id|nama> rekening penerima nota Transfer (bawaan: satu-satunya rekening bank tipe itu)
  *   ... --limit 5           hanya N nota pertama (uji coba)
  *
  * Aman diulang: tiap nota memakai clientRequestId SIM-<no nota>, jadi nota yang sudah masuk dilewati.
- * Harga jual diambil dari Master Barang instance tujuan. Pembayaran: Cash.
+ * Nama customer selalu "Walk In"; kode pelanggan di file ditaruh di catatan nota.
+ * Barang dicocokkan ke Master Barang instance tujuan lewat SKU = ID barang di file (J-01, S-001, ...).
  */
 import { readFileSync } from "node:fs";
 import { gunzipSync } from "node:zlib";
@@ -29,10 +31,11 @@ const opt = (name, fallback) => {
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const BASE = (opt("url", process.env.IMPORT_URL) || "").replace(/\/+$/, "");
-const FILE = opt("file", path.join(here, "data", "simulasi-penjualan-aj-jul-des-2026.json.gz"));
+const FILE = opt("file", path.join(here, "data", "simulasi-penjualan-aj-v9-jul-des-2026.json.gz"));
 const COMMIT = flag("commit");
 const LIMIT = Number(opt("limit", "0")) || 0;
 const TIPE = opt("tipe", "");
+const REKENING = opt("rekening", "");
 const USER = process.env.IMPORT_USER || "";
 const PASSWORD = process.env.IMPORT_PASSWORD || "";
 
@@ -116,6 +119,7 @@ function buildMatcher(products) {
 }
 
 const isLusin = (unit) => /^(lusin|dz|dozen|lsn)$/i.test(String(unit).trim());
+/** Jumlah mengikuti satuan di Master Barang; nilai baris tetap sama dengan Omzet di file. */
 function quantityFor(item, product) {
   if (isLusin(product.unit)) return { qty: item.qtyLusin, unitWarn: false };
   if (norm(product.unit) === norm(item.unitSource)) return { qty: item.qtyUnit, unitWarn: false };
@@ -139,14 +143,25 @@ async function main() {
   console.log(`Tipe tersedia: ${types.map((t) => `${t.code} (${t.id})`).join(", ") || "-"}`);
   if (!tipe) throw new Error(TIPE ? `Tipe ${TIPE} tidak ditemukan.` : "Tidak ada tipe selain AJ. Pilih dengan --tipe.");
   if (norm(tipe.code) === "aj") throw new Error("Tipe AJ dikirim ke ERP Aneka Jaya. Pilih tipe lain dengan --tipe.");
-  console.log(`Dipakai: tipe ${tipe.code} (${tipe.name}), pembayaran Cash`);
+  console.log(`Dipakai: tipe ${tipe.code} (${tipe.name})`);
+
+  const needsTransfer = selected.some((n) => n.payment === "Transfer");
+  let rekening;
+  if (needsTransfer) {
+    const rekRes = await api("GET", `/api/rekening?tipeId=${encodeURIComponent(tipe.id)}`);
+    if (!rekRes.json.success) throw new Error(`Gagal membaca Rekening: ${rekRes.json.message}`);
+    const banks = rekRes.json.data.filter((r) => r.isActive !== false && !r.isCash);
+    console.log(`Rekening bank tipe ${tipe.code}: ${banks.map((r) => `${r.bank} ${r.name} (${r.id})`).join(", ") || "-"}`);
+    rekening = REKENING ? banks.find((r) => norm(r.id) === norm(REKENING) || norm(r.name) === norm(REKENING)) : banks.length === 1 ? banks[0] : undefined;
+    if (!rekening) throw new Error(REKENING ? `Rekening ${REKENING} tidak ditemukan untuk tipe ${tipe.code}.` : banks.length ? "Ada lebih dari satu rekening bank. Pilih dengan --rekening <id>." : `Belum ada rekening bank untuk tipe ${tipe.code}. Tambahkan di Pengaturan > Rekening.`);
+    console.log(`Nota Transfer masuk ke: ${rekening.bank} ${rekening.name}`);
+  }
 
   const products = await loadProducts();
   console.log(`Master Barang: ${products.length} barang aktif`);
   const match = buildMatcher(products);
 
   const unmatched = new Map();
-  const noPrice = new Map();
   const unitWarn = new Map();
   const via = new Map();
   const payloads = [];
@@ -158,14 +173,20 @@ async function main() {
       if (!m.product) { unmatched.set(item.itemId, `${item.itemId} ${item.name} (${item.unitSource})${m.candidates?.length ? ` · kandidat: ${m.candidates.join(", ")}` : ""}`); continue; }
       via.set(m.via, (via.get(m.via) ?? 0) + 1);
       const p = m.product;
-      if (!(Number(p.sellingPrice) > 0)) noPrice.set(p.sku, `${p.sku} ${p.name}`);
       const { qty, unitWarn: warn } = quantityFor(item, p);
       if (warn) unitWarn.set(p.sku, `${p.sku} ${p.name}: satuan ${p.unit}, di file ${item.unitSource}; dipakai jumlah lusin`);
       const prev = lines.get(p.id);
-      lines.set(p.id, { productRef: p.sku, productId: p.id, productInputMode: "erp", unitSnapshot: p.unit, quantity: (prev?.quantity ?? 0) + qty, unitPrice: Number(p.sellingPrice) || 0, discount: 0 });
+      const quantity = (prev?.quantity ?? 0) + qty;
+      const amount = (prev?.amount ?? 0) + item.amount;
+      lines.set(p.id, { productRef: p.sku, productId: p.id, productInputMode: "erp", unitSnapshot: p.unit, quantity, amount });
     }
-    const items = [...lines.values()];
-    total += items.reduce((s, i) => s + i.quantity * i.unitPrice, 0);
+    // Harga satuan = Omzet / jumlah, jadi total nota sama persis dengan file.
+    const items = [...lines.values()].map(({ amount, ...line }) => {
+      const unitPrice = Math.round((amount / line.quantity) * 100) / 100;
+      return { ...line, unitPrice, discount: Math.max(0, Math.round((unitPrice * line.quantity - amount) * 100) / 100) };
+    });
+    total += items.reduce((s, i) => s + i.quantity * i.unitPrice - i.discount, 0);
+    const transfer = n.payment === "Transfer";
     payloads.push({
       nota: n.nota,
       body: {
@@ -174,11 +195,12 @@ async function main() {
         tipeId: tipe.id,
         tipeCodeSnapshot: tipe.code,
         tipeNameSnapshot: tipe.name,
-        customerName: n.customer,
+        customerName: "Walk In",
         customerLocation: n.area,
-        shippingMethod: /datang ke toko/i.test(n.segment) ? "di Tempat" : "Kirim Langsung",
-        paymentMethod: "Cash",
-        notes: `Impor simulasi ${n.nota}`,
+        shippingMethod: "di Tempat",
+        paymentMethod: transfer ? "TF" : "Cash",
+        ...(transfer ? { rekeningId: rekening.id, rekeningNameSnapshot: rekening.name } : {}),
+        notes: `Impor simulasi ${n.nota} · ${n.customer}`,
         clientRequestId: `SIM-${n.nota}`,
         allowDuplicate: true,
         items
@@ -187,14 +209,14 @@ async function main() {
   }
 
   console.log(`Barang cocok lewat: ${[...via].map(([k, v]) => `${k} ${v} baris`).join(", ") || "-"}`);
-  console.log(`Perkiraan total penjualan: ${rupiah(total)}`);
+  const fileTotal = selected.reduce((s, n) => s + n.items.reduce((t, i) => t + i.amount, 0), 0);
+  console.log(`Total penjualan: ${rupiah(total)} (di file ${rupiah(fileTotal)}) · Transfer ${selected.filter((n) => n.payment === "Transfer").length} nota, Tunai ${selected.filter((n) => n.payment !== "Transfer").length} nota`);
   const report = (title, map) => { if (map.size) { console.log(`\n${title} (${map.size}):`); for (const v of map.values()) console.log(`  - ${v}`); } };
   report("Barang di file yang TIDAK ditemukan di Master Barang", unmatched);
-  report("Barang tanpa harga jual di Master Barang", noPrice);
   report("Satuan berbeda (cek)", unitWarn);
 
-  if (unmatched.size || noPrice.size) {
-    console.log("\nBelum bisa disimpan: lengkapi Master Barang (SKU = ID barang di file, mis. J-01, dan harga jual), lalu jalankan lagi.");
+  if (unmatched.size) {
+    console.log("\nBelum bisa disimpan: tambahkan barang di atas ke Master Barang dengan SKU = ID barang di file (mis. J-01), lalu jalankan lagi.");
     process.exit(1);
   }
   if (!COMMIT) { console.log("\nCek selesai, tidak ada yang disimpan. Jalankan lagi dengan --commit."); return; }

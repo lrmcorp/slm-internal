@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
+import { deliveryOrdersEnabled } from "@/lib/features";
 import { AppShell } from "@/components/layout/AppShell";
 import { Input } from "@/components/ui/Input";
 import { ResponsiveFilterPanel } from "@/components/ui/ResponsiveFilterPanel";
@@ -117,6 +118,7 @@ export default async function DeliveryOrdersPage({
 }: {
   searchParams?: Promise<SearchParams>;
 }) {
+  if (!deliveryOrdersEnabled()) notFound();
   const user = await getCurrentUser();
   if (!can(user.role, "do.view")) {
     redirect("/");

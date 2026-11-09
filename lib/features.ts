@@ -26,6 +26,14 @@ export function cctvEnabled(env: Env = process.env, host?: string) {
   return allowedHosts(env).includes(host.trim().toLowerCase().replace(/:\d+$/, ""));
 }
 
+/**
+ * DO (Surat Jalan / antrean packing). DELIVERY_ORDERS_ENABLED=false: penjualan tidak membuat DO dan
+ * menu, halaman, serta tombol DO disembunyikan. Bawaan: aktif.
+ */
+export function deliveryOrdersEnabled(env: Env = process.env) {
+  return env.DELIVERY_ORDERS_ENABLED?.trim().toLowerCase() !== "false";
+}
+
 /** Untuk server component dan route handler: CCTV aktif bila request datang ke domain SLM. */
 export async function cctvEnabledForRequest() {
   const { headers } = await import("next/headers");

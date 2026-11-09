@@ -29,3 +29,21 @@ describe("CCTV hanya untuk domain SLM", () => {
     expect(visibleNavLinks("OWNER", { cctv: false }).length).toBe(visibleNavLinks("OWNER").length - hrefs().filter((h) => h.includes("cctv")).length);
   });
 });
+
+describe("fitur per instance: DO dan notifikasi", () => {
+  it("DO aktif kecuali DELIVERY_ORDERS_ENABLED=false, menu DO ikut hilang", async () => {
+    const { deliveryOrdersEnabled } = await import("@/lib/features");
+    expect(deliveryOrdersEnabled({})).toBe(true);
+    expect(deliveryOrdersEnabled({ DELIVERY_ORDERS_ENABLED: "false" })).toBe(false);
+    const links = (o: { deliveryOrders?: boolean }) => visibleNavLinks("OWNER", o).map((l) => l.href);
+    expect(links({})).toContain("/delivery-orders");
+    expect(links({ deliveryOrders: false })).not.toContain("/delivery-orders");
+  });
+
+  it("PUSH_ENABLED=false mematikan notifikasi walau kunci VAPID terisi", async () => {
+    const { pushConfig } = await import("@/lib/push/config");
+    const keys = { VAPID_PUBLIC_KEY: "pub", VAPID_PRIVATE_KEY: "priv" };
+    expect(pushConfig(keys).enabled).toBe(true);
+    expect(pushConfig({ ...keys, PUSH_ENABLED: "false" }).enabled).toBe(false);
+  });
+});

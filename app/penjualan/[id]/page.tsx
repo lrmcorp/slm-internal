@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { cctvEnabledForRequest } from "@/lib/features";
+import { cctvEnabledForRequest, deliveryOrdersEnabled } from "@/lib/features";
 import { notFound, redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { TransactionCancelButton } from "@/components/transactions/TransactionCancelButton";
@@ -185,7 +185,7 @@ export default async function SalesDetailPage({ params }: { params: Promise<{ id
               <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Status Persetujuan</p>
               <div className="mt-1"><Badge value={sale.approvalStatus || "approved"} tone={statusTone(sale.approvalStatus || "approved")} /></div>
             </div>
-            <div>
+            {deliveryOrdersEnabled() && <div>
               <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Surat Jalan (DO)</p>
               <div className="mt-1">
                 <DeliveryOrderSyncButton
@@ -195,7 +195,7 @@ export default async function SalesDetailPage({ params }: { params: Promise<{ id
                   currentUserRole={role}
                 />
               </div>
-            </div>
+            </div>}
             <div>
               <p className="text-xs font-bold uppercase tracking-wide text-slate-500">Status Cetak Struk</p>
               <div className="mt-1">

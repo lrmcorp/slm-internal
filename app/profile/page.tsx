@@ -40,7 +40,7 @@ export default async function ProfilePage() {
           <PushNotificationToggle publicKey={push.publicKey} topics={topics} />
         </section>
       )}
-      {!push.enabled && user.role === "OWNER" && (
+      {!push.enabled && process.env.PUSH_ENABLED?.trim().toLowerCase() !== "false" && user.role === "OWNER" && (
         <section className="aj-surface mt-5 max-w-2xl px-5 py-4 sm:px-6">
           <p className="text-sm font-semibold text-neutral-900">Notifikasi di perangkat ini</p>
           <p className="mt-1 text-sm text-neutral-600">

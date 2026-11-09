@@ -454,7 +454,7 @@ const CATEGORY_ORDER: NavCategory[] = [
   "SISTEM & MONITORING",
 ];
 
-export type NavOptions = { cctv?: boolean };
+export type NavOptions = { cctv?: boolean; deliveryOrders?: boolean };
 
 const CCTV_HREFS = ["/cctv-monitoring", "/reports/cctv", "/reports/cctv-outbound"];
 
@@ -465,6 +465,7 @@ function isCctvLink(href: string) {
 export function visibleNavLinks(role: Role, options: NavOptions = {}): NavLink[] {
   return NAV_LINKS.filter((link) => {
     if (options.cctv === false && isCctvLink(link.href)) return false;
+    if (options.deliveryOrders === false && (link.href === "/delivery-orders" || link.href.startsWith("/delivery-orders/"))) return false;
     if (link.ownerOnly && role !== "OWNER") return false;
     if (!can(role, link.permission) && !(link.anyPermission ?? []).some((p) => can(role, p))) return false;
     if (link.hideForRoles?.includes(role)) return false;

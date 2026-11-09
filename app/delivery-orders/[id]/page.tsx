@@ -1,5 +1,5 @@
 import { notFound, redirect } from "next/navigation";
-import { cctvEnabledForRequest } from "@/lib/features";
+import { cctvEnabledForRequest, deliveryOrdersEnabled } from "@/lib/features";
 import { prisma } from "@/lib/db/prisma";
 import { AppShell } from "@/components/layout/AppShell";
 import { can } from "@/lib/auth/roles";
@@ -15,6 +15,7 @@ export default async function DeliveryOrderDetailPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  if (!deliveryOrdersEnabled()) notFound();
   const showCctv = await cctvEnabledForRequest();
   const user = await getCurrentUser();
   if (!can(user.role, "do.view")) {

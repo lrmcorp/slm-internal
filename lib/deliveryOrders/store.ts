@@ -1,3 +1,4 @@
+import { deliveryOrdersEnabled } from "@/lib/features";
 import { prisma } from "@/lib/db/prisma";
 import type { Prisma } from "@prisma/client";
 import type { CurrentUser } from "@/lib/auth/session";
@@ -54,6 +55,7 @@ export async function syncDeliveryOrderForSale(
   customTx?: Prisma.TransactionClient,
   options: { previousShipped?: DeliveryOrderShippedSnapshot[] } = {}
 ) {
+  if (!deliveryOrdersEnabled()) return null;
   const runner = async (tx: Prisma.TransactionClient) => {
     if (!tx?.deliveryOrder || !tx?.salesRecord) return null;
 

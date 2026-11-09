@@ -10,7 +10,7 @@ import { activeNavSection, visibleNavSections } from "./navigation";
 export function SectionTabs({ role }: { role: Role }) {
   const pathname = usePathname();
   const brand = useBrand();
-  const sections = visibleNavSections(role, { cctv: brand.cctvEnabled }).flatMap((g) => g.sections);
+  const sections = visibleNavSections(role, { cctv: brand.cctvEnabled, deliveryOrders: brand.deliveryOrdersEnabled }).flatMap((g) => g.sections);
   const { section, href: activeHref } = activeNavSection(pathname, sections);
   if (!section || section.links.length < 2) return null;
   return (
