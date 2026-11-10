@@ -5,6 +5,7 @@ import { penjualanSchema } from "@/lib/validation/penjualanSchema";
 import { updateSalesRecord } from "@/lib/sales/store";
 import { getErpSyncSetting } from "@/lib/settings/erpSync";
 import { retrySalesErpSync } from "@/lib/erpSync/salesRetry";
+import { prisma } from "@/lib/db/prisma";
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   if (!can(await getCurrentRole(), "penjualan.manage")) {
@@ -15,8 +16,16 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
     return NextResponse.json({ success: false, message: "Mohon lengkapi data penjualan yang wajib diisi.", code: "VALIDATION", details: parsed.error.flatten() }, { status: 400 });
   }
   const { id } = await params;
+  const before = await prisma.salesRecord.findUnique({ where: { id }, select: { approvalStatus: true } }).catch(() => null);
+  // Simpan otomatis dari HP lain tidak boleh mengubah transaksi yang sudah difinalkan kembali menjadi draft.
+  if (parsed.data.isDraft && before && before.approvalStatus !== "draft") {
+    return NextResponse.json({ success: false, code: "ALREADY_FINAL", message: "Transaksi ini sudah difinalkan, tidak bisa disimpan sebagai draft." }, { status: 409 });
+  }
   try {
     const data = await updateSalesRecord(id, parsed.data);
+    if (before?.approvalStatus === "draft" && !parsed.data.isDraft) {
+      void import("@/lib/push/notify").then(({ notifyNewSale }) => notifyNewSale(id)).catch(() => undefined);
+    }
     if (data.syncTarget === "erp" && data.syncStatus === "pending") {
       const setting = await getErpSyncSetting();
       if (setting.autoSyncAfterSalesEdit) {
