@@ -358,7 +358,36 @@ export function SalesItemsDetail({
           Tidak ada item barang pada transaksi ini.
         </p>
       ) : (
-        <div className="overflow-x-auto rounded-md border border-slate-200 bg-white">
+        <>
+        {/* HP: satu baris per barang, tanpa tabel lebar yang terpotong di kanan. */}
+        <ul className="divide-y divide-slate-100 rounded-md border border-slate-200 bg-white md:hidden">
+          {sale.items.map((item, index) => {
+            const key = item.productRef.trim().toLowerCase();
+            const manualName = item.manualProduct?.name?.trim();
+            const name = manualName || productNames[key];
+            const code = manualName ? item.manualProduct?.sku?.trim() || item.productRef : item.productRef;
+            const missing = shortage[key];
+            return (
+              <li key={`${item.productRef}-${index}`} className="px-3 py-2.5">
+                <div className="flex items-baseline justify-between gap-3">
+                  <p className="min-w-0 break-words font-semibold text-slate-900">{code}</p>
+                  <p className="shrink-0 font-semibold tabular-nums text-slate-900">{rupiah(salesItemSubtotal(item))}</p>
+                </div>
+                {name && <p className="text-xs text-slate-500">{name}</p>}
+                <p className="mt-0.5 text-xs tabular-nums text-slate-600">
+                  {item.quantity} {item.unitSnapshot || ""} × {rupiah(item.unitPrice)}
+                  {(item.discount || 0) > 0 && <span className="text-slate-500"> · diskon {rupiah(item.discount || 0)}</span>}
+                </p>
+                {missing > 0 && (
+                  <p className="mt-1 inline-flex rounded bg-orange-50 px-1.5 py-0.5 text-[11px] font-semibold text-orange-800">
+                    Stok kosong: {missing.toLocaleString("id-ID")} {item.unitSnapshot || ""}
+                  </p>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+        <div className="hidden overflow-x-auto rounded-md border border-slate-200 bg-white md:block">
           <table className="min-w-full text-left text-sm">
             <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
               <tr>
@@ -415,6 +444,7 @@ export function SalesItemsDetail({
             </tbody>
           </table>
         </div>
+        </>
       )}
     </div>
   );
