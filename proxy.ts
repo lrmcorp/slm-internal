@@ -42,6 +42,14 @@ const PROTECTED: Array<{ path: string; permission: Parameters<typeof can>[1] | P
  * Super Admin tetap login selama aktif: setiap buka aplikasi atau pindah menu memperpanjang sesi 24 jam.
  * Tidak ada aktivitas 24 jam: cookie habis dan harus login lagi.
  */
+function readRoleSafely(request: NextRequest) {
+  try {
+    return readSessionToken(request.cookies.get(LOCAL_SESSION_COOKIE)?.value)?.role;
+  } catch {
+    return undefined;
+  }
+}
+
 function outsideAccessHours(request: NextRequest) {
   try {
     const session = readSessionToken(request.cookies.get(LOCAL_SESSION_COOKIE)?.value);
@@ -78,7 +86,8 @@ export function proxy(request: NextRequest) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
   if (localCredentialsMode && outsideAccessHours(request)) {
-    const res = NextResponse.redirect(new URL("/login?jam=1", request.url));
+    const role = readRoleSafely(request);
+    const res = NextResponse.redirect(new URL(`/login?jam=${role ?? "1"}`, request.url));
     res.cookies.set(LOCAL_SESSION_COOKIE, "", { path: "/", maxAge: 0 });
     return res;
   }

@@ -18,21 +18,42 @@ export function sessionTtlFor(role?: Role) {
   return role === "OWNER" ? OWNER_IDLE_TTL_SECONDS : SESSION_TTL_SECONDS;
 }
 
+type Env = Record<string, string | undefined>;
+type Hours = { start: number; end: number };
+
+/** Admin (kasir) dan Petugas DO (packing) selesai lebih awal dari role lain. */
+const ROLE_END_DEFAULT: Partial<Record<Role, number>> = { ADMIN: 17 * 60, DELIVERY_DRIVER: 17 * 60 };
+
+function parseHours(raw: string): Hours | null | undefined {
+  const value = raw.trim().toLowerCase();
+  if (value === "off" || value === "") return null;
+  const m = /^(\d{1,2})[.:](\d{2})\s*-\s*(\d{1,2})[.:](\d{2})$/.exec(value);
+  return m ? { start: Number(m[1]) * 60 + Number(m[2]), end: Number(m[3]) * 60 + Number(m[4]) } : undefined;
+}
+
 /**
- * Jam kerja (WIB) untuk semua role selain Super Admin. Diatur per instance lewat ACCESS_HOURS,
- * mis. "08:00-18:00" (bawaan) atau "off" untuk tanpa batas jam.
+ * Jam kerja (WIB) role selain Super Admin. Diatur per instance:
+ *   ACCESS_HOURS            semua role (bawaan "08:00-18:00", "off" = tanpa batas)
+ *   ACCESS_HOURS_<ROLE>     khusus satu role, mis. ACCESS_HOURS_ADMIN=08:00-17:00
+ * Bawaan Admin dan Petugas DO selesai jam 17.00.
  */
-export function accessHours(env: Record<string, string | undefined> = process.env) {
-  const raw = (env.ACCESS_HOURS ?? "08:00-18:00").trim().toLowerCase();
-  if (raw === "off" || raw === "") return null;
-  const m = /^(\d{1,2})[.:](\d{2})\s*-\s*(\d{1,2})[.:](\d{2})$/.exec(raw);
-  if (!m) return { start: 8 * 60, end: 18 * 60 };
-  return { start: Number(m[1]) * 60 + Number(m[2]), end: Number(m[3]) * 60 + Number(m[4]) };
+export function accessHours(env: Env = process.env, role?: Role): Hours | null {
+  if (role === "OWNER") return null;
+  const own = role ? env[`ACCESS_HOURS_${role}`] : undefined;
+  if (own !== undefined) {
+    const parsed = parseHours(own);
+    if (parsed !== undefined) return parsed;
+  }
+  const general = parseHours(env.ACCESS_HOURS ?? "08:00-18:00");
+  if (general === null) return null;
+  const base = general ?? { start: 8 * 60, end: 18 * 60 };
+  const roleEnd = role ? ROLE_END_DEFAULT[role] : undefined;
+  return roleEnd !== undefined ? { start: base.start, end: Math.min(base.end, roleEnd) } : base;
 }
 
 const label = (minutes: number) => `${String(Math.floor(minutes / 60)).padStart(2, "0")}.${String(minutes % 60).padStart(2, "0")}`;
-export function accessHoursLabel(env: Record<string, string | undefined> = process.env) {
-  const h = accessHours(env);
+export function accessHoursLabel(env: Env = process.env, role?: Role) {
+  const h = accessHours(env, role);
   return h ? `${label(h.start)}–${label(h.end)} WIB` : null;
 }
 
@@ -42,17 +63,17 @@ function jakartaMinutes(now: number) {
   return d.getUTCHours() * 60 + d.getUTCMinutes();
 }
 
-export function withinAccessHours(role: Role | undefined, now = Date.now(), env: Record<string, string | undefined> = process.env) {
+export function withinAccessHours(role: Role | undefined, now = Date.now(), env: Env = process.env) {
   if (role === "OWNER") return true;
-  const h = accessHours(env);
+  const h = accessHours(env, role);
   if (!h) return true;
   const m = jakartaMinutes(now);
   return m >= h.start && m < h.end;
 }
 
 /** Detik (epoch) saat jam kerja hari ini berakhir, untuk membatasi umur sesi role selain Super Admin. */
-function accessEndEpoch(now: number, env: Record<string, string | undefined> = process.env) {
-  const h = accessHours(env);
+function accessEndEpoch(now: number, role?: Role, env: Env = process.env) {
+  const h = accessHours(env, role);
   if (!h) return Infinity;
   const nowSec = Math.floor(now / 1000);
   return nowSec - jakartaMinutes(now) * 60 - (nowSec % 60) + h.end * 60;
@@ -83,7 +104,7 @@ function decodePayload(value: string): SessionPayload | null {
 
 export function createSessionToken(externalId: string, role?: Role, now = Date.now()) {
   const ttlExp = Math.floor(now / 1000) + sessionTtlFor(role);
-  const body: SessionPayload = { externalId, exp: role === "OWNER" ? ttlExp : Math.min(ttlExp, accessEndEpoch(now)) };
+  const body: SessionPayload = { externalId, exp: role === "OWNER" ? ttlExp : Math.min(ttlExp, accessEndEpoch(now, role)) };
   if (role) body.role = role;
   const payload = Buffer.from(JSON.stringify(body)).toString("base64url");
   return `${payload}.${sign(payload)}`;

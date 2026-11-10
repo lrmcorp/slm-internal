@@ -4,10 +4,11 @@ import { verifyPassword } from "./password";
 import { setLocalSessionCookie } from "./localSession";
 import { accessHoursLabel, withinAccessHours } from "./sessionToken";
 
-export function outsideHoursMessage() {
-  return `Aplikasi hanya bisa dipakai jam ${accessHoursLabel()}. Di luar jam itu hanya Super Admin yang bisa masuk.`;
+export function outsideHoursMessage(role?: Role) {
+  const hours = accessHoursLabel(process.env, role);
+  return `Akun ${role ? roleLabel(role) : "ini"} hanya bisa dipakai jam ${hours ?? "kerja"}. Di luar jam itu hanya Super Admin yang bisa masuk.`;
 }
-import { landingPageForRole, type Role } from "./roles";
+import { landingPageForRole, roleLabel, type Role } from "./roles";
 
 const MAX_FAILED_LOGIN = 5;
 const LOCK_MINUTES = 15;
@@ -97,7 +98,7 @@ export async function loginWithPassword(input: unknown) {
     throw new Error(INVALID_MESSAGE);
   }
 
-  if (!withinAccessHours(user.role)) throw new Error(outsideHoursMessage());
+  if (!withinAccessHours(user.role)) throw new Error(outsideHoursMessage(user.role));
 
   await prisma.user.update({
     where: { id: user.id },
