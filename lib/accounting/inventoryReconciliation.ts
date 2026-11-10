@@ -1,4 +1,5 @@
 import "server-only";
+import { cashAccountForRekening } from "@/lib/accounting/rekeningLedger";
 import { prisma } from "@/lib/db/prisma";
 import type { Role } from "@/lib/auth/roles";
 import { recordAudit } from "@/lib/audit/store";
@@ -258,8 +259,7 @@ export async function applyCorrection(expenseId: string, kind: CorrectionKind, a
     await prisma.expenseRecord.update({ where: { id: expense.id }, data: { categoryCode: "equipment" } });
     journalId = (await postExpenseJournal(expense.id, actor))?.id;
   } else {
-    const cash = await prisma.account.findUnique({ where: { code: "1-1001" } });
-    if (!cash) throw new Error("Akun Kas & Bank (1-1001) tidak ditemukan.");
+    const cash = await cashAccountForRekening(expense.rekeningId);
     const memo = `Pembelian barang dagang (${expense.expenseDate.toISOString().slice(0, 10)}): ${expense.description ?? ""}`.slice(0, 250);
     const journal = await postJournalEntry({
       entryDate: expense.expenseDate, sourceType: "EXPENSE", sourceId: expense.id, postingType: "DISBURSEMENT",

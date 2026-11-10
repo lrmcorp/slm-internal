@@ -1,5 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
+import { ensureAllRekeningLedgerAccounts } from "@/lib/accounting/rekeningLedger";
 import type { AccountCategory, NormalBalance, Prisma } from "@prisma/client";
 import type { AccountInput } from "@/lib/validation/accountingSchema";
 import { recordAudit } from "@/lib/audit/store";
@@ -33,11 +34,13 @@ export const STANDARD_ACCOUNTS: StandardAccountSeed[] = [
   // 3. EKUITAS
   { code: "3-1001", name: "Modal Pemilik", category: "EQUITY", normalBalance: "CREDIT", description: "Modal awal disetor dan ekuitas pemilik perusahaan", isSystem: true, sortOrder: 210 },
   { code: "3-1002", name: "Laba Ditahan", category: "EQUITY", normalBalance: "CREDIT", description: "Akumulasi laba rugi tahun-tahun sebelumnya", isSystem: true, sortOrder: 220 },
+  { code: "3-1003", name: "Prive Pemilik", category: "EQUITY", normalBalance: "DEBIT", description: "Pengambilan uang usaha untuk keperluan pribadi pemilik", isSystem: true, sortOrder: 230 },
 
   // 4. PENDAPATAN
   { code: "4-1001", name: "Pendapatan Penjualan", category: "REVENUE", normalBalance: "CREDIT", description: "Pendapatan dari penjualan produk & jasa", isSystem: true, sortOrder: 310 },
   { code: "4-1002", name: "Pendapatan Selisih Kurs", category: "REVENUE", normalBalance: "CREDIT", description: "Laba selisih kurs valuta asing terealisasi & revaluasi", isSystem: true, sortOrder: 320 },
   { code: "4-1003", name: "Retur & Potongan Penjualan", category: "REVENUE", normalBalance: "DEBIT", description: "Kontra akun pendapatan atas retur dan potongan penjualan", isSystem: true, sortOrder: 330 },
+  { code: "4-2001", name: "Pendapatan Bunga Bank", category: "REVENUE", normalBalance: "CREDIT", description: "Bunga dan jasa giro dari rekening bank", isSystem: true, sortOrder: 340 },
 
   // 5. HARGA POKOK PENJUALAN
   { code: "5-1001", name: "Harga Pokok Penjualan (HPP)", category: "EXPENSE", normalBalance: "DEBIT", description: "Beban pokok barang yang terjual", isSystem: true, sortOrder: 410 },
@@ -48,6 +51,7 @@ export const STANDARD_ACCOUNTS: StandardAccountSeed[] = [
   { code: "6-1003", name: "Beban Transport & Logistik", category: "EXPENSE", normalBalance: "DEBIT", description: "Bahan bakar, tol, kurir, dan ekspedisi", isSystem: true, sortOrder: 530 },
   { code: "6-1004", name: "Beban Pemeliharaan & Perbaikan", category: "EXPENSE", normalBalance: "DEBIT", description: "Biaya servis armada, gedung, dan perlengkapan", isSystem: false, sortOrder: 540 },
   { code: "6-1005", name: "Beban Utilitas & Komunikasi", category: "EXPENSE", normalBalance: "DEBIT", description: "Listrik, air, internet, telepon, dan pulsa", isSystem: false, sortOrder: 550 },
+  { code: "6-1009", name: "Beban Administrasi Bank", category: "EXPENSE", normalBalance: "DEBIT", description: "Biaya admin bulanan, biaya transfer, dan pajak bunga bank", isSystem: true, sortOrder: 590 },
   { code: "6-1006", name: "Kerugian Selisih Kurs", category: "EXPENSE", normalBalance: "DEBIT", description: "Rugi selisih kurs valuta asing terealisasi pembayaran utang", isSystem: true, sortOrder: 560 }
 ];
 
@@ -72,6 +76,8 @@ export async function ensureStandardAccounts(): Promise<void> {
       }
     });
   }
+  // Rekening yang belum punya akun COA sendiri ditautkan sekarang, sebelum jurnal otomatis membaca rekening.
+  await ensureAllRekeningLedgerAccounts();
 }
 
 export type AccountRow = Awaited<ReturnType<typeof listAccounts>>[number];

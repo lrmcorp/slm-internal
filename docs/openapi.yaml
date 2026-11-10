@@ -2315,6 +2315,41 @@ paths:
           description: Endpoint wajib diisi.
         "401":
           description: Belum login.
+  /api/cash-bank:
+    get:
+      summary: Saldo buku per rekening dan riwayat Mutasi Kas & Bank.
+      description: Permission cashbank.manage (Super Admin, Supervisor, Finance).
+      responses:
+        "200":
+          description: Saldo per rekening dan 100 mutasi terakhir.
+        "403":
+          description: Tidak punya akses.
+    post:
+      summary: Catat mutasi kas & bank dan buat jurnalnya.
+      description: "Body: type (SETOR_TUNAI, TARIK_TUNAI, TRANSFER, BIAYA_ADMIN, BUNGA, MODAL_MASUK, PRIVE), date (YYYY-MM-DD), amount, fromRekeningId, toRekeningId, notes. Rekening GENERAL berarti Kas & Bank umum (1-1001)."
+      responses:
+        "201":
+          description: Mutasi tersimpan sebagai jurnal CASH_BANK.
+        "400":
+          description: Data tidak valid atau periode sudah ditutup.
+        "403":
+          description: Tidak punya akses.
+  /api/cash-bank/{id}/cancel:
+    post:
+      summary: Batalkan mutasi kas & bank dengan jurnal pembalik bertanggal hari ini.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Jurnal pembalik dibuat.
+        "400":
+          description: Mutasi tidak ditemukan atau sudah dibatalkan.
+        "403":
+          description: Tidak punya akses.
   /api/rekening:
     get:
       summary: Daftar rekening pembayaran.

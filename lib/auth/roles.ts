@@ -9,7 +9,7 @@ export const ALL_PERMISSIONS = [
   "tempo.view", "tempo.view_due", "tempo.mark_paid", "tempo.cancel", "tempo.write_off", "audit.view", "erp_sync.retry", "rekening.reset",
   "master_data.view", "guide.view", "do.view", "do.process", "do.assign",
   "sdm.view", "sdm.employee.manage", "sdm.kasbon.manage", "sdm.salary.view", "sdm.savings.manage",
-  "accounting.view", "accounting.journal.manage", "accounting.coa.manage", "accounting.period.manage", "accounting.rates.manage",
+  "cashbank.manage", "accounting.view", "accounting.journal.manage", "accounting.coa.manage", "accounting.period.manage", "accounting.rates.manage",
   "purchasing.view", "purchasing.order.manage", "purchasing.invoice.manage", "purchasing.payment.manage",
   // Inventory gudang & toko: satu permission per menu
   "inventory.stock.view", "inventory.movement.view", "inventory.transfer", "inventory.receive",
@@ -59,8 +59,8 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   FINANCE: [
     "pengeluaran.view", "pengeluaran.create", "tempo.view", "tempo.mark_paid",
     "master_data.view", "guide.view",
-    // Bagan Akun, Tutup Buku, dan Rekening boleh diatur Finance.
-    "accounting.coa.manage", "accounting.period.manage", "settings.view", "settings.rekening.manage",
+    // Bagan Akun, Tutup Buku, Rekening, dan Mutasi Kas & Bank boleh diatur Finance.
+    "accounting.coa.manage", "accounting.period.manage", "settings.view", "settings.rekening.manage", "cashbank.manage",
     "sdm.view", "sdm.kasbon.manage", "sdm.salary.view", "sdm.savings.manage",
     "purchasing.view", "purchasing.order.manage", "purchasing.invoice.manage", "purchasing.payment.manage"
   ],

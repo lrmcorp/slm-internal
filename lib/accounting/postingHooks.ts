@@ -1,4 +1,5 @@
 import "server-only";
+import { cashAccountForRekening } from "@/lib/accounting/rekeningLedger";
 import { prisma } from "@/lib/db/prisma";
 import { postJournalEntry, reverseJournalEntry } from "@/lib/accounting/journalStore";
 import { getAccountByCode, ensureStandardAccounts } from "@/lib/accounting/accountStore";
@@ -68,9 +69,8 @@ export async function postExpenseJournal(
   const amount = Number(expense.amount);
   if (amount <= 0) return null;
 
-  // Resolve Kas/Bank account
-  const cashAccount = await getAccountByCode("1-1001");
-  if (!cashAccount) throw new Error("Akun perkiraan Kas & Bank (1-1001) tidak ditemukan.");
+  // Akun kas/bank rekening yang dipakai membayar (Kas & Bank umum bila rekening tidak dikenal).
+  const cashAccount = await cashAccountForRekening(expense.rekeningId);
 
   const policy = await getFixedAssetPolicy();
   const debitAccountCode = expenseDebitAccountFor(expense, { capitalizationThreshold: policy.capitalizationThreshold });
@@ -199,14 +199,16 @@ export async function postRepaymentJournal(
   const piutangAccount = await getAccountByCode("1-1003");
   if (!piutangAccount) throw new Error("Akun perkiraan Piutang Karyawan (1-1003) tidak ditemukan.");
 
-  let debitAccountCode = "1-1001"; // Kas & Bank default
+  let debitAccount;
   if (payment.paymentMethod === "POTONG_GAJI") {
-    debitAccountCode = "2-1002"; // Utang Gaji
+    const debitAccountCode = "2-1002"; // Utang Gaji
+    const role = ROLE_BY_CODE.get(debitAccountCode);
+    debitAccount = role ? await accountForRole(role) : await getAccountByCode(debitAccountCode);
+    if (!debitAccount) throw new Error(`Akun perkiraan (${debitAccountCode}) tidak ditemukan.`);
+  } else {
+    // Uang pelunasan masuk ke rekening penerima.
+    debitAccount = await cashAccountForRekening(payment.rekeningId);
   }
-
-  const role = ROLE_BY_CODE.get(debitAccountCode);
-  const debitAccount = role ? await accountForRole(role) : await getAccountByCode(debitAccountCode);
-  if (!debitAccount) throw new Error(`Akun perkiraan (${debitAccountCode}) tidak ditemukan.`);
 
   const desc = `Pelunasan Kasbon ${payment.employee.name} via ${payment.paymentMethod}${payment.payrollReference ? ` (${payment.payrollReference})` : ""}`;
 
@@ -287,8 +289,7 @@ export async function postSettlementJournal(
   const expenseAccount = await getAccountByCode("6-1001");
   if (!expenseAccount) throw new Error("Akun perkiraan Beban Operasional Umum (6-1001) tidak ditemukan.");
 
-  const cashAccount = await getAccountByCode("1-1001");
-  if (!cashAccount) throw new Error("Akun perkiraan Kas & Bank (1-1001) tidak ditemukan.");
+  const cashAccount = await cashAccountForRekening(settlement.refundRekeningId);
 
   const lines = [];
 
