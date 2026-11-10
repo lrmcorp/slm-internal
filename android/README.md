@@ -1,4 +1,13 @@
-# Aplikasi Android SLM
+# Aplikasi Android SLM dan ANKJY
+
+Satu kode untuk beberapa instance. Pilih brand saat build dengan `-Pbrand=...`:
+
+| Brand | applicationId | Nama | Alamat | APK |
+|---|---|---|---|---|
+| `slm` (bawaan) | `id.playgo.slm` | SLM | https://slm.lrmint.xyz | `public/downloads/slm-android.apk` |
+| `ankjy` | `id.playgo.ankjy` | ANKJY | https://ankjy.net | `public/downloads/ankjy-android.apk` |
+
+Nama dan ikon tiap brand ada di `app/src/brand/<brand>/res`; versi dan alamat di `app/build.gradle`.
 
 APK ini membuka web SLM (`https://slm.lrmint.xyz`) di dalam aplikasi, jadi semua fitur dan hak akses sama dengan versi web dan otomatis ikut setiap update server. Tidak perlu build ulang APK ketika web berubah.
 
@@ -27,7 +36,10 @@ cd android
 cp app/build/outputs/apk/release/app-release.apk ../public/downloads/slm-android.apk
 ```
 
+ANKJY: `./gradlew assembleRelease -Pbrand=ankjy` lalu salin ke `../public/downloads/ankjy-android.apk`.
 Alamat web lain: `./gradlew assembleRelease -PslmUrl=https://alamat-lain`.
+
+**Kunci rilis ANKJY (sejak 10 Nov 2026, versi 1.0):** terpisah dari kunci SLM, letakkan di `android/keystore/ankjy/` (`ankjy-release.jks` dan `keystore.properties`). Simpan cadangannya di VPS `/root/android-keystore/ankjy/`. Tanpa kunci ini, update ANKJY berikutnya tidak bisa dipasang di atas versi 1.0.
 Naikkan `versionCode`/`versionName` di `app/build.gradle` setiap rilis baru.
 
 **Kunci rilis v2 (sejak 8 Nov 2026, versi 2.0):** disimpan di VPS `/root/android-keystore/` (hanya root). Build ulang di VPS: `/root/build-apk.sh` (container JDK 17 + Android SDK, Gradle dari mirror Tencent dengan checksum resmi). Versi 1.0 memakai kunci lama developer, jadi HP yang masih memasang versi 1.0 harus menghapus aplikasi lama dulu.
