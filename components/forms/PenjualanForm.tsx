@@ -268,6 +268,8 @@ export function PenjualanForm({
   const autosaveInFlightRef = useRef<Promise<void> | null>(null);
   const autosaveAgainRef = useRef(false);
   const autosaveBlockedRef = useRef(false);
+  /** Draft sudah disimpan lewat tombol dan halaman sedang berpindah: jangan simpan otomatis lagi. */
+  const autosaveDoneRef = useRef(false);
   const [autosaveStatus, setAutosaveStatus] = useState<{ state: "idle" | "saving" | "saved" | "error"; at?: string }>({ state: "idle" });
   const [duplicateSuspectModal, setDuplicateSuspectModal] = useState<{
     isOpen: boolean;
@@ -601,7 +603,7 @@ export function PenjualanForm({
    * Baru jalan bila ada minimal satu barang terisi. Draft pertama dibuat (POST), berikutnya diperbarui (PUT).
    */
   const runAutosave = async (): Promise<void> => {
-    if (!autosaveEnabled || autosaveBlockedRef.current || isSubmittingRef.current) return;
+    if (!autosaveEnabled || autosaveBlockedRef.current || autosaveDoneRef.current || isSubmittingRef.current) return;
     if (autosaveInFlightRef.current) {
       autosaveAgainRef.current = true;
       return;
@@ -660,7 +662,7 @@ export function PenjualanForm({
     if (!autosaveEnabled) return;
     const schedule = () => {
       if (autosaveTimerRef.current) window.clearTimeout(autosaveTimerRef.current);
-      autosaveTimerRef.current = window.setTimeout(() => void runAutosaveRef.current(), 3000);
+      autosaveTimerRef.current = window.setTimeout(() => void runAutosaveRef.current(), 1500);
     };
     const flushNow = () => {
       if (autosaveTimerRef.current) window.clearTimeout(autosaveTimerRef.current);
@@ -676,7 +678,8 @@ export function PenjualanForm({
       subscription.unsubscribe();
       document.removeEventListener("visibilitychange", onVisibility);
       window.removeEventListener("pagehide", flushNow);
-      if (autosaveTimerRef.current) window.clearTimeout(autosaveTimerRef.current);
+      // Pindah halaman di dalam aplikasi (menu, tab) tidak memicu pagehide: simpan sekarang sebelum form ditutup.
+      flushNow();
     };
   }, [autosaveEnabled, watch]);
 
@@ -1071,6 +1074,7 @@ export function PenjualanForm({
       autosaveRequestIdRef.current = `AUTO-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
       setAutosaveStatus({ state: "idle" });
       if (isDraft) {
+        autosaveDoneRef.current = true;
         setNotice({
           type: "success",
           message: "Draft penjualan berhasil disimpan. Stok gudang belum dipotong.",
