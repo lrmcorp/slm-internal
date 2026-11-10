@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { can, landingPageForRole } from "@/lib/auth/roles";
 import { resolveAuthProvider, resolveRequestRole, resolveRequestUser } from "@/lib/auth/request";
+import { OWNER_IDLE_TTL_SECONDS, renewedOwnerToken } from "@/lib/auth/sessionToken";
 
 const LOCAL_SESSION_COOKIE = "aneka_jaya_session";
 const ANIKA_ERP_TOKEN_COOKIE = "aneka_jaya_erp_token";
@@ -37,6 +38,22 @@ const PROTECTED: Array<{ path: string; permission: Parameters<typeof can>[1] | P
   { path: "/inventory", permission: "inventory.stock.view" },
 ];
 
+/**
+ * Super Admin tetap login selama aktif: setiap buka aplikasi atau pindah menu memperpanjang sesi 24 jam.
+ * Tidak ada aktivitas 24 jam: cookie habis dan harus login lagi.
+ */
+function withOwnerSessionRenewed(request: NextRequest, response: NextResponse) {
+  const token = renewedOwnerToken(request.cookies.get(LOCAL_SESSION_COOKIE)?.value);
+  if (!token) return response;
+  const base = { sameSite: "lax" as const, secure: process.env.NODE_ENV === "production", path: "/", maxAge: OWNER_IDLE_TTL_SECONDS };
+  response.cookies.set(LOCAL_SESSION_COOKIE, token, { ...base, httpOnly: true });
+  for (const name of [ANIKA_ERP_TOKEN_COOKIE, "aneka_jaya_role"]) {
+    const value = request.cookies.get(name)?.value;
+    if (value) response.cookies.set(name, value, { ...base, httpOnly: name !== "aneka_jaya_role" });
+  }
+  return response;
+}
+
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   if (pathname.startsWith("/api/") || pathname.startsWith("/_next/") || pathname.startsWith("/uploads/") || pathname.startsWith("/downloads/") || pathname === "/" || pathname === "/no-access" || pathname === "/login" || pathname === "/favicon.ico" || pathname === "/icon.svg" || pathname === "/brand-icon.svg" || pathname === "/manifest.webmanifest" || pathname === "/sw.js" || pathname.startsWith("/pwa-icon/") || pathname.startsWith("/pwa-splash/")) return NextResponse.next();
@@ -50,7 +67,7 @@ export function proxy(request: NextRequest) {
   if (localCredentialsMode && (!request.cookies.get(LOCAL_SESSION_COOKIE)?.value || missingErpSession)) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
-  if (localCredentialsMode) return NextResponse.next();
+  if (localCredentialsMode) return withOwnerSessionRenewed(request, NextResponse.next());
   const role = resolveRequestRole(request);
   for (const rule of PROTECTED) {
     if (pathname === rule.path || pathname.startsWith(`${rule.path}/`)) {
