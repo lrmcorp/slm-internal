@@ -481,7 +481,21 @@ export function SalesHistoryList({
               <p className="mt-1 truncate text-[11px] text-slate-500">
                 {[canViewTransactionNumber ? sale.transactionNumber || sale.id : null, sale.customerLocation, sale.createdByNameSnapshot && `oleh ${sale.createdByNameSnapshot}`].filter(Boolean).join(" · ")}
               </p>
-              {expanded && <SalesItemsDetail sale={sale} className="mt-2" productNames={productNames} shortage={stockShortage[sale.id]} />}
+              {expanded && (
+                <div className="mt-2">
+                  {/* Tutup juga dari atas daftar: daftar item bisa panjang, tombol di bawah tidak terlihat. */}
+                  <button
+                    type="button"
+                    aria-expanded
+                    onClick={() => toggle(sale.id)}
+                    className="flex min-h-11 w-full items-center justify-between rounded-md border border-slate-200 bg-slate-50 px-3 text-xs font-semibold text-slate-700"
+                  >
+                    <span>{sale.items.length} item</span>
+                    <span className="flex items-center gap-1">Tutup <span aria-hidden="true" className="inline-block rotate-180">⌄</span></span>
+                  </button>
+                  <SalesItemsDetail sale={sale} className="mt-1.5" productNames={productNames} shortage={stockShortage[sale.id]} />
+                </div>
+              )}
               <div className="mt-2 flex items-center gap-1.5">
                 <button
                   type="button"
@@ -491,7 +505,7 @@ export function SalesHistoryList({
                   className="flex h-9 shrink-0 items-center gap-1 rounded-md border border-slate-200 px-2 text-xs font-semibold text-slate-700"
                 >
                   {expanded ? "Tutup" : `${sale.items.length} item`}
-                  <span aria-hidden="true" className={`transition-transform ${expanded ? "rotate-180" : ""}`}>⌄</span>
+                  <span aria-hidden="true" className={`inline-block transition-transform ${expanded ? "rotate-180" : ""}`}>⌄</span>
                 </button>
                 <Link className="grid h-9 min-w-0 flex-1 place-items-center rounded-md bg-brand-600 text-xs font-semibold text-white" href={`/penjualan/${sale.id}`}>
                   Detail
