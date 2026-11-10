@@ -4,41 +4,73 @@ import { prisma } from "@/lib/db/prisma";
 import { pushConfig } from "./config";
 
 export type PushPayload = { title: string; body: string; url: string; tag?: string };
+export type PushFailure = { status?: number; reason: string; device: string };
+export type PushResult = { devices: number; sent: number; removed: number; failures: PushFailure[] };
+
+function deviceLabel(userAgent?: string | null) {
+  if (!userAgent) return "Perangkat";
+  if (/iPhone/i.test(userAgent)) return "iPhone";
+  if (/iPad/i.test(userAgent)) return "iPad";
+  if (/Android/i.test(userAgent)) return "Android";
+  if (/Mac OS X/i.test(userAgent)) return "Mac";
+  if (/Windows/i.test(userAgent)) return "Windows";
+  return "Perangkat";
+}
 
 /** Langganan yang ditolak layanan push sebanyak ini dianggap mati dan dihapus. */
 const MAX_FAILURES = 5;
 
 /**
- * Kirim ke semua perangkat milik role tertentu. Tidak pernah melempar error: notifikasi tidak boleh
- * menggagalkan penjualan atau pergerakan stok yang memicunya.
+ * Kirim ke langganan yang cocok. Tidak pernah melempar error: notifikasi tidak boleh menggagalkan
+ * penjualan atau pergerakan stok yang memicunya. Alasan gagal dicatat di log server.
  */
-export async function sendPushToRoles(roles: readonly string[], payload: PushPayload): Promise<{ sent: number; removed: number }> {
+async function sendToSubscriptions(where: { role?: { in: string[] }; userId?: string }, payload: PushPayload): Promise<PushResult> {
   const config = pushConfig();
-  if (!config.enabled || roles.length === 0) return { sent: 0, removed: 0 };
+  const empty: PushResult = { devices: 0, sent: 0, removed: 0, failures: [] };
+  if (!config.enabled) return empty;
   try {
     webpush.setVapidDetails(config.subject, config.publicKey, config.privateKey);
-    const subscriptions = await prisma.pushSubscription.findMany({ where: { role: { in: Array.from(roles) } } });
-    let sent = 0;
-    let removed = 0;
+    const subscriptions = await prisma.pushSubscription.findMany({ where });
+    const result: PushResult = { ...empty, devices: subscriptions.length };
     await Promise.all(subscriptions.map(async (sub) => {
       try {
         await webpush.sendNotification({ endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } }, JSON.stringify(payload), { TTL: 60 * 60 * 6, urgency: "high" });
-        sent += 1;
+        result.sent += 1;
         await prisma.pushSubscription.update({ where: { id: sub.id }, data: { lastSentAt: new Date(), failureCount: 0 } }).catch(() => undefined);
       } catch (error) {
         const status = (error as { statusCode?: number }).statusCode;
-        // 404/410: aplikasi dihapus atau izin notifikasi dicabut.
-        if (status === 404 || status === 410 || sub.failureCount + 1 >= MAX_FAILURES) {
-          removed += 1;
+        const body = String((error as { body?: unknown }).body ?? (error instanceof Error ? error.message : error)).slice(0, 200);
+        const host = (() => { try { return new URL(sub.endpoint).host; } catch { return "?"; } })();
+        console.error(`[push] gagal ke ${host} (${deviceLabel(sub.userAgent)}, user ${sub.userId}): ${status ?? "-"} ${body}`);
+        result.failures.push({ status, reason: body, device: deviceLabel(sub.userAgent) });
+        if (status === 404 || status === 410) {
+          // Aplikasi dihapus atau izin notifikasi dicabut di perangkat.
+          result.removed += 1;
+          await prisma.pushSubscription.delete({ where: { id: sub.id } }).catch(() => undefined);
+        } else if (status === 400 || status === 401 || status === 403) {
+          // Kesalahan pengaturan server (kunci/alamat kontak VAPID), bukan perangkat: langganan tidak dihapus.
+        } else if (sub.failureCount + 1 >= MAX_FAILURES) {
+          result.removed += 1;
           await prisma.pushSubscription.delete({ where: { id: sub.id } }).catch(() => undefined);
         } else {
           await prisma.pushSubscription.update({ where: { id: sub.id }, data: { failureCount: { increment: 1 } } }).catch(() => undefined);
         }
       }
     }));
-    return { sent, removed };
+    return result;
   } catch (error) {
     console.error("[push] gagal mengirim notifikasi:", error instanceof Error ? error.message : error);
-    return { sent: 0, removed: 0 };
+    return empty;
   }
+}
+
+/** Kirim ke semua perangkat milik role tertentu. */
+export async function sendPushToRoles(roles: readonly string[], payload: PushPayload): Promise<PushResult> {
+  if (roles.length === 0) return { devices: 0, sent: 0, removed: 0, failures: [] };
+  return sendToSubscriptions({ role: { in: Array.from(roles) } }, payload);
+}
+
+/** Kirim ke semua perangkat milik satu user (dipakai tombol uji di Profil). */
+export async function sendPushToUser(userId: string, payload: PushPayload): Promise<PushResult> {
+  return sendToSubscriptions({ userId }, payload);
 }

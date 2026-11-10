@@ -73,12 +73,12 @@ describe("notifikasi push", () => {
   it("langganan yang ditolak layanan push (410) dihapus; tanpa kunci VAPID tidak mengirim apa pun", async () => {
     mocks.subFindMany.mockResolvedValue([sub("1", "OWNER"), sub("2", "OWNER")]);
     mocks.sendNotification.mockResolvedValueOnce({}).mockRejectedValueOnce(Object.assign(new Error("gone"), { statusCode: 410 }));
-    await expect(sendPushToRoles(["OWNER"], { title: "t", body: "b", url: "/" })).resolves.toEqual({ sent: 1, removed: 1 });
+    await expect(sendPushToRoles(["OWNER"], { title: "t", body: "b", url: "/" })).resolves.toMatchObject({ sent: 1, removed: 1 });
     expect(mocks.subDelete).toHaveBeenCalledWith({ where: { id: "2" } });
 
     vi.stubEnv("VAPID_PRIVATE_KEY", "");
     mocks.sendNotification.mockClear();
-    await expect(sendPushToRoles(["OWNER"], { title: "t", body: "b", url: "/" })).resolves.toEqual({ sent: 0, removed: 0 });
+    await expect(sendPushToRoles(["OWNER"], { title: "t", body: "b", url: "/" })).resolves.toMatchObject({ sent: 0, removed: 0 });
     expect(mocks.sendNotification).not.toHaveBeenCalled();
   });
 

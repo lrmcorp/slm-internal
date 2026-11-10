@@ -2292,6 +2292,17 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+  /api/push/test:
+    post:
+      summary: Kirim notifikasi uji ke semua perangkat user yang sedang login.
+      description: Mengembalikan jumlah perangkat, yang terkirim, dan alasan gagal per perangkat.
+      responses:
+        "200":
+          description: Hasil pengiriman.
+        "401":
+          description: Belum login.
+        "503":
+          description: Notifikasi belum diaktifkan di server.
   /api/push/subscription:
     post:
       summary: Simpan langganan notifikasi push perangkat ini.
