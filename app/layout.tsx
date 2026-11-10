@@ -5,6 +5,7 @@ import { BrandProvider } from "@/components/brand/BrandProvider";
 import { TopLoadingBar } from "@/components/ui/TopLoadingBar";
 import { ToastProvider } from "@/components/ui/ToastProvider";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
+import { PullToRefresh } from "@/components/pwa/PullToRefresh";
 import { Suspense } from "react";
 import { cctvEnabledForRequest } from "@/lib/features";
 import "./globals.css";
@@ -33,6 +34,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
           <TopLoadingBar />
         </Suspense>
         <ServiceWorkerRegister />
+        <PullToRefresh />
         <BrandProvider brand={{ ...getAppBrand(), cctvEnabled: await cctvEnabledForRequest() }}>
           <ToastProvider>{children}</ToastProvider>
         </BrandProvider>
