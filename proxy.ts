@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { can, landingPageForRole } from "@/lib/auth/roles";
 import { resolveAuthProvider, resolveRequestRole, resolveRequestUser } from "@/lib/auth/request";
-import { OWNER_IDLE_TTL_SECONDS, renewedOwnerToken } from "@/lib/auth/sessionToken";
+import { OWNER_IDLE_TTL_SECONDS, readSessionToken, renewedOwnerToken, withinAccessHours } from "@/lib/auth/sessionToken";
 
 const LOCAL_SESSION_COOKIE = "aneka_jaya_session";
 const ANIKA_ERP_TOKEN_COOKIE = "aneka_jaya_erp_token";
@@ -42,6 +42,16 @@ const PROTECTED: Array<{ path: string; permission: Parameters<typeof can>[1] | P
  * Super Admin tetap login selama aktif: setiap buka aplikasi atau pindah menu memperpanjang sesi 24 jam.
  * Tidak ada aktivitas 24 jam: cookie habis dan harus login lagi.
  */
+function outsideAccessHours(request: NextRequest) {
+  try {
+    const session = readSessionToken(request.cookies.get(LOCAL_SESSION_COOKIE)?.value);
+    // Token lama tanpa role diperiksa di server (getCurrentUser) memakai role dari database.
+    return Boolean(session?.role) && !withinAccessHours(session!.role);
+  } catch {
+    return false;
+  }
+}
+
 function withOwnerSessionRenewed(request: NextRequest, response: NextResponse) {
   const token = renewedOwnerToken(request.cookies.get(LOCAL_SESSION_COOKIE)?.value);
   if (!token) return response;
@@ -66,6 +76,11 @@ export function proxy(request: NextRequest) {
   if (trustedHeaderMode) return NextResponse.next();
   if (localCredentialsMode && (!request.cookies.get(LOCAL_SESSION_COOKIE)?.value || missingErpSession)) {
     return NextResponse.redirect(new URL("/login", request.url));
+  }
+  if (localCredentialsMode && outsideAccessHours(request)) {
+    const res = NextResponse.redirect(new URL("/login?jam=1", request.url));
+    res.cookies.set(LOCAL_SESSION_COOKIE, "", { path: "/", maxAge: 0 });
+    return res;
   }
   if (localCredentialsMode) return withOwnerSessionRenewed(request, NextResponse.next());
   const role = resolveRequestRole(request);

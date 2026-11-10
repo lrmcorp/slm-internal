@@ -2,6 +2,11 @@ import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { verifyPassword } from "./password";
 import { setLocalSessionCookie } from "./localSession";
+import { accessHoursLabel, withinAccessHours } from "./sessionToken";
+
+export function outsideHoursMessage() {
+  return `Aplikasi hanya bisa dipakai jam ${accessHoursLabel()}. Di luar jam itu hanya Super Admin yang bisa masuk.`;
+}
 import { landingPageForRole, type Role } from "./roles";
 
 const MAX_FAILED_LOGIN = 5;
@@ -91,6 +96,8 @@ export async function loginWithPassword(input: unknown) {
     if ((after?.failedLoginCount ?? MAX_FAILED_LOGIN) >= MAX_FAILED_LOGIN) await lockAccount(user.id);
     throw new Error(INVALID_MESSAGE);
   }
+
+  if (!withinAccessHours(user.role)) throw new Error(outsideHoursMessage());
 
   await prisma.user.update({
     where: { id: user.id },

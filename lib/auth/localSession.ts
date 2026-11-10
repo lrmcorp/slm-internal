@@ -7,8 +7,11 @@ export { LOCAL_SESSION_COOKIE, createSessionToken, readSessionToken };
 
 export async function setLocalSessionCookie(externalId: string, role?: Role) {
   const cookieStore = await cookies();
-  const ttl = sessionTtlFor(role);
-  cookieStore.set(LOCAL_SESSION_COOKIE, createSessionToken(externalId, role), {
+  const token = createSessionToken(externalId, role);
+  // Umur cookie mengikuti token: role selain Super Admin berhenti di akhir jam kerja.
+  const exp = readSessionToken(token)?.exp;
+  const ttl = exp ? Math.max(60, exp - Math.floor(Date.now() / 1000)) : sessionTtlFor(role);
+  cookieStore.set(LOCAL_SESSION_COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
     secure: process.env.NODE_ENV === "production",

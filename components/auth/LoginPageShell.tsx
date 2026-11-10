@@ -3,7 +3,7 @@ import { LoginForm } from "@/components/auth/LoginForm";
 import { AndroidAppLink } from "@/components/auth/AndroidAppLink";
 import { APP_BRAND_INITIALS, APP_BRAND_NAME, APP_BRAND_TITLE } from "@/lib/appBrand";
 
-export function LoginPageShell() {
+export function LoginPageShell({ notice }: { notice?: string }) {
   return (
     <main className="min-h-screen overflow-x-hidden bg-[#f7f7f4] text-neutral-950">
       <section className="mx-auto grid min-h-screen w-full max-w-6xl gap-0 px-5 py-6 sm:px-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(380px,0.75fr)] lg:items-center lg:gap-12 lg:px-10">
@@ -56,6 +56,7 @@ export function LoginPageShell() {
               <p className="mt-2 text-sm leading-6 text-neutral-500">Masuk dengan username dan password akun {APP_BRAND_NAME} Anda.</p>
             </div>
 
+            {notice && <p role="status" className="mt-6 rounded-sm border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">{notice}</p>}
             <LoginForm className="mt-6" />
             <AndroidAppLink />
 

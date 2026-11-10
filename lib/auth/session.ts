@@ -3,6 +3,7 @@ import { cookies, headers } from "next/headers";
 import { type Role } from "./roles";
 import { isProductionAuthRuntime, resolveAuthProvider, resolveRequestUser, shouldAllowTrustedHeaderRoleFallback, unauthenticatedUser, type ResolvedUser } from "./request";
 import { LOCAL_SESSION_COOKIE, readSessionToken } from "./localSession";
+import { withinAccessHours } from "./sessionToken";
 import { findActiveUserByExternalId } from "@/lib/users/authLookup";
 import { ANIKA_ERP_TOKEN_COOKIE } from "./anikaErp";
 
@@ -39,7 +40,8 @@ async function getLocalCredentialsUser(requireErpToken = false): Promise<Current
     if (!session) return unauthenticatedUser();
     try {
       const dbUser = await findActiveUserByExternalId(session.externalId, { touchLastLogin: false });
-      if (dbUser) return dbUser;
+      // Di luar jam kerja hanya Super Admin yang tetap dianggap login.
+      if (dbUser) return withinAccessHours(dbUser.role) ? dbUser : unauthenticatedUser();
     } catch {
       // Visual QA can run without a local database; production-like auth still requires User lookup.
     }
