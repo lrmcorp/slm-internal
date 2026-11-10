@@ -504,9 +504,12 @@ function mergeSalesRecords(primary: Sale[], secondary: Sale[]) {
   });
 }
 
-export async function listSalesRecords(): Promise<Sale[]> {
+/** fromDate (YYYY-MM-DD): hanya penjualan sejak tanggal itu, supaya halaman seperti dashboard tidak memuat seluruh riwayat. */
+export async function listSalesRecords(options: { fromDate?: string } = {}): Promise<Sale[]> {
+  const from = options.fromDate && /^\d{4}-\d{2}-\d{2}$/.test(options.fromDate) ? options.fromDate : undefined;
   if (isProductionMode()) {
     const rows = await prisma.salesRecord.findMany({
+      where: from ? { saleDate: { gte: new Date(`${from}T00:00:00.000Z`) } } : undefined,
       include: salesInclude,
       orderBy: [{ saleDate: "desc" }, { transactionAt: "desc" }, { createdAt: "desc" }]
     }).catch((error) => {
@@ -517,7 +520,8 @@ export async function listSalesRecords(): Promise<Sale[]> {
     return rows.map(toSale);
   }
   const rows = await readJsonArray<Sale>(fileName);
-  return mergeSalesRecords(rows, await listPrismaSalesRecordsSafe());
+  const merged = mergeSalesRecords(rows, await listPrismaSalesRecordsSafe());
+  return from ? merged.filter((sale) => !sale.saleDate || sale.saleDate >= from) : merged;
 }
 
 export async function listSalesRecordsPage(input: { page?: number; pageSize?: number; filters?: SalesRecordFilters; scope?: SalesRecordScope } = {}): Promise<PaginatedSalesRecords> {

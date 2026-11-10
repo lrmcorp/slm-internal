@@ -156,8 +156,12 @@ export async function getExpenseRecord(id: string): Promise<Expense | undefined>
   return row ? toExpense(row) : undefined;
 }
 
-export async function listExpenseRecords(): Promise<Expense[]> {
-  const rows = await prisma.expenseRecord.findMany({ orderBy: [{ expenseDate: "desc" }, { createdAt: "desc" }] });
+export async function listExpenseRecords(options: { fromDate?: string } = {}): Promise<Expense[]> {
+  const from = options.fromDate && /^\d{4}-\d{2}-\d{2}$/.test(options.fromDate) ? options.fromDate : undefined;
+  const rows = await prisma.expenseRecord.findMany({
+    where: from ? { expenseDate: { gte: new Date(`${from}T00:00:00.000Z`) } } : undefined,
+    orderBy: [{ expenseDate: "desc" }, { createdAt: "desc" }]
+  });
   return rows.map(toExpense);
 }
 

@@ -309,8 +309,9 @@ function buildAuditWhere(options?: AuditListFilters): Prisma.AuditLogWhereInput 
   return where;
 }
 
-export async function listAudit(options?: AuditListFilters): Promise<AuditLog[]> {
-  const result = await listAuditPaginated({ ...options, page: 1, pageSize: 10000 });
+export async function listAudit(options?: AuditListFilters & { limit?: number }): Promise<AuditLog[]> {
+  const { limit, ...filters } = options ?? {};
+  const result = await listAuditPaginated({ ...filters, page: 1, pageSize: limit ?? 10000 });
   return result.entries;
 }
 

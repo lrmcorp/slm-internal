@@ -25,6 +25,7 @@ import { getOperationalProfitSetting } from "@/lib/settings/profit";
 import { listTempoPaymentReversals, listTempoPayments } from "@/lib/tempo/store";
 import { getStockInventoryReport } from "@/lib/reports/stockReports";
 import { SupervisorStockDashboard } from "@/components/dashboard/SupervisorStockDashboard";
+import { dashboardDataFrom } from "@/lib/dashboard/dataRange";
 import { CctvDashboardWidget } from "@/components/dashboard/CctvDashboardWidget";
 import { getCctvDashboardSummary } from "@/lib/cctv/store";
 import { getConfiguredCameraStreams } from "@/lib/cctv/streams";
@@ -140,12 +141,14 @@ export default async function DashboardPage({ searchParams }: { searchParams?: P
   const paymentPeriod = paymentPeriodFromParams(params, monthStr, todayStr);
   const isOwner = role === "OWNER";
   const canViewOperationalProfit = can(role, "settings.profit.manage");
+  // Hanya data yang dipakai: grafik 6 bulan (atau rentang filter), periode pembayaran, bulan ini, dan hari ini.
+  const dataFrom = dashboardDataFrom(filters, paymentPeriod.from, monthStr);
   // Semua sumber data tidak saling bergantung: diambil bersamaan supaya dashboard (halaman pembuka aplikasi) cepat tampil.
   const [products, audit, allSales, allExpenses, allRekenings, allTempoPayments, allTempoReversals, cctvSummary, profitSetting] = await Promise.all([
     listCatalogProducts(),
-    listAudit({ role }),
-    listSalesRecords(),
-    listExpenseRecords(),
+    listAudit({ role, limit: 5 }),
+    listSalesRecords({ fromDate: dataFrom }),
+    listExpenseRecords({ fromDate: dataFrom }),
     listRekeningAccounts(),
     listTempoPayments(),
     listTempoPaymentReversals(),
