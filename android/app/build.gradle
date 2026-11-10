@@ -2,8 +2,20 @@ plugins {
     id "com.android.application"
 }
 
+// Satu kode untuk beberapa instance. Pilih dengan -Pbrand=slm (bawaan) atau -Pbrand=ankjy.
+// Tiap brand punya applicationId sendiri, jadi aplikasi SLM dan ANKJY bisa terpasang bersamaan.
+def brands = [
+    slm  : [appId: "id.playgo.slm",   url: "https://slm.lrmint.xyz", versionCode: 2, versionName: "2.0"],
+    ankjy: [appId: "id.playgo.ankjy", url: "https://ankjy.net",      versionCode: 1, versionName: "1.0"],
+]
+def brand = (project.findProperty("brand") ?: "slm").toString()
+if (!brands.containsKey(brand)) throw new GradleException("Brand tidak dikenal: ${brand}. Pilihan: ${brands.keySet()}")
+def brandConfig = brands[brand]
+
+// Kunci rilis per brand: keystore/<brand>/keystore.properties; SLM juga boleh di keystore/ (letak lama).
+def keystoreDir = rootProject.file("keystore/${brand}/keystore.properties").exists() ? "keystore/${brand}" : "keystore"
 def keystoreProps = new Properties()
-def keystoreFile = rootProject.file("keystore/keystore.properties")
+def keystoreFile = rootProject.file("${keystoreDir}/keystore.properties")
 if (keystoreFile.exists()) keystoreFile.withInputStream { keystoreProps.load(it) }
 
 android {
@@ -11,18 +23,25 @@ android {
     compileSdk 35
 
     defaultConfig {
-        applicationId "id.playgo.slm"
+        applicationId brandConfig.appId
         minSdk 24
         targetSdk 35
-        versionCode 2
-        versionName "2.0"
-        buildConfigField "String", "SLM_URL", "\"${project.findProperty("slmUrl") ?: "https://slm.lrmint.xyz"}\""
+        versionCode brandConfig.versionCode
+        versionName brandConfig.versionName
+        buildConfigField "String", "SLM_URL", "\"${project.findProperty("slmUrl") ?: brandConfig.url}\""
+    }
+
+    // Nama aplikasi dan ikon per brand ada di src/brand/<brand>/res.
+    sourceSets {
+        main {
+            res.srcDirs = ["src/main/res", "src/brand/${brand}/res"]
+        }
     }
 
     signingConfigs {
         release {
             if (keystoreProps["storeFile"]) {
-                storeFile rootProject.file("keystore/" + keystoreProps["storeFile"])
+                storeFile rootProject.file("${keystoreDir}/" + keystoreProps["storeFile"])
                 storePassword keystoreProps["storePassword"]
                 keyAlias keystoreProps["keyAlias"]
                 keyPassword keystoreProps["keyPassword"]

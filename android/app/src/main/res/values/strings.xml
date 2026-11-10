@@ -1,5 +1,4 @@
 <resources>
-    <string name="app_name">SLM</string>
     <string name="offline_title">Tidak bisa terhubung</string>
     <string name="offline_body">Periksa koneksi internet, lalu coba lagi.</string>
     <string name="retry">Coba lagi</string>
