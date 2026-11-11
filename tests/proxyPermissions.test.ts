@@ -200,7 +200,8 @@ describe("proxy permission enforcement", () => {
       return proxy(makeRequest(path)).headers.get("location");
     };
     expect(statusFor("FINANCE", "/akuntansi/coa")).toBeNull();
-    expect(statusFor("FINANCE", "/akuntansi/jurnal")).not.toBeNull();
+    expect(statusFor("FINANCE", "/akuntansi/jurnal")).toBeNull();
+    expect(statusFor("ADMIN", "/akuntansi/jurnal")).not.toBeNull();
     expect(statusFor("ADMIN", "/inventory/barang-keluar")).toBeNull();
     expect(statusFor("DELIVERY_DRIVER", "/inventory/barang-keluar")).not.toBeNull();
   });

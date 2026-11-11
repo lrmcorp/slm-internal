@@ -62,8 +62,11 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   FINANCE: [
     "pengeluaran.view", "pengeluaran.create", "tempo.view", "tempo.mark_paid",
     "master_data.view", "guide.view",
-    // Bagan Akun, Tutup Buku, Rekening, dan Mutasi Kas & Bank boleh diatur Finance.
-    "accounting.coa.manage", "accounting.period.manage", "settings.view", "settings.rekening.manage", "cashbank.manage",
+    // Akuntan: seluruh fungsi akuntansi (jurnal, buku besar, neraca saldo, kurs, COA, tutup buku, rekonsiliasi,
+    // persediaan, aset tetap) dan laporan keuangan (laba rugi, neraca, laporan finance).
+    "accounting.view", "accounting.journal.manage", "accounting.coa.manage", "accounting.period.manage", "accounting.rates.manage",
+    "reports.finance_view",
+    "settings.view", "settings.rekening.manage", "cashbank.manage",
     "sdm.view", "sdm.kasbon.manage", "sdm.salary.view", "sdm.savings.manage",
     "purchasing.view", "purchasing.order.manage", "purchasing.invoice.manage", "purchasing.payment.manage"
   ],
