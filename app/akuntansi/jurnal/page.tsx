@@ -1,5 +1,7 @@
 import { AppShell } from "@/components/layout/AppShell";
 import { requirePermission } from "@/lib/auth/requirePermission";
+import { getCurrentRole } from "@/lib/auth/session";
+import { can } from "@/lib/auth/roles";
 import { listJournalEntries } from "@/lib/accounting/journalStore";
 import { listAccounts, ensureStandardAccounts } from "@/lib/accounting/accountStore";
 import Link from "next/link";
@@ -9,6 +11,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AkuntansiJurnalPage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
   await requirePermission("accounting.view");
+  const canManage = can(await getCurrentRole(), "accounting.journal.manage");
   await ensureStandardAccounts();
 
   const requestedPage = Math.max(1, Math.floor(Number((await searchParams).page)) || 1);
@@ -26,6 +29,7 @@ export default async function AkuntansiJurnalPage({ searchParams }: { searchPara
     sourceRef: j.sourceId,
     description: j.description,
     status: j.status as "POSTED" | "REVERSED",
+    isReversal: j.isReversal || Boolean(j.reversedByJournalId),
     reversedAt: j.reversedByJournalId ? j.updatedAt.toISOString() : null,
     reversalReason: j.reversalReason,
     createdByName: j.createdByNameSnapshot,
@@ -65,7 +69,7 @@ export default async function AkuntansiJurnalPage({ searchParams }: { searchPara
         </p>
       </div>
 
-      <JournalOverviewTable initialJournals={journals} accounts={accounts} />
+      <JournalOverviewTable initialJournals={journals} accounts={accounts} canManage={canManage} />
 
       {journalResult.totalPages > 1 && (
         <nav className="mt-5 flex items-center justify-between text-sm text-slate-600" aria-label="Halaman jurnal">

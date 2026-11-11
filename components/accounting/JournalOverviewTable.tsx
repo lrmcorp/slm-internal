@@ -8,20 +8,23 @@ import { Select } from "@/components/ui/Select";
 import { formatCurrency } from "@/lib/currency";
 import { formatJakartaDate } from "@/lib/date/jakarta";
 import { JournalDetailModal, type JournalDetailRow } from "./JournalDetailModal";
-import { ManualJournalModal, type SimpleAccount } from "./ManualJournalModal";
+import { ManualJournalModal, type EditableJournal, type SimpleAccount } from "./ManualJournalModal";
 
 type Props = {
   initialJournals: JournalDetailRow[];
   accounts: SimpleAccount[];
+  /** Pengguna boleh mengedit jurnal manual. */
+  canManage?: boolean;
 };
 
-export function JournalOverviewTable({ initialJournals, accounts }: Props) {
+export function JournalOverviewTable({ initialJournals, accounts, canManage = false }: Props) {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [sourceTypeFilter, setSourceTypeFilter] = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("ALL");
   const [selectedJournal, setSelectedJournal] = useState<JournalDetailRow | null>(null);
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+  const [editingJournal, setEditingJournal] = useState<EditableJournal | null>(null);
 
   const filtered = useMemo(() => {
     return initialJournals.filter((j) => {
@@ -242,13 +245,24 @@ export function JournalOverviewTable({ initialJournals, accounts }: Props) {
           onJournalReversed={() => {
             router.refresh();
           }}
+          onEdit={canManage ? (j) => {
+            setEditingJournal({
+              id: j.id,
+              entryNumber: j.entryNumber,
+              entryDate: typeof j.entryDate === "string" ? j.entryDate : j.entryDate.toISOString(),
+              description: j.description,
+              lines: j.lines.map((l) => ({ accountId: l.account.id, debit: l.debit, credit: l.credit, description: l.description })),
+            });
+            setSelectedJournal(null);
+          } : undefined}
         />
       )}
 
       {/* Manual Journal Modal */}
       <ManualJournalModal
-        isOpen={isManualModalOpen}
-        onClose={() => setIsManualModalOpen(false)}
+        isOpen={isManualModalOpen || Boolean(editingJournal)}
+        editing={editingJournal}
+        onClose={() => { setIsManualModalOpen(false); setEditingJournal(null); }}
         accounts={accounts}
         onSuccess={() => {
           router.refresh();

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/lib/currency";
 import { jakartaDateKey } from "@/lib/date/jakarta";
@@ -21,14 +21,25 @@ type JournalLineForm = {
   description: string;
 };
 
+/** Jurnal manual yang sedang diedit (mode edit). */
+export type EditableJournal = {
+  id: string;
+  entryNumber: string;
+  entryDate: string;
+  description: string;
+  lines: { accountId: string; debit: number; credit: number; description?: string | null }[];
+};
+
 type Props = {
   isOpen: boolean;
   onClose: () => void;
   accounts: SimpleAccount[];
   onSuccess?: () => void;
+  /** Diisi untuk mengedit jurnal manual yang sudah ada. */
+  editing?: EditableJournal | null;
 };
 
-export function ManualJournalModal({ isOpen, onClose, accounts, onSuccess }: Props) {
+export function ManualJournalModal({ isOpen, onClose, accounts, onSuccess, editing }: Props) {
   const { showToast } = useToast();
   const [entryDate, setEntryDate] = useState(jakartaDateKey(new Date()));
   const [sourceRef, setSourceRef] = useState("");
@@ -38,6 +49,25 @@ export function ManualJournalModal({ isOpen, onClose, accounts, onSuccess }: Pro
     { accountId: accounts[1]?.id || "", debit: 0, credit: 0, description: "" },
   ]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Setiap kali dibuka: isi dari jurnal yang diedit, atau kosongkan untuk jurnal baru.
+  useEffect(() => {
+    if (!isOpen) return;
+    if (editing) {
+      setEntryDate(jakartaDateKey(new Date(editing.entryDate)));
+      setSourceRef("");
+      setDescription(editing.description);
+      setLines(editing.lines.map((l) => ({ accountId: l.accountId, debit: Number(l.debit) || 0, credit: Number(l.credit) || 0, description: l.description ?? "" })));
+    } else {
+      setEntryDate(jakartaDateKey(new Date()));
+      setSourceRef("");
+      setDescription("");
+      setLines([
+        { accountId: accounts[0]?.id || "", debit: 0, credit: 0, description: "" },
+        { accountId: accounts[1]?.id || "", debit: 0, credit: 0, description: "" },
+      ]);
+    }
+  }, [isOpen, editing, accounts]);
 
   if (!isOpen) return null;
 
@@ -100,12 +130,12 @@ export function ManualJournalModal({ isOpen, onClose, accounts, onSuccess }: Pro
           accountId: l.accountId,
           debit: Number(l.debit) || 0,
           credit: Number(l.credit) || 0,
-          description: l.description.trim() || undefined,
+          memo: l.description.trim() || undefined,
         })),
       };
 
-      const res = await fetch("/api/accounting/journals", {
-        method: "POST",
+      const res = await fetch(editing ? `/api/accounting/journals/${editing.id}` : "/api/accounting/journals", {
+        method: editing ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
@@ -116,7 +146,7 @@ export function ManualJournalModal({ isOpen, onClose, accounts, onSuccess }: Pro
         return;
       }
 
-      showToast("Jurnal manual berhasil dibukukan.", "success");
+      showToast(editing ? `Jurnal ${editing.entryNumber} berhasil diubah.` : "Jurnal manual berhasil dibukukan.", "success");
       onSuccess?.();
       onClose();
     } catch {
@@ -132,9 +162,9 @@ export function ManualJournalModal({ isOpen, onClose, accounts, onSuccess }: Pro
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-6 py-4">
           <div>
-            <h3 className="text-base font-bold text-slate-900">Input Jurnal Manual (General Journal)</h3>
+            <h3 className="text-base font-bold text-slate-900">{editing ? `Edit Jurnal ${editing.entryNumber}` : "Input Jurnal Manual (General Journal)"}</h3>
             <p className="text-xs text-slate-500">
-              Pencatatan ayat jurnal penyesuaian, mutasi antar akun, atau koreksi pembukuan.
+              {editing ? "Ubah tanggal, keterangan, akun, atau nominal. Nomor jurnal tetap; perubahan tercatat di Audit Trail." : "Pencatatan ayat jurnal penyesuaian, mutasi antar akun, atau koreksi pembukuan."}
             </p>
           </div>
           <button
@@ -161,6 +191,7 @@ export function ManualJournalModal({ isOpen, onClose, accounts, onSuccess }: Pro
                 />
               </div>
 
+              {!editing && (
               <div>
                 <label className="block text-xs font-semibold text-slate-700">No. Dokumen / Referensi (Opsional)</label>
                 <input
@@ -171,6 +202,7 @@ export function ManualJournalModal({ isOpen, onClose, accounts, onSuccess }: Pro
                   className="mt-1 block w-full rounded border border-slate-300 bg-white px-3 py-1.5 text-xs focus:border-brand-600 focus:outline-none font-mono"
                 />
               </div>
+              )}
 
               <div>
                 <label className="block text-xs font-semibold text-slate-700">Keterangan / Memo Jurnal</label>
@@ -321,7 +353,7 @@ export function ManualJournalModal({ isOpen, onClose, accounts, onSuccess }: Pro
               Batal
             </Button>
             <Button type="submit" variant="primary" disabled={!isBalanced || isSubmitting}>
-              {isSubmitting ? "Menyimpan Jurnal..." : "Bukukan Jurnal Manual"}
+              {isSubmitting ? "Menyimpan Jurnal..." : editing ? "Simpan Perubahan" : "Bukukan Jurnal Manual"}
             </Button>
           </div>
         </form>

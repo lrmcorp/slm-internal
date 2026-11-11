@@ -231,6 +231,72 @@ export async function createManualJournalEntry(
   );
 }
 
+/**
+ * Edit jurnal manual: tanggal, keterangan, dan baris (akun, debit, kredit, memo). Nomor jurnal tetap.
+ * Hanya jurnal MANUAL yang belum dibalik; jurnal otomatis dikoreksi lewat dokumen sumbernya.
+ * Periode tanggal lama dan tanggal baru harus belum ditutup. Isi sebelum dan sesudah dicatat di audit.
+ */
+export async function updateManualJournalEntry(
+  journalId: string,
+  input: ManualJournalInput,
+  actor: { id: string; name: string; role: Role }
+) {
+  const original = await prisma.journalEntry.findUnique({ where: { id: journalId }, include: { lines: { orderBy: { sortOrder: "asc" } } } });
+  if (!original) throw new Error("Jurnal tidak ditemukan.");
+  if (original.sourceType !== "MANUAL") throw new Error("Hanya jurnal manual yang bisa diedit. Jurnal otomatis dikoreksi dari dokumen sumbernya.");
+  if (original.isReversal || original.postingType === "REVERSAL") throw new Error("Jurnal pembalik (reversal) tidak bisa diedit.");
+  if (original.status === "REVERSED" || original.reversedByJournalId) throw new Error(`Jurnal ${original.journalNumber} sudah dibalik, tidak bisa diedit.`);
+
+  const newDate = new Date(input.entryDate);
+  await assertPeriodOpen(original.entryDate);
+  await assertPeriodOpen(newDate);
+
+  const lines = input.lines.map((l, i) => ({ ...l, debit: Number(l.debit) || 0, credit: Number(l.credit) || 0, sortOrder: i }));
+  const totalDebit = lines.reduce((sum, l) => sum + l.debit, 0);
+  const totalCredit = lines.reduce((sum, l) => sum + l.credit, 0);
+  if (Math.abs(totalDebit - totalCredit) > 0.01 || totalDebit <= 0) {
+    throw new Error(`Jurnal tidak seimbang: Total Debit (Rp ${totalDebit.toLocaleString("id-ID")}) harus sama dengan Total Kredit (Rp ${totalCredit.toLocaleString("id-ID")}).`);
+  }
+  if (lines.some((l) => l.debit > 0 && l.credit > 0)) throw new Error("Satu baris hanya boleh berisi debit atau kredit, tidak keduanya.");
+  const resolved: { accountId: string; accountCodeSnapshot: string; accountNameSnapshot: string; debit: number; credit: number; memo: string | null; sortOrder: number }[] = [];
+  for (const l of lines) {
+    const acc = await getAccountById(l.accountId);
+    if (!acc) throw new Error(`Akun perkiraan dengan ID ${l.accountId} tidak ditemukan.`);
+    resolved.push({ accountId: acc.id, accountCodeSnapshot: acc.code, accountNameSnapshot: acc.name, debit: l.debit, credit: l.credit, memo: l.memo || null, sortOrder: l.sortOrder });
+  }
+
+  return prisma.$transaction(async (tx) => {
+    await tx.journalLine.deleteMany({ where: { journalEntryId: original.id } });
+    const updated = await tx.journalEntry.update({
+      where: { id: original.id },
+      data: {
+        entryDate: newDate,
+        description: input.description,
+        attachmentUrl: input.attachmentUrl || original.attachmentUrl,
+        totalDebit,
+        totalCredit,
+        lines: { create: resolved },
+      },
+      include: { lines: { orderBy: { sortOrder: "asc" } } },
+    });
+    await tx.auditLog.create({
+      data: {
+        id: crypto.randomUUID(),
+        entityType: "coa",
+        entityId: original.id,
+        action: "update",
+        beforeValue: JSON.parse(JSON.stringify(original)),
+        afterValue: JSON.parse(JSON.stringify(updated)),
+        userId: actor.id,
+        userNameSnapshot: actor.name,
+        userRoleSnapshot: actor.role,
+        reason: `Edit jurnal manual ${original.journalNumber}`,
+      },
+    });
+    return updated;
+  });
+}
+
 export async function reverseJournalEntry(
   journalId: string,
   actor: { id: string; name: string; role: Role },

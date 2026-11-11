@@ -15,6 +15,8 @@ export type JournalDetailRow = {
   sourceRef?: string | null;
   description: string;
   status: "POSTED" | "REVERSED";
+  /** Jurnal pembalik (tidak bisa diedit). */
+  isReversal?: boolean;
   reversedAt?: string | Date | null;
   reversalReason?: string | null;
   createdByName?: string | null;
@@ -38,9 +40,11 @@ type Props = {
   journal: JournalDetailRow | null;
   onClose: () => void;
   onJournalReversed?: () => void;
+  /** Tampilkan tombol Edit untuk jurnal manual (hak kelola jurnal). */
+  onEdit?: (journal: JournalDetailRow) => void;
 };
 
-export function JournalDetailModal({ journal, onClose, onJournalReversed }: Props) {
+export function JournalDetailModal({ journal, onClose, onJournalReversed, onEdit }: Props) {
   const { showToast } = useToast();
   const [showReverseConfirm, setShowReverseConfirm] = useState(false);
   const [reversalReason, setReversalReason] = useState("");
@@ -229,7 +233,10 @@ export function JournalDetailModal({ journal, onClose, onJournalReversed }: Prop
 
         {/* Footer Actions */}
         <div className="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-6 py-3">
-          <div>
+          <div className="flex flex-wrap gap-2">
+            {onEdit && journal.sourceType === "MANUAL" && journal.status === "POSTED" && !journal.isReversal && !showReverseConfirm && (
+              <Button onClick={() => onEdit(journal)}>Edit Jurnal</Button>
+            )}
             {journal.status === "POSTED" && !showReverseConfirm && (
               <Button
                 variant="danger"

@@ -3373,6 +3373,25 @@ paths:
       responses:
         "200":
           description: Detail jurnal
+    put:
+      summary: Edit jurnal manual (hanya MANUAL, belum dibalik, periode terbuka)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Jurnal diperbarui
+        "400":
+          description: Validasi gagal atau jurnal tidak bisa diedit
   /api/accounting/journals/{id}/reverse:
     post:
       summary: Balikkan entri jurnal (Reversal)
