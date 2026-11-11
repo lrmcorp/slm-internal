@@ -36,20 +36,19 @@ function pageHref(params: SearchParams, page: number): string {
   return `/delivery-orders?${next.toString()}`;
 }
 
+/** Halaman DO dibuka tanpa filter oleh Petugas DO / Gudang. */
+function isPackingDefaultView(params: SearchParams, userRole?: string) {
+  return isPackingRole(userRole) && !("officerId" in params) && !("view" in params) && !("status" in params);
+}
+
 function filtersFromParams(
   params: SearchParams,
   userRole?: string,
   userId?: string
 ): ListDeliveryOrdersFilter {
-  const isAllExplicit = valueOf(params, "view") === "all";
-  const hasExplicitOfficerParam = "officerId" in params;
-  let officerId = valueOf(params, "officerId") || undefined;
-
-  if (isPackingRole(userRole) && !hasExplicitOfficerParam && !isAllExplicit) {
-    officerId = userId;
-  }
-
-  const rawStatus = valueOf(params, "status") || undefined;
+  const officerId = valueOf(params, "officerId") || undefined;
+  // Petugas DO / Gudang: bawaannya semua antrean yang belum diproses (bukan hanya tugas sendiri).
+  const rawStatus = valueOf(params, "status") || (isPackingDefaultView(params, userRole) ? "belum_selesai" : undefined);
   // Non-Super Admin (bukan OWNER) tidak diizinkan memfilter DO selesai
   const status = userRole !== "OWNER" && rawStatus === "selesai" ? undefined : rawStatus;
 
@@ -129,10 +128,9 @@ export default async function DeliveryOrdersPage({
   const page = Math.max(1, Number(valueOf(params, "page") || "1"));
 
   const isAllExplicit = valueOf(params, "view") === "all";
-  const hasExplicitOfficerParam = "officerId" in params;
   const isDriver = isPackingRole(user.role);
-  const defaultToMyTasks = isDriver && !hasExplicitOfficerParam && !isAllExplicit;
-  const effectiveOfficerId = defaultToMyTasks ? user.id : (valueOf(params, "officerId") || undefined);
+  const isDefaultView = isPackingDefaultView(params, user.role);
+  const effectiveOfficerId = valueOf(params, "officerId") || undefined;
 
   const filters = filtersFromParams(params, user.role, user.id);
 
@@ -147,9 +145,9 @@ export default async function DeliveryOrdersPage({
   const canAssign = can(user.role, "do.assign");
   const canProcess = can(user.role, "do.process");
   const totalPages = meta.totalPages;
-  const activeFilters = activeFilterLabels(params, officers, effectiveOfficerId, user.id);
+  const activeFilters = activeFilterLabels(isDefaultView ? { ...params, status: "belum_selesai" } : params, officers, effectiveOfficerId, user.id);
 
-  const currentStatus = valueOf(params, "status");
+  const currentStatus = valueOf(params, "status") || (isDefaultView ? "belum_selesai" : undefined);
   const isMyTasks = effectiveOfficerId === user.id && !isAllExplicit;
   const isAll = isAllExplicit || (!currentStatus && !effectiveOfficerId && !valueOf(params, "search") && !valueOf(params, "packingStatus") && !valueOf(params, "shippingStatus"));
   const isBelumSelesai = currentStatus === "belum_selesai";
@@ -178,16 +176,26 @@ export default async function DeliveryOrdersPage({
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <span className="text-xs font-semibold text-slate-500">Shortcut:</span>
+        <Link
+          href={isDriver ? "/delivery-orders" : "/delivery-orders?status=belum_selesai&view=all"}
+          className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+            isBelumSelesai && !isMyTasks
+              ? "bg-brand-700 text-white"
+              : "bg-brand-50 text-brand-800 border border-brand-200 hover:bg-brand-100"
+          }`}
+        >
+          Belum Diproses {isDriver && "(Default)"}
+        </Link>
         {user.id && (
           <Link
-            href={isDriver ? "/delivery-orders" : `/delivery-orders?officerId=${user.id}`}
+            href={`/delivery-orders?officerId=${user.id}`}
             className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
               isMyTasks
                 ? "bg-blue-700 text-white"
                 : "bg-blue-50 text-blue-800 border border-blue-200 hover:bg-blue-100"
             }`}
           >
-            Tugas Saya {isDriver && "(Default)"}
+            Tugas Saya
           </Link>
         )}
         <Link
@@ -199,16 +207,6 @@ export default async function DeliveryOrdersPage({
           }`}
         >
           Semua Antrean
-        </Link>
-        <Link
-          href={isMyTasks ? `/delivery-orders?status=belum_selesai&officerId=${user.id}` : "/delivery-orders?status=belum_selesai&view=all"}
-          className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
-            isBelumSelesai
-              ? "bg-brand-700 text-white"
-              : "bg-brand-50 text-brand-800 border border-brand-200 hover:bg-brand-100"
-          }`}
-        >
-          Belum Selesai
         </Link>
       </div>
 
@@ -234,7 +232,7 @@ export default async function DeliveryOrdersPage({
           Status DO
           <Select
             name="status"
-            defaultValue={valueOf(params, "status") || ""}
+            defaultValue={valueOf(params, "status") || (isDefaultView ? "belum_selesai" : "")}
             className="mt-1"
           >
             <option value="">Semua</option>
