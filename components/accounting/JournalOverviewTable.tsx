@@ -26,6 +26,18 @@ export function JournalOverviewTable({ initialJournals, accounts, canManage = fa
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
   const [editingJournal, setEditingJournal] = useState<EditableJournal | null>(null);
 
+  const isEditable = (j: JournalDetailRow) => canManage && j.sourceType === "MANUAL" && j.status === "POSTED" && !j.isReversal;
+  function openEdit(j: JournalDetailRow) {
+    setEditingJournal({
+      id: j.id,
+      entryNumber: j.entryNumber,
+      entryDate: typeof j.entryDate === "string" ? j.entryDate : j.entryDate.toISOString(),
+      description: j.description,
+      lines: j.lines.map((l) => ({ accountId: l.account.id, debit: l.debit, credit: l.credit, description: l.description })),
+    });
+    setSelectedJournal(null);
+  }
+
   const filtered = useMemo(() => {
     return initialJournals.filter((j) => {
       if (sourceTypeFilter !== "ALL" && j.sourceType !== sourceTypeFilter) return false;
@@ -220,13 +232,24 @@ export function JournalOverviewTable({ initialJournals, accounts, canManage = fa
                         </span>
                       </td>
                       <td className="py-3 px-4 text-center">
-                        <Button
-                          variant="secondary"
-                          className="text-xs py-1 px-2.5 h-auto min-h-0"
-                          onClick={() => setSelectedJournal(j)}
-                        >
-                          Rincian
-                        </Button>
+                        <div className="flex justify-center gap-1.5">
+                          <Button
+                            variant="secondary"
+                            className="text-xs py-1 px-2.5 h-auto min-h-0"
+                            onClick={() => setSelectedJournal(j)}
+                          >
+                            Rincian
+                          </Button>
+                          {isEditable(j) && (
+                            <Button
+                              variant="secondary"
+                              className="text-xs py-1 px-2.5 h-auto min-h-0"
+                              onClick={() => openEdit(j)}
+                            >
+                              Edit
+                            </Button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -245,16 +268,7 @@ export function JournalOverviewTable({ initialJournals, accounts, canManage = fa
           onJournalReversed={() => {
             router.refresh();
           }}
-          onEdit={canManage ? (j) => {
-            setEditingJournal({
-              id: j.id,
-              entryNumber: j.entryNumber,
-              entryDate: typeof j.entryDate === "string" ? j.entryDate : j.entryDate.toISOString(),
-              description: j.description,
-              lines: j.lines.map((l) => ({ accountId: l.account.id, debit: l.debit, credit: l.credit, description: l.description })),
-            });
-            setSelectedJournal(null);
-          } : undefined}
+          onEdit={canManage ? openEdit : undefined}
         />
       )}
 
