@@ -41,7 +41,7 @@ async function getLocalCredentialsUser(requireErpToken = false): Promise<Current
     try {
       const dbUser = await findActiveUserByExternalId(session.externalId, { touchLastLogin: false });
       // Di luar jam kerja hanya Super Admin yang tetap dianggap login.
-      if (dbUser) return withinAccessHours(dbUser.role) ? dbUser : unauthenticatedUser();
+      if (dbUser) return [dbUser.role, ...(dbUser.extraRoles ?? [])].some((r) => withinAccessHours(r)) ? dbUser : unauthenticatedUser();
     } catch {
       // Visual QA can run without a local database; production-like auth still requires User lookup.
     }
@@ -54,8 +54,8 @@ async function getLocalCredentialsUser(requireErpToken = false): Promise<Current
   }
 }
 
-export async function getCurrentRole(): Promise<Role> {
-  return (await getCurrentUser()).role;
+export async function getCurrentRole(): Promise<{ role: Role; extraRoles?: Role[] }> {
+  return (await getCurrentUser());
 }
 
 export async function getCurrentUser(): Promise<CurrentUser> {

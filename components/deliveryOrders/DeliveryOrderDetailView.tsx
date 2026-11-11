@@ -30,6 +30,8 @@ type Props = {
   canAssign: boolean;
   canProcess: boolean;
   currentUserRole: string;
+  /** Punya role Petugas DO (utama atau tambahan). */
+  isPackingOfficer?: boolean;
   currentUserName?: string;
 };
 
@@ -41,6 +43,7 @@ export function DeliveryOrderDetailView({
   canAssign,
   canProcess,
   currentUserRole,
+  isPackingOfficer,
   currentUserName
 }: Props) {
   const router = useRouter();
@@ -68,7 +71,7 @@ export function DeliveryOrderDetailView({
   const photoSectionRef = useRef<HTMLDivElement>(null);
 
   const isOwner = currentUserRole === "OWNER";
-  const canInvite = canAssign || isPackingRole(currentUserRole);
+  const canInvite = canAssign || (isPackingOfficer ?? isPackingRole(currentUserRole));
 
   const handleSyncItems = async () => {
     setIsSyncing(true);
@@ -502,14 +505,14 @@ export function DeliveryOrderDetailView({
             {canInvite && (
               <div className="w-full sm:w-auto">
                 <SearchableSelect
-                  placeholder={`+ ${isPackingRole(currentUserRole) ? "Ajak Petugas DO Lainnya" : "Tambah Petugas DO"}`}
+                  placeholder={`+ ${(isPackingOfficer ?? isPackingRole(currentUserRole)) ? "Ajak Petugas DO Lainnya" : "Tambah Petugas DO"}`}
                   searchPlaceholder="Cari nama atau role..."
                   options={officers
                     .filter((o) => !assignedList.some((ao) => ao.userId === o.id))
                     .map((o) => ({
                       value: o.id,
                       label: o.name,
-                      badge: o.role === "DELIVERY_DRIVER" ? "Petugas DO" : o.role === "GUDANG" ? "Gudang" : o.role
+                      badge: o.role === "DELIVERY_DRIVER" ? "Petugas DO" : o.role
                     }))}
                   onSelect={(officerId) => handleAddOfficer(officerId)}
                   align="right"

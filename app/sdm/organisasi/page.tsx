@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function OrganizationPage() {
   await requirePermission("sdm.view");
   const user = await getCurrentUser();
-  const canManage = can(user.role, "sdm.employee.manage");
+  const canManage = can(user, "sdm.employee.manage");
 
   const [hierarchy, allEmployees] = await Promise.all([
     getOrganizationHierarchy(),

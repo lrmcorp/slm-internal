@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { getTempoReceivable, listMjSaleIds, listTempoPaymentReversals, listTempoPayments } from "@/lib/tempo/store";
 import { getSalesRecord } from "@/lib/sales/store";
@@ -36,8 +36,9 @@ function methodBadge(method: string) {
 
 export default async function TempoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const role = await getCurrentRole();
-  if (!can(role, "tempo.view")) redirect("/");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "tempo.view")) redirect("/");
   const [tempo, rekenings] = await Promise.all([getTempoReceivable(id), listRekeningAccounts()]);
   if (!tempo) redirect("/tempo");
   const [payments, reversals, sale] = await Promise.all([
@@ -301,7 +302,7 @@ export default async function TempoDetailPage({ params }: { params: Promise<{ id
         <div className="space-y-4">
           {!isPaid && !["cancelled", "written_off"].includes(tempo.status) ? (
             <>
-              {can(role, "tempo.mark_paid") && (
+              {can(access, "tempo.mark_paid") && (
                 <TempoPayForm
                   tempoId={tempo.id}
                   remainingAmount={tempo.remainingAmount}
@@ -309,8 +310,8 @@ export default async function TempoDetailPage({ params }: { params: Promise<{ id
                   rekenings={rekenings}
                 />
               )}
-              {can(role, "tempo.cancel") && <TempoActionForm tempoId={tempo.id} action="cancel" />}
-              {can(role, "tempo.write_off") && tempo.remainingAmount > 0 && (
+              {can(access, "tempo.cancel") && <TempoActionForm tempoId={tempo.id} action="cancel" />}
+              {can(access, "tempo.write_off") && tempo.remainingAmount > 0 && (
                 <TempoActionForm tempoId={tempo.id} action="write-off" />
               )}
             </>

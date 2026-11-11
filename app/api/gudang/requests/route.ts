@@ -7,7 +7,7 @@ import { warehouseRequestError } from "@/lib/inventory/warehouseRequestHttp";
 /** Sales membuat permintaan barang ke gudang. */
 export async function POST(request: Request) {
   const user = await getCurrentUser();
-  if (!can(user.role, "gudang.request.create")) return NextResponse.json({ success: false, message: "Tidak punya akses membuat permintaan barang." }, { status: 403 });
+  if (!can(user, "gudang.request.create")) return NextResponse.json({ success: false, message: "Tidak punya akses membuat permintaan barang." }, { status: 403 });
   try {
     const input = warehouseRequestSchema.parse(await request.json().catch(() => null));
     const created = await createWarehouseRequest(input, { id: user.id, name: user.name });

@@ -4,7 +4,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { InlineNameForm } from "@/components/inventory/InlineNameForm";
 import { ProductPhoto } from "@/components/inventory/ProductPhoto";
 import { InventoryHeader, Pager, filterButton, filterInput, fmtQty } from "@/components/inventory/ui";
-import { can, canEditProductPhoto } from "@/lib/auth/roles";
+import { can, canEditProductPhoto, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { stockMatrix } from "@/lib/inventory/service";
 import { inventorySource, stockViewType } from "@/lib/inventory/config";
@@ -13,13 +13,14 @@ export const dynamic = "force-dynamic";
 type SP = Promise<{ keyword?: string; type?: string; page?: string; missing?: string }>;
 
 export default async function InventoryStockPage({ searchParams }: { searchParams: SP }) {
-  const role = await getCurrentRole();
-  if (!can(role, "inventory.stock.view")) redirect("/no-access");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "inventory.stock.view")) redirect("/no-access");
   const params = await searchParams;
-  const canMovement = can(role, "inventory.movement.view");
-  const canEditMaster = can(role, "inventory.master");
+  const canMovement = can(access, "inventory.movement.view");
+  const canEditMaster = can(access, "inventory.master");
   const canEditPhoto = canEditProductPhoto(role);
-  const canAdjust = can(role, "inventory.adjust");
+  const canAdjust = can(access, "inventory.adjust");
   const missingName = canEditMaster && params.missing === "1";
   const typeParam = stockViewType(params.type, role);
   const type = typeParam === "ALL" ? undefined : typeParam;
@@ -33,8 +34,8 @@ export default async function InventoryStockPage({ searchParams }: { searchParam
         description={<>Stok semua gudang dan toko dalam satu tabel. Penjualan saat ini memotong stok dari <b>{inventorySource() === "local" ? "SLM" : "ERP (belum pindah ke SLM)"}</b>.</>}
         actions={<>
           {role === "OWNER" && <Link href="/stok-barang/ai-forecast" className="inline-flex min-h-11 items-center rounded-lg border border-brand-300 px-4 text-sm font-semibold text-brand-800">Prediksi Stok &amp; Dead Stock</Link>}
-          {can(role, "inventory.transfer") && <Link href="/inventory/transfer" className="inline-flex min-h-11 items-center rounded-lg border border-brand-300 px-4 text-sm font-semibold text-brand-800">Transfer</Link>}
-          {can(role, "inventory.receive") && <Link href="/inventory/barang-masuk" className="inline-flex min-h-11 items-center rounded-lg bg-brand-700 px-4 text-sm font-semibold text-white hover:bg-brand-800">Barang Masuk</Link>}
+          {can(access, "inventory.transfer") && <Link href="/inventory/transfer" className="inline-flex min-h-11 items-center rounded-lg border border-brand-300 px-4 text-sm font-semibold text-brand-800">Transfer</Link>}
+          {can(access, "inventory.receive") && <Link href="/inventory/barang-masuk" className="inline-flex min-h-11 items-center rounded-lg bg-brand-700 px-4 text-sm font-semibold text-white hover:bg-brand-800">Barang Masuk</Link>}
         </>}
       />
       <form className="mb-4 flex flex-wrap gap-2">
@@ -121,7 +122,7 @@ export default async function InventoryStockPage({ searchParams }: { searchParam
             })}
             {!matrix.data.length && (
               <tr><td colSpan={matrix.locations.length + 4} className="px-3 py-8 text-center text-slate-600">
-                {missingName ? "Semua barang di sini sudah punya nama." : "Belum ada barang."}{!missingName && can(role, "inventory.master") && <> Mulai dari <Link className="text-brand-800 underline" href="/inventory/lokasi">Lokasi Stok</Link> lalu <Link className="text-brand-800 underline" href="/inventory/produk">Master Barang</Link>.</>}
+                {missingName ? "Semua barang di sini sudah punya nama." : "Belum ada barang."}{!missingName && can(access, "inventory.master") && <> Mulai dari <Link className="text-brand-800 underline" href="/inventory/lokasi">Lokasi Stok</Link> lalu <Link className="text-brand-800 underline" href="/inventory/produk">Master Barang</Link>.</>}
               </td></tr>
             )}
           </tbody>

@@ -8,5 +8,5 @@ export async function findActiveUserByExternalId(externalId: string, options?: {
   if (options?.touchLastLogin) {
     await prisma.user.update({ where: { id: user.id }, data: { lastLoginAt: new Date() } });
   }
-  return { id: user.externalId, name: user.name, role: user.role };
+  return { id: user.externalId, name: user.name, role: user.role, extraRoles: (user.extraRoles ?? []).filter((r) => r !== user.role) };
 }

@@ -1,6 +1,6 @@
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
-import { can, type Role } from "@/lib/auth/roles";
+import { can, type Role, type RoleSubject } from "@/lib/auth/roles";
 import { getTempoMetricsSummary } from "@/lib/tempo/store";
 
 export type NavBadge = { count: number; title: string };
@@ -15,7 +15,7 @@ async function safe<T>(work: () => Promise<T>): Promise<T | null> {
 }
 
 /** Angka kecil di menu: hal yang perlu ditindaklanjuti. Gagal hitung = tanpa angka, halaman tetap tampil. */
-export async function getNavBadges(role: Role): Promise<NavBadges> {
+export async function getNavBadges(role: RoleSubject): Promise<NavBadges> {
   const badges: NavBadges = {};
   const canTempo = can(role, "tempo.view");
   const canTempoDue = can(role, "tempo.view_due");

@@ -2,15 +2,16 @@ import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { CostCalculator } from "@/components/inventory/CostCalculator";
 import { InventoryHeader } from "@/components/inventory/ui";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { getCbmRate, getRmbRate } from "@/lib/inventory/pricing";
 
 export const dynamic = "force-dynamic";
 
 export default async function CostCalculatorPage() {
-  const role = await getCurrentRole();
-  if (!can(role, "inventory.master")) redirect("/no-access");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "inventory.master")) redirect("/no-access");
   const [rmb, cbm] = await Promise.all([getRmbRate(), getCbmRate()]);
   return (
     <AppShell>

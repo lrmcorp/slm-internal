@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { getStockDetail } from "@/lib/api/stocks";
 import { stockDetailReturnTo } from "@/lib/stocks/detail";
@@ -22,8 +22,9 @@ function Metric({ label, value }: { label: string; value: string }) {
 }
 
 export default async function StockDetailPage({ params, searchParams }: { params: DetailParams; searchParams: DetailSearchParams }) {
-  const role = await getCurrentRole();
-  if (!can(role, "stock.view")) redirect("/penjualan/input");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "stock.view")) redirect("/penjualan/input");
 
   const [{ productKey }, query] = await Promise.all([params, searchParams]);
   const result = await getStockDetail(productKey, query.sku);

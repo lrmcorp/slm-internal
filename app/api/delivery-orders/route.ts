@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentRole, getCurrentUser } from "@/lib/auth/session";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import {
   createDeliveryOrderForSale,
   listDeliveryOfficers,
@@ -9,8 +9,9 @@ import {
 } from "@/lib/deliveryOrders/store";
 
 export async function GET(request: Request) {
-  const role = await getCurrentRole();
-  if (!can(role, "do.view")) {
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "do.view")) {
     return NextResponse.json({ success: false, message: "Tidak memiliki akses melihat Delivery Order." }, { status: 403 });
   }
 
@@ -49,8 +50,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const role = await getCurrentRole();
-  if (!can(role, "do.assign") && !can(role, "penjualan.create")) {
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "do.assign") && !can(access, "penjualan.create")) {
     return NextResponse.json({ success: false, message: "Tidak memiliki hak akses untuk membuat DO." }, { status: 403 });
   }
 

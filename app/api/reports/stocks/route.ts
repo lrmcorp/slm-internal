@@ -5,7 +5,7 @@ import { generateStockReportExcel } from "@/lib/reports/excelExport";
 
 export async function GET(request: Request) {
   const user = await getCurrentUser();
-  if (!can(user.role, "stock.view") && !can(user.role, "reports.view")) {
+  if (!can(user, "stock.view") && !can(user, "reports.view")) {
     return Response.json(
       { success: false, message: "Tidak punya akses laporan stok." },
       { status: 403 },

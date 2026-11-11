@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { getCurrentRole } from "@/lib/auth/session";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getExpenseRecord } from "@/lib/expenses/store";
 import { formatJakartaDate } from "@/lib/date/jakarta";
 import {
@@ -17,11 +17,12 @@ export default async function ExpenseInvoicePage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{ created?: string }>;
 }) {
-  const role = await getCurrentRole();
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
   if (
-    !can(role, "pengeluaran.view") &&
-    !can(role, "pengeluaran.create") &&
-    !can(role, "pengeluaran.manage")
+    !can(access, "pengeluaran.view") &&
+    !can(access, "pengeluaran.create") &&
+    !can(access, "pengeluaran.manage")
   ) {
     redirect("/");
   }

@@ -1,3 +1,4 @@
+import { primaryRole } from "@/lib/auth/roles";
 import { AppShell } from "@/components/layout/AppShell";
 import { LogoutButton } from "@/components/layout/LogoutButton";
 import { RoleSelector } from "@/components/settings/RoleSelector";
@@ -7,7 +8,8 @@ import { getCurrentRole } from "@/lib/auth/session";
 import Link from "next/link";
 
 export default async function NoAccessPage() {
-  const role = await getCurrentRole();
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
   const showRoleSelector = isDemoRoleSelectorEnabled();
   const provider = resolveAuthProvider();
   const showLoginLink = !showRoleSelector && (provider === "trusted_header" || provider === "local_credentials" || provider === "anika_erp");

@@ -5,7 +5,7 @@ import { calculateForexPreview } from "@/lib/purchasing/paymentStore";
 
 export async function GET(request: Request) {
   const user = await getCurrentUser();
-  if (!can(user.role, "purchasing.view")) {
+  if (!can(user, "purchasing.view")) {
     return NextResponse.json({ success: false, message: "Akses ditolak." }, { status: 403 });
   }
 

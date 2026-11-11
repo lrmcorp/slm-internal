@@ -5,7 +5,7 @@ import { cancelCashBankMutation } from "@/lib/accounting/cashBank";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
-  if (!can(user.role, "cashbank.manage")) return NextResponse.json({ success: false, message: "Tidak punya akses Mutasi Kas & Bank." }, { status: 403 });
+  if (!can(user, "cashbank.manage")) return NextResponse.json({ success: false, message: "Tidak punya akses Mutasi Kas & Bank." }, { status: 403 });
   const { id } = await params;
   const body = (await request.json().catch(() => ({}))) as { reason?: string };
   try {

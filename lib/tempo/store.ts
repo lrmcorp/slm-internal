@@ -772,7 +772,7 @@ export async function listTempoPaymentReversals(tempoPaymentId?: string): Promis
 
 export async function payTempo(id: string, input: Omit<TempoPayment, "id" | "tempoReceivableId" | "createdByUserId" | "createdByNameSnapshot" | "createdAt">): Promise<{ receivable: TempoReceivable; payment: TempoPayment }> {
   const user = await getCurrentUser();
-  if (!can(user.role, "tempo.mark_paid")) throw new Error("Tidak punya akses bayar Tempo.");
+  if (!can(user, "tempo.mark_paid")) throw new Error("Tidak punya akses bayar Tempo.");
   if (!Number.isFinite(input.amountPaid) || input.amountPaid <= 0) throw new Error("Nominal dibayar harus lebih dari 0.");
   if (Number.isNaN(Date.parse(input.paymentDate))) throw new Error("Tanggal pembayaran tidak valid.");
   if (isProductionMode() || await prismaTempoExists(id)) {
@@ -886,7 +886,7 @@ export async function reverseTempoPayment(
   reason: string
 ): Promise<{ payment: TempoPayment; reversal: TempoPaymentReversal }> {
   const user = await getCurrentUser();
-  if (!can(user.role, "tempo.mark_paid") && !can(user.role, "penjualan.manage")) {
+  if (!can(user, "tempo.mark_paid") && !can(user, "penjualan.manage")) {
     throw new Error("Tidak punya akses membatalkan pembayaran Tempo.");
   }
   const cleanReason = reason.trim();
@@ -1068,7 +1068,7 @@ export async function applySalesReturnToTempo(
 
 export async function cancelTempo(id: string, reason: string): Promise<TempoReceivable> {
   const user = await getCurrentUser();
-  if (!can(user.role, "tempo.cancel")) throw new Error("Tidak punya akses cancel Tempo.");
+  if (!can(user, "tempo.cancel")) throw new Error("Tidak punya akses cancel Tempo.");
   const cleanReason = reason.trim();
   if (!cleanReason) throw new Error("Alasan cancel wajib diisi.");
   if (isProductionMode() || await prismaTempoExists(id)) {
@@ -1110,7 +1110,7 @@ export async function cancelTempo(id: string, reason: string): Promise<TempoRece
 
 export async function writeOffTempo(id: string, reason: string): Promise<TempoReceivable> {
   const user = await getCurrentUser();
-  if (!can(user.role, "tempo.write_off")) throw new Error("Tidak punya akses write-off Tempo.");
+  if (!can(user, "tempo.write_off")) throw new Error("Tidak punya akses write-off Tempo.");
   const cleanReason = reason.trim();
   if (!cleanReason) throw new Error("Alasan write-off wajib diisi.");
   if (isProductionMode() || await prismaTempoExists(id)) {

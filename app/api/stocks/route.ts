@@ -1,3 +1,4 @@
+import { primaryRole } from "@/lib/auth/roles";
 import { NextResponse } from "next/server";
 import { listStocks, listStocksPage } from "@/lib/api/stocks";
 import { getCurrentRole } from "@/lib/auth/session";
@@ -14,7 +15,8 @@ function listParam(value: string | null) {
 }
 
 export async function GET(request: Request) {
-  const role = await getCurrentRole();
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
   if (!canListStocks(role)) return NextResponse.json({ success: false, message: "Tidak punya akses melihat ketersediaan stok." }, { status: 403 });
   const url = new URL(request.url);
   const hasQuery = ["page", "pageSize", "keyword", "productId", "sku", "warehouse", "productIds", "skus"].some((key) => url.searchParams.has(key));

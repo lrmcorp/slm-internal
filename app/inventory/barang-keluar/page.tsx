@@ -37,7 +37,7 @@ function periodLabel(from: string, to: string) {
 
 export default async function BarangKeluarPage({ searchParams }: { searchParams: SP }) {
   const user = await getCurrentUser();
-  if (!can(user.role, "penjualan.create") && !can(user.role, "reports.view")) redirect("/no-access");
+  if (!can(user, "penjualan.create") && !can(user, "reports.view")) redirect("/no-access");
 
   const p = await searchParams;
   const today = jakartaDateKey();

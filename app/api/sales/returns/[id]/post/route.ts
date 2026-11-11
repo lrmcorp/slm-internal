@@ -8,7 +8,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const user = await getCurrentUser();
-  if (!can(user.role, "penjualan.manage") && !can(user.role, "accounting.journal.manage")) {
+  if (!can(user, "penjualan.manage") && !can(user, "accounting.journal.manage")) {
     return NextResponse.json({ success: false, message: "Akses ditolak." }, { status: 403 });
   }
 

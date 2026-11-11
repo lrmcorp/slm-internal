@@ -5,7 +5,7 @@ import { getJournalEntry } from "@/lib/accounting/journalStore";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
-  if (!can(user.role, "accounting.view")) {
+  if (!can(user, "accounting.view")) {
     return NextResponse.json({ success: false, message: "Akses ditolak." }, { status: 403 });
   }
 

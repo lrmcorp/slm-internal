@@ -1,3 +1,4 @@
+import { primaryRole } from "@/lib/auth/roles";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { getCurrentRole } from "@/lib/auth/session";
@@ -7,7 +8,8 @@ import { AiFinancialForecastView } from "@/components/finance/AiFinancialForecas
 export const dynamic = "force-dynamic";
 
 export default async function AiFinancialForecastPage() {
-  const role = await getCurrentRole();
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
   if (role !== "OWNER") {
     redirect("/dashboard");
   }

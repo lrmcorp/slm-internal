@@ -1,3 +1,4 @@
+import { rolesOf } from "@/lib/auth/roles";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { getCurrentUser } from "@/lib/auth/session";
@@ -14,10 +15,10 @@ export default async function ProfilePage() {
   const profile = await getUserProfile(user);
   const push = pushConfig();
   const topics = [
-    (PUSH_AUDIENCE.newSale as readonly string[]).includes(user.role) ? "Transaksi baru di Riwayat Penjualan" : null,
-    (PUSH_AUDIENCE.lowStock as readonly string[]).includes(user.role) ? "Barang menyentuh stok minimum" : null,
-    (PUSH_AUDIENCE.tempoDue as readonly string[]).includes(user.role) ? "Tempo jatuh tempo (setiap pagi)" : null,
-    (PUSH_AUDIENCE.newDeliveryOrder as readonly string[]).includes(user.role) ? "DO baru untuk dipacking" : null,
+    rolesOf(user).some((r) => (PUSH_AUDIENCE.newSale as readonly string[]).includes(r)) ? "Transaksi baru di Riwayat Penjualan" : null,
+    rolesOf(user).some((r) => (PUSH_AUDIENCE.lowStock as readonly string[]).includes(r)) ? "Barang menyentuh stok minimum" : null,
+    rolesOf(user).some((r) => (PUSH_AUDIENCE.tempoDue as readonly string[]).includes(r)) ? "Tempo jatuh tempo (setiap pagi)" : null,
+    rolesOf(user).some((r) => (PUSH_AUDIENCE.newDeliveryOrder as readonly string[]).includes(r)) ? "DO baru untuk dipacking" : null,
   ].filter((topic): topic is string => Boolean(topic));
 
   return (

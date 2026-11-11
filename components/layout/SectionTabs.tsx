@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { Role } from "@/lib/auth/roles";
+import type { RoleSubject } from "@/lib/auth/roles";
 import { useBrand } from "@/components/brand/BrandProvider";
 import { activeNavSection, visibleNavSections } from "./navigation";
 
 /** Tab halaman di dalam modul yang sedang dibuka; tidak tampil untuk modul satu halaman. */
-export function SectionTabs({ role }: { role: Role }) {
+export function SectionTabs({ role }: { role: RoleSubject }) {
   const pathname = usePathname();
   const brand = useBrand();
   const sections = visibleNavSections(role, { cctv: brand.cctvEnabled, deliveryOrders: brand.deliveryOrdersEnabled }).flatMap((g) => g.sections);

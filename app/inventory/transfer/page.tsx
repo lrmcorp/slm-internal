@@ -4,7 +4,7 @@ import { InventoryDocumentForm } from "@/components/inventory/InventoryDocumentF
 import { AddPanel } from "@/components/inventory/AddPanel";
 import { InventoryActionButton } from "@/components/inventory/InventoryActionButton";
 import { InventoryHeader, Pager, filterButton, filterInput, fmtDate, fmtQty } from "@/components/inventory/ui";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { listLocations, listProductOptions, listTransfers } from "@/lib/inventory/service";
 
@@ -13,16 +13,17 @@ type SP = Promise<{ status?: string; page?: string }>;
 const STATUS_LABEL = { IN_TRANSIT: "Dalam Perjalanan", RECEIVED: "Diterima", CANCELLED: "Dibatalkan" } as const;
 
 export default async function TransferPage({ searchParams }: { searchParams: SP }) {
-  const role = await getCurrentRole();
-  if (!can(role, "inventory.transfer")) redirect("/no-access");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "inventory.transfer")) redirect("/no-access");
   const p = await searchParams;
   const status = p.status && p.status in STATUS_LABEL ? (p.status as keyof typeof STATUS_LABEL) : undefined;
-  const canTransfer = can(role, "inventory.transfer");
+  const canTransfer = can(access, "inventory.transfer");
   const [locations, products, result] = await Promise.all([listLocations(), listProductOptions(), listTransfers({ status, page: Number(p.page) || 1 })]);
   return (
     <AppShell>
       <InventoryHeader title="Transfer Stok" description="Pindahkan stok antar gudang dan toko. Transfer bisa langsung diterima, atau berstatus Dalam Perjalanan sampai dikonfirmasi diterima." />
-      {canTransfer && <AddPanel label="Buat Transfer"><InventoryDocumentForm mode="transfer" canSetKoli={can(role, "inventory.master")} locations={locations} products={products} /></AddPanel>}
+      {canTransfer && <AddPanel label="Buat Transfer"><InventoryDocumentForm mode="transfer" canSetKoli={can(access, "inventory.master")} locations={locations} products={products} /></AddPanel>}
       <form className="mb-3 flex gap-2">
         <select name="status" defaultValue={status ?? ""} className={filterInput}>
           <option value="">Semua status</option>

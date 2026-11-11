@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { InventoryHeader } from "@/components/inventory/ui";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { jakartaDateKey, jakartaMonthKey } from "@/lib/date/jakarta";
 import { warehouseShortageReport } from "@/lib/inventory/warehouseRequests";
@@ -14,8 +14,9 @@ const when = new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", day: "
 const valid = (v?: string) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : undefined);
 
 export default async function LaporanSelisihGudangPage({ searchParams }: { searchParams: Promise<{ from?: string; to?: string }> }) {
-  const role = await getCurrentRole();
-  if (!can(role, "gudang.report.view")) redirect("/no-access");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "gudang.report.view")) redirect("/no-access");
   const p = await searchParams;
   const from = valid(p.from) ?? `${jakartaMonthKey()}-01`;
   const to = valid(p.to) ?? jakartaDateKey();

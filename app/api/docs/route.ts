@@ -1,8 +1,9 @@
+import { primaryRole } from "@/lib/auth/roles";
 import { NextResponse } from "next/server";
 import { getCurrentRole } from "@/lib/auth/session";
 
 export async function GET() {
-  if ((await getCurrentRole()) !== "OWNER") {
+  if (primaryRole(await getCurrentRole()) !== "OWNER") {
     return NextResponse.json({ success: false, message: "Tidak punya akses dokumentasi API." }, { status: 403 });
   }
 

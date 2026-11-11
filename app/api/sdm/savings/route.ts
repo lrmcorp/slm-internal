@@ -9,7 +9,7 @@ import {
 
 export async function GET(request: Request) {
   const user = await getCurrentUser();
-  if (!can(user.role, "sdm.view")) {
+  if (!can(user, "sdm.view")) {
     return NextResponse.json(
       { success: false, message: "Tidak memiliki hak akses melihat data simpanan karyawan." },
       { status: 403 }
@@ -44,7 +44,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const user = await getCurrentUser();
-  if (!can(user.role, "sdm.savings.manage") && !can(user.role, "sdm.employee.manage")) {
+  if (!can(user, "sdm.savings.manage") && !can(user, "sdm.employee.manage")) {
     return NextResponse.json(
       { success: false, message: "Tidak memiliki hak akses membuka rekening simpanan." },
       { status: 403 }

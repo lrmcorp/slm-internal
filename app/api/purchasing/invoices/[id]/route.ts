@@ -8,7 +8,7 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const user = await getCurrentUser();
-  if (!can(user.role, "purchasing.view")) {
+  if (!can(user, "purchasing.view")) {
     return NextResponse.json({ success: false, message: "Akses ditolak." }, { status: 403 });
   }
 
@@ -32,7 +32,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const user = await getCurrentUser();
-  if (!can(user.role, "purchasing.invoice.manage")) {
+  if (!can(user, "purchasing.invoice.manage")) {
     return NextResponse.json({ success: false, message: "Akses ditolak." }, { status: 403 });
   }
 

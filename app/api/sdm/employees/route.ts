@@ -6,7 +6,7 @@ import { employeeSchema } from "@/lib/validation/sdmSchema";
 
 export async function GET(request: Request) {
   const user = await getCurrentUser();
-  if (!can(user.role, "sdm.view")) {
+  if (!can(user, "sdm.view")) {
     return NextResponse.json({ success: false, message: "Tidak punya akses melihat data SDM." }, { status: 403 });
   }
 
@@ -30,7 +30,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const user = await getCurrentUser();
-  if (!can(user.role, "sdm.employee.manage")) {
+  if (!can(user, "sdm.employee.manage")) {
     return NextResponse.json({ success: false, message: "Tidak punya akses mengelola data karyawan." }, { status: 403 });
   }
 

@@ -8,11 +8,11 @@ import type { SalesReturnStatus } from "@prisma/client";
 export async function GET(request: Request) {
   const user = await getCurrentUser();
   if (
-    !can(user.role, "penjualan.manage") &&
-    !can(user.role, "penjualan.create") &&
-    !can(user.role, "accounting.view") &&
-    !can(user.role, "tempo.view") &&
-    !can(user.role, "tempo.view_due")
+    !can(user, "penjualan.manage") &&
+    !can(user, "penjualan.create") &&
+    !can(user, "accounting.view") &&
+    !can(user, "tempo.view") &&
+    !can(user, "tempo.view_due")
   ) {
     return NextResponse.json({ success: false, message: "Akses ditolak." }, { status: 403 });
   }
@@ -35,7 +35,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const user = await getCurrentUser();
-  if (!can(user.role, "penjualan.create") && !can(user.role, "penjualan.manage")) {
+  if (!can(user, "penjualan.create") && !can(user, "penjualan.manage")) {
     return NextResponse.json({ success: false, message: "Akses ditolak." }, { status: 403 });
   }
 

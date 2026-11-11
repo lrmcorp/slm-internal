@@ -1,14 +1,15 @@
 import { NextResponse } from "next/server";
 import { getCurrentRole, getCurrentUser } from "@/lib/auth/session";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { updateDeliveryOrderReceiptPhotos } from "@/lib/deliveryOrders/store";
 
 export async function PATCH(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const role = await getCurrentRole();
-  if (!can(role, "do.process")) {
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "do.process")) {
     return NextResponse.json(
       { success: false, message: "Tidak memiliki hak akses mengubah foto bukti DO." },
       { status: 403 }

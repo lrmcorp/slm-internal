@@ -6,7 +6,7 @@ import { periodClosingSchema } from "@/lib/validation/accountingSchema";
 
 export async function GET() {
   const user = await getCurrentUser();
-  if (!can(user.role, "accounting.view") && !can(user.role, "accounting.period.manage")) {
+  if (!can(user, "accounting.view") && !can(user, "accounting.period.manage")) {
     return NextResponse.json({ success: false, message: "Akses ditolak." }, { status: 403 });
   }
 
@@ -23,7 +23,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const user = await getCurrentUser();
-  if (!can(user.role, "accounting.period.manage")) {
+  if (!can(user, "accounting.period.manage")) {
     return NextResponse.json(
       { success: false, message: "Akses ditolak. Memerlukan hak akses kelola periode tutup buku." },
       { status: 403 }

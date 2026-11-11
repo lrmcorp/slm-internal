@@ -2,13 +2,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { roleLabel, type Role } from "@/lib/auth/roles";
+import { rolesLabel, type RoleSubject } from "@/lib/auth/roles";
 import { useBrand } from "@/components/brand/BrandProvider";
 import { activeNavSection, visibleNavSections } from "./navigation";
 import { NavCountBadge } from "./NavCountBadge";
 import type { NavBadges } from "@/lib/layout/navBadges";
 
-export function MobileNavigationDrawer({ role, userName, badges = {} }: { role: Role; userName: string; badges?: NavBadges }) {
+export function MobileNavigationDrawer({ role, userName, badges = {} }: { role: RoleSubject; userName: string; badges?: NavBadges }) {
   const brand = useBrand();
   const pathname = usePathname();
   const [drawerState, setDrawerState] = useState({ open: false, pathname });
@@ -25,7 +25,7 @@ export function MobileNavigationDrawer({ role, userName, badges = {} }: { role: 
           <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-600 text-sm font-black tracking-tighter text-white shadow-sm">{brand.initials}</span>
           <div className="min-w-0">
             <p className="truncate text-sm font-bold text-neutral-900">{brand.name}</p>
-            <p className="truncate text-xs text-neutral-500">{roleLabel(role)} · {userName}</p>
+            <p className="truncate text-xs text-neutral-500">{rolesLabel(role)} · {userName}</p>
           </div>
         </div>
         <button type="button" aria-label="Buka menu" aria-controls="mobile-navigation-drawer" aria-expanded={open} onClick={() => setOpen(true)} className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-lg border border-neutral-300 bg-white px-3 text-sm font-semibold text-neutral-800 transition hover:border-brand-400 hover:bg-brand-50 hover:text-brand-800">
@@ -46,7 +46,7 @@ export function MobileNavigationDrawer({ role, userName, badges = {} }: { role: 
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-600 text-sm font-black tracking-tighter text-white">{brand.initials}</span>
               <div className="min-w-0">
                 <p className="truncate text-sm font-bold text-neutral-900">{brand.name}</p>
-                <p className="truncate text-[11px] text-neutral-500">{roleLabel(role)}</p>
+                <p className="truncate text-[11px] text-neutral-500">{rolesLabel(role)}</p>
               </div>
             </div>
             <button type="button" aria-label="Tutup menu" onClick={() => setOpen(false)} className="grid h-11 w-11 place-items-center rounded-sm border border-neutral-300 text-xl leading-none text-neutral-700 transition hover:border-brand-400 hover:bg-brand-50 hover:text-brand-800">
@@ -76,7 +76,7 @@ export function MobileNavigationDrawer({ role, userName, badges = {} }: { role: 
               </div>
             ))}
           </nav>
-          <div className="border-t border-neutral-200 px-5 py-4 text-xs text-neutral-500">Menu sesuai hak akses {roleLabel(role)}</div>
+          <div className="border-t border-neutral-200 px-5 py-4 text-xs text-neutral-500">Menu sesuai hak akses {rolesLabel(role)}</div>
         </aside>
       </div> : null}
     </div>

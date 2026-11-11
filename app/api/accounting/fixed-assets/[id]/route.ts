@@ -19,7 +19,7 @@ const schema = z.object({
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
-  if (!can(user.role, "accounting.journal.manage")) return NextResponse.json({ success: false, message: "Akses ditolak." }, { status: 403 });
+  if (!can(user, "accounting.journal.manage")) return NextResponse.json({ success: false, message: "Akses ditolak." }, { status: 403 });
   const { id } = await params;
   try {
     const input = schema.parse(await request.json());

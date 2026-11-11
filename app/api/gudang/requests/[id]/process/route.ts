@@ -7,7 +7,7 @@ import { warehouseRequestError } from "@/lib/inventory/warehouseRequestHttp";
 /** Petugas Gudang menyelesaikan permintaan: qty yang benar-benar dikirim per barang. */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
-  if (!can(user.role, "gudang.request.process")) return NextResponse.json({ success: false, message: "Tidak punya akses memproses permintaan barang." }, { status: 403 });
+  if (!can(user, "gudang.request.process")) return NextResponse.json({ success: false, message: "Tidak punya akses memproses permintaan barang." }, { status: 403 });
   const { id } = await params;
   try {
     const input = processRequestSchema.parse(await request.json().catch(() => null));

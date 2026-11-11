@@ -45,10 +45,10 @@ export function inventoryRoute<P extends Record<string, string> = Record<string,
         ctx = { actor: { id: `api:${principal.clientCode}`, name: `API ${principal.clientCode}` }, source: "api", canSeeCost: false };
       } else {
         const user = await getCurrentUser();
-        if (!can(user.role, permission)) {
+        if (!can(user, permission)) {
           return NextResponse.json({ success: false, message: "Tidak punya akses ke modul inventory ini.", code: "FORBIDDEN" }, { status: 403 });
         }
-        ctx = { actor: { id: user.id, name: user.name, canEditMaster: can(user.role, "inventory.master") }, source: "session", canSeeCost: can(user.role, "inventory.master") || can(user.role, "inventory.receive") };
+        ctx = { actor: { id: user.id, name: user.name, canEditMaster: can(user, "inventory.master") }, source: "session", canSeeCost: can(user, "inventory.master") || can(user, "inventory.receive") };
       }
       const raw = await handler(request, ctx, params);
       const data = ctx.canSeeCost || raw instanceof Response ? raw : withoutCost(raw);

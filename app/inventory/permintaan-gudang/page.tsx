@@ -2,7 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { InventoryHeader } from "@/components/inventory/ui";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { jakartaDateKey } from "@/lib/date/jakarta";
 import { getWarehouseRequests } from "@/lib/reports/warehouseRequests";
@@ -14,8 +14,9 @@ const dayLabel = new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", we
 const timeLabel = new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit" });
 
 export default async function WarehouseRequestPage({ searchParams }: { searchParams: Promise<{ from?: string; to?: string }> }) {
-  const role = await getCurrentRole();
-  if (!can(role, "inventory.stock.view")) redirect("/no-access");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "inventory.stock.view")) redirect("/no-access");
   const p = await searchParams;
   const today = jakartaDateKey(new Date());
   const valid = (v?: string) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : undefined);

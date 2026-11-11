@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { PageHeader } from "@/components/ui/Page";
 import { ResponsiveFilterPanel } from "@/components/ui/ResponsiveFilterPanel";
@@ -29,11 +29,12 @@ export default async function DashboardProfitDetailPage({
 }: {
   searchParams?: Promise<SearchParams>;
 }) {
-  const role = await getCurrentRole();
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
   // Khusus OWNER, ADMIN, FINANCE yang berwenang melihat breakdown profitabilitas
   if (
-    !can(role, "settings.profit.manage") &&
-    !can(role, "reports.finance_view") &&
+    !can(access, "settings.profit.manage") &&
+    !can(access, "reports.finance_view") &&
     role !== "OWNER"
   ) {
     redirect("/dashboard");

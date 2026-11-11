@@ -24,17 +24,17 @@ function statusBadge(status: string) {
 export default async function SalesReturnListPage() {
   const user = await getCurrentUser();
   if (
-    !can(user.role, "penjualan.manage") &&
-    !can(user.role, "penjualan.create") &&
-    !can(user.role, "accounting.view") &&
-    !can(user.role, "tempo.view") &&
-    !can(user.role, "tempo.view_due")
+    !can(user, "penjualan.manage") &&
+    !can(user, "penjualan.create") &&
+    !can(user, "accounting.view") &&
+    !can(user, "tempo.view") &&
+    !can(user, "tempo.view_due")
   ) {
     redirect("/");
   }
 
   const returns = await listSalesReturns().catch(() => []);
-  const canPost = can(user.role, "penjualan.manage") || can(user.role, "accounting.journal.manage");
+  const canPost = can(user, "penjualan.manage") || can(user, "accounting.journal.manage");
 
   return (
     <AppShell>

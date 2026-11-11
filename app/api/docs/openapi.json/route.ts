@@ -1,9 +1,10 @@
+import { primaryRole } from "@/lib/auth/roles";
 import { NextResponse } from "next/server";
 import { readOpenApiDocument } from "@/lib/apiDocs/openapi";
 import { getCurrentRole } from "@/lib/auth/session";
 
 async function assertOwner() {
-  return (await getCurrentRole()) === "OWNER";
+  return primaryRole(await getCurrentRole()) === "OWNER";
 }
 
 export async function GET() {

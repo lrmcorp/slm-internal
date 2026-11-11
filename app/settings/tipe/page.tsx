@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { listBookkeepingTypes, listRekeningAccounts } from "@/lib/business/masterData";
 import { TipeManager } from "@/components/settings/TipeManager";
@@ -8,8 +8,9 @@ import { TipeManager } from "@/components/settings/TipeManager";
 export const dynamic = "force-dynamic";
 
 export default async function TipePage() {
-  const role = await getCurrentRole();
-  if (!can(role, "settings.tipe.manage")) redirect("/settings");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "settings.tipe.manage")) redirect("/settings");
   const types = await listBookkeepingTypes();
   const rekenings = await listRekeningAccounts();
   return (

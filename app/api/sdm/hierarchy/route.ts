@@ -5,7 +5,7 @@ import { getOrganizationHierarchy, assignSupervisor } from "@/lib/sdm/hierarchyS
 
 export async function GET() {
   const user = await getCurrentUser();
-  if (!can(user.role, "sdm.view")) {
+  if (!can(user, "sdm.view")) {
     return NextResponse.json(
       { success: false, message: "Tidak memiliki hak akses melihat struktur organisasi." },
       { status: 403 }
@@ -25,7 +25,7 @@ export async function GET() {
 
 export async function POST(request: Request) {
   const user = await getCurrentUser();
-  if (!can(user.role, "sdm.employee.manage")) {
+  if (!can(user, "sdm.employee.manage")) {
     return NextResponse.json(
       { success: false, message: "Tidak memiliki hak akses mengubah struktur organisasi." },
       { status: 403 }

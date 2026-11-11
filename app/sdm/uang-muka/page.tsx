@@ -2,7 +2,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { AdvanceOverviewTable } from "@/components/sdm/AdvanceOverviewTable";
 import { requirePermission } from "@/lib/auth/requirePermission";
 import { getCurrentRole } from "@/lib/auth/session";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { listEmployeeLoans } from "@/lib/sdm/loanStore";
 import { listRekeningAccounts } from "@/lib/business/masterData";
 
@@ -10,8 +10,9 @@ export const dynamic = "force-dynamic";
 
 export default async function SdmUangMukaPage() {
   await requirePermission("sdm.view");
-  const role = await getCurrentRole();
-  const canManage = can(role, "sdm.kasbon.manage");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  const canManage = can(access, "sdm.kasbon.manage");
 
   const [loans, rekenings] = await Promise.all([
     listEmployeeLoans({ loanType: "UANG_MUKA" }),

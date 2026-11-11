@@ -14,10 +14,37 @@ export type UserRow = {
   email?: string | null;
   name: string;
   role: Role;
+  extraRoles?: Role[];
   isActive: boolean;
   hasPassword: boolean;
   lastLoginAt?: string | null;
 };
+
+/** Role yang bisa dirangkap (Super Admin hanya bisa jadi role utama; Viewer tidak menambah hak). */
+const EXTRA_ROLE_OPTIONS = ROLES.filter((r) => r !== "OWNER" && r !== "VIEWER");
+
+/** Kotak centang role tambahan (rangkap jabatan). */
+function ExtraRolesPicker({ primary, value, onChange, idPrefix }: { primary: Role; value: Role[]; onChange: (next: Role[]) => void; idPrefix: string }) {
+  return (
+    <fieldset className="mt-2">
+      <legend className="text-xs font-semibold text-slate-600">Rangkap juga sebagai</legend>
+      <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1">
+        {EXTRA_ROLE_OPTIONS.filter((r) => r !== primary).map((r) => (
+          <label key={r} htmlFor={`${idPrefix}-${r}`} className="inline-flex min-h-9 cursor-pointer items-center gap-1.5 text-xs text-slate-700">
+            <input
+              id={`${idPrefix}-${r}`}
+              type="checkbox"
+              className="h-4 w-4 accent-brand-600"
+              checked={value.includes(r)}
+              onChange={(e) => onChange(e.target.checked ? [...value, r] : value.filter((x) => x !== r))}
+            />
+            {roleLabel(r)}
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  );
+}
 
 export function UserManager({ users: initial }: { users: UserRow[] }) {
   const { showToast } = useToast();
@@ -26,6 +53,7 @@ export function UserManager({ users: initial }: { users: UserRow[] }) {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [role, setRole] = useState<Role>("VIEWER");
+  const [extraRoles, setExtraRoles] = useState<Role[]>([]);
   const [password, setPassword] = useState("");
   const [resetPasswords, setResetPasswords] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
@@ -62,6 +90,7 @@ export function UserManager({ users: initial }: { users: UserRow[] }) {
           email: email.trim(),
           name: name.trim(),
           role,
+          extraRoles: extraRoles.filter((r) => r !== role),
           password
         })
       });
@@ -72,6 +101,7 @@ export function UserManager({ users: initial }: { users: UserRow[] }) {
         setEmail("");
         setName("");
         setRole("VIEWER");
+        setExtraRoles([]);
         setPassword("");
         showToast("User berhasil ditambahkan.", "success");
       } else {
@@ -89,7 +119,7 @@ export function UserManager({ users: initial }: { users: UserRow[] }) {
       const response = await fetch(`/api/users/${user.id}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ...user, role: newRole })
+        body: JSON.stringify({ ...user, role: newRole, extraRoles: (user.extraRoles ?? []).filter((r) => r !== newRole) })
       });
       const result = await response.json();
       if (result.success) {
@@ -100,6 +130,32 @@ export function UserManager({ users: initial }: { users: UserRow[] }) {
       }
     } catch {
       showToast("Terjadi kesalahan jaringan saat mengubah role.", "error");
+    }
+  };
+
+  const updateExtraRoles = async (user: UserRow, next: Role[]) => {
+    const previous = user.extraRoles ?? [];
+    // Langsung tercentang; dikembalikan bila gagal disimpan.
+    setUsers((prev) => prev.map((item) => (item.id === user.id ? { ...item, extraRoles: next } : item)));
+    const revert = () => setUsers((prev) => prev.map((item) => (item.id === user.id ? { ...item, extraRoles: previous } : item)));
+    try {
+      const response = await fetch(`/api/users/${user.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ...user, extraRoles: next })
+      });
+      const result = await response.json();
+      if (result.success) {
+        setUsers((prev) => prev.map((item) => (item.id === user.id ? result.data : item)));
+        const extras = (result.data.extraRoles ?? []) as Role[];
+        showToast(extras.length ? `${user.name} sekarang juga ${extras.map(roleLabel).join(" + ")}.` : `${user.name} tidak lagi merangkap role lain.`, "success");
+      } else {
+        revert();
+        showToast(result.message || "Gagal mengubah role tambahan.", "error");
+      }
+    } catch {
+      revert();
+      showToast("Terjadi kesalahan jaringan saat mengubah role tambahan.", "error");
     }
   };
 
@@ -204,6 +260,14 @@ export function UserManager({ users: initial }: { users: UserRow[] }) {
                       </option>
                     ))}
                   </Select>
+                  {user.role !== "OWNER" && (
+                    <ExtraRolesPicker
+                      primary={user.role}
+                      value={user.extraRoles ?? []}
+                      onChange={(next) => updateExtraRoles(user, next)}
+                      idPrefix={`extra-${user.id}`}
+                    />
+                  )}
                 </td>
                 <td className="px-5 py-4">
                   <span
@@ -323,6 +387,7 @@ export function UserManager({ users: initial }: { users: UserRow[] }) {
               ))}
             </Select>
           </label>
+          {role !== "OWNER" && <ExtraRolesPicker primary={role} value={extraRoles} onChange={setExtraRoles} idPrefix="new-extra" />}
           <label className="block text-sm font-medium text-slate-700">
             <span className="mb-1 block">
               Password awal <span className="text-red-500">*</span>

@@ -1,3 +1,4 @@
+import { primaryRole } from "@/lib/auth/roles";
 import { NextResponse } from "next/server";
 import { getCurrentRole } from "@/lib/auth/session";
 import { askFinancialCfo } from "@/lib/ai/financialAiService";
@@ -5,7 +6,8 @@ import { askFinancialCfo } from "@/lib/ai/financialAiService";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  const role = await getCurrentRole();
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
   if (role !== "OWNER") {
     return NextResponse.json(
       { success: false, message: "Akses ditolak: Hanya Super Admin (Owner) yang dapat mengakses AI Keuangan." },

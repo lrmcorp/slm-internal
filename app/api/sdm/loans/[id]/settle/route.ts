@@ -6,7 +6,7 @@ import { advanceSettlementSchema } from "@/lib/validation/sdmSchema";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
-  if (!can(user.role, "sdm.kasbon.manage")) {
+  if (!can(user, "sdm.kasbon.manage")) {
     return NextResponse.json({ success: false, message: "Tidak punya akses memproses pertanggungjawaban uang muka." }, { status: 403 });
   }
 

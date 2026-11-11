@@ -1,3 +1,4 @@
+import { primaryRole } from "@/lib/auth/roles";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
@@ -14,7 +15,7 @@ const timeLabel = new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", h
 
 export default async function ConsignmentReportPage({ searchParams }: { searchParams: Promise<{ from?: string; to?: string; keyword?: string }> }) {
   // Laporan owner: angka rupiah hanya untuk Super Admin.
-  if ((await getCurrentRole()) !== "OWNER") redirect("/no-access");
+  if (primaryRole(await getCurrentRole()) !== "OWNER") redirect("/no-access");
   const p = await searchParams;
   const today = jakartaDateKey(new Date());
   const valid = (v?: string) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : undefined);

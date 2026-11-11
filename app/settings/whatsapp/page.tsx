@@ -2,15 +2,16 @@ import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { WhatsAppRecipientManager } from "@/components/settings/WhatsAppRecipientManager";
 import { WhatsAppTestButton } from "@/components/settings/WhatsAppTestButton";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { getWhatsappProviderStatus, listWhatsappLogs, listWhatsappRecipients } from "@/lib/whatsapp/whatsappClient";
 
 export const dynamic = "force-dynamic";
 
 export default async function WhatsAppSettingsPage() {
-  const role = await getCurrentRole();
-  if (!can(role, "settings.whatsapp.manage")) redirect("/settings");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "settings.whatsapp.manage")) redirect("/settings");
   const recipients = await listWhatsappRecipients();
   const logs = await listWhatsappLogs(10);
   const status = getWhatsappProviderStatus();

@@ -3,21 +3,22 @@ import { AppShell } from "@/components/layout/AppShell";
 import { InventoryDocumentForm } from "@/components/inventory/InventoryDocumentForm";
 import { AddPanel } from "@/components/inventory/AddPanel";
 import { InventoryHeader, Pager, fmtDate, fmtQty } from "@/components/inventory/ui";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { listAdjustments, listLocations, listProductOptions } from "@/lib/inventory/service";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdjustmentPage({ searchParams }: { searchParams: Promise<{ page?: string; productId?: string; locationId?: string }> }) {
-  const role = await getCurrentRole();
-  if (!can(role, "inventory.adjust")) redirect("/no-access");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "inventory.adjust")) redirect("/no-access");
   const p = await searchParams;
   const [locations, products, result] = await Promise.all([listLocations(), listProductOptions(), listAdjustments({ page: Number(p.page) || 1 })]);
   return (
     <AppShell>
       <InventoryHeader title="Stock Adjustment" description="Tambah atau kurangi stok yang ada, mis. barang rusak, hilang, atau bonus. Isi angka minus untuk mengurangi." />
-      {can(role, "inventory.adjust") && <AddPanel label="Buat Adjustment" defaultOpen={Boolean(p.productId)}><InventoryDocumentForm key={p.productId ?? "new"} mode="adjustment" canSetKoli={can(role, "inventory.master")} locations={locations} products={products} initialProductId={p.productId} initialLocationId={p.locationId} /></AddPanel>}
+      {can(access, "inventory.adjust") && <AddPanel label="Buat Adjustment" defaultOpen={Boolean(p.productId)}><InventoryDocumentForm key={p.productId ?? "new"} mode="adjustment" canSetKoli={can(access, "inventory.master")} locations={locations} products={products} initialProductId={p.productId} initialLocationId={p.locationId} /></AddPanel>}
       <div className="aj-surface overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-600">

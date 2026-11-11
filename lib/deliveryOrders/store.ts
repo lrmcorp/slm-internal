@@ -997,9 +997,9 @@ export async function updateDeliveryOrderReceiptPhotos(
 }
 
 export async function listDeliveryOfficers() {
-  // Petugas packing: Petugas DO dan Gudang (yang merangkap packing DO).
+  // Petugas packing: role utama atau role tambahan Petugas DO.
   const drivers = await prisma.user.findMany({
-    where: { isActive: true, role: { in: ["DELIVERY_DRIVER", "GUDANG"] } },
+    where: { isActive: true, OR: [{ role: "DELIVERY_DRIVER" }, { extraRoles: { has: "DELIVERY_DRIVER" } }] },
     select: { id: true, name: true, role: true, email: true },
     orderBy: { name: "asc" }
   });

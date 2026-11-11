@@ -1,15 +1,16 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { UserManager, type UserRow } from "@/components/settings/UserManager";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { listUsers } from "@/lib/users/store";
 
 export const dynamic = "force-dynamic";
 
 export default async function UsersPage() {
-  const role = await getCurrentRole();
-  if (!can(role, "users.manage")) redirect("/settings");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "users.manage")) redirect("/settings");
   const users = await listUsers();
   const rows: UserRow[] = users.map((user) => ({
     id: user.id,

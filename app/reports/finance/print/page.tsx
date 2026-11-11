@@ -25,7 +25,7 @@ export default async function FinanceReportPrintPage({
   searchParams?: SearchParams;
 }) {
   const user = await getCurrentUser();
-  if (!can(user.role, "reports.finance_view")) redirect("/");
+  if (!can(user, "reports.finance_view")) redirect("/");
 
   const params = await searchParams;
   const selectedMonth = jakartaMonthFromKey(params?.month);

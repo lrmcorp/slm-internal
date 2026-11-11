@@ -5,7 +5,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Input } from "@/components/ui/Input";
 import { ResponsiveFilterPanel } from "@/components/ui/ResponsiveFilterPanel";
 import { Select } from "@/components/ui/Select";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { listCctvDetectionsPaginated, getCctvStats } from "@/lib/cctv/store";
 import { CctvStatsCards } from "@/components/cctv/CctvStatsCards";
@@ -50,9 +50,10 @@ function activeFilterLabels(params: Record<string, string | string[] | undefined
 
 export default async function CctvMonitoringPage({ searchParams }: Props) {
   const showCctv = await cctvEnabledForRequest();
-  const role = await getCurrentRole();
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
   if (!showCctv) notFound();
-  if (!can(role, "audit.view")) redirect("/no-access");
+  if (!can(access, "audit.view")) redirect("/no-access");
 
   const params = (await searchParams) || {};
   const page = Number(valueOf(params, "page") || "1");

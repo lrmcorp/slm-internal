@@ -53,6 +53,8 @@ model User {
   email            String?   @unique
   name             String
   role             Role
+  /// Role tambahan (rangkap jabatan), mis. Petugas DO yang juga Gudang. Hak akses = gabungan role + extraRoles.
+  extraRoles       Role[]    @default([])
   isActive         Boolean   @default(true)
   passwordHash     String?
   passwordUpdatedAt DateTime?

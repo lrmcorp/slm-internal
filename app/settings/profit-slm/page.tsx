@@ -1,15 +1,16 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { SlmProfitSettingsForm } from "@/components/settings/SlmProfitSettingsForm";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { getOperationalProfitSetting } from "@/lib/settings/profit";
 
 export const dynamic = "force-dynamic";
 
 export default async function ProfitSlmSettingsPage() {
-  const role = await getCurrentRole();
-  if (!can(role, "settings.profit.manage")) redirect("/settings");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "settings.profit.manage")) redirect("/settings");
   const setting = await getOperationalProfitSetting();
 
   return (

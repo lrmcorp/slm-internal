@@ -1,3 +1,4 @@
+import { primaryRole } from "@/lib/auth/roles";
 import { NextResponse } from "next/server";
 import { listProducts } from "@/lib/api/products";
 import { getOpenCloudStatus } from "@/lib/opencloud/auth";
@@ -5,7 +6,7 @@ import { getCurrentRole } from "@/lib/auth/session";
 import { checkAppSettingTable } from "@/lib/db/migrationHealth";
 
 export async function GET() {
-  if ((await getCurrentRole()) !== "OWNER") {
+  if (primaryRole(await getCurrentRole()) !== "OWNER") {
     return NextResponse.json({ status: "ok" });
   }
   const erp = await listProducts();

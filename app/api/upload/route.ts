@@ -1,10 +1,12 @@
+import { primaryRole } from "@/lib/auth/roles";
 import { NextResponse } from "next/server";
 import { uploadReceipt } from "@/lib/opencloud/storage";
 import { getCurrentRole } from "@/lib/auth/session";
 import { canUploadAttachment } from "@/lib/auth/apiPermissions";
 
 export async function POST(request: Request) {
-  const role = await getCurrentRole();
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
   if (!canUploadAttachment(role)) return NextResponse.json({ success: false, message: "Tidak punya akses unggah lampiran." }, { status: 403 });
   const formData = await request.formData();
   const file = formData.get("file");

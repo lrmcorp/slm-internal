@@ -8,7 +8,7 @@ import Link from "next/link";
 import { BulkUnitForm } from "@/components/inventory/BulkUnitForm";
 import { AddPanel, SettingsPanel } from "@/components/inventory/AddPanel";
 import { InventoryHeader, Pager, filterButton, filterInput } from "@/components/inventory/ui";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
 import { getCbmRate, getRmbRate } from "@/lib/inventory/pricing";
@@ -17,10 +17,11 @@ import { listLocations, listProducts, listUnitUsage } from "@/lib/inventory/serv
 export const dynamic = "force-dynamic";
 
 export default async function InventoryProductPage({ searchParams }: { searchParams: Promise<{ keyword?: string; page?: string; edit?: string }> }) {
-  const role = await getCurrentRole();
-  if (!can(role, "inventory.master")) redirect("/no-access");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "inventory.master")) redirect("/no-access");
   const p = await searchParams;
-  const canManage = can(role, "inventory.master");
+  const canManage = can(access, "inventory.master");
   const [locations, result, rmb, rmbProducts, units, cbm] = await Promise.all([
     listLocations(),
     listProducts({ keyword: p.keyword, page: Number(p.page) || 1, pageSize: 50 }),

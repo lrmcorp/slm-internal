@@ -5,7 +5,7 @@ import { getOrganizationTree } from "@/lib/sdm/employeeStore";
 
 export async function GET() {
   const user = await getCurrentUser();
-  if (!can(user.role, "sdm.view")) {
+  if (!can(user, "sdm.view")) {
     return NextResponse.json({ success: false, message: "Tidak punya akses melihat struktur organisasi." }, { status: 403 });
   }
 

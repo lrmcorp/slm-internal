@@ -27,9 +27,16 @@ describe("menu inventory per role", () => {
     expect(inventoryMenu("DELIVERY_DRIVER")).toEqual(["Stok Gudang & Toko", "Terjual dari Gudang", "Mutasi / Kartu Stok"]);
   });
 
-  it("Gudang: proses permintaan barang, stok, mutasi, transfer; plus DO (merangkap packing)", () => {
+  it("Gudang hanya urusan gudang (tanpa DO); Petugas DO hanya DO", () => {
     expect(inventoryMenu("GUDANG")).toEqual(["Stok Gudang & Toko", "Terjual dari Gudang", "Proses Permintaan Gudang", "Mutasi / Kartu Stok", "Transfer Stok"]);
-    expect(visibleNavLinks("GUDANG").map((l) => l.href)).toContain("/delivery-orders");
+    expect(visibleNavLinks("GUDANG").map((l) => l.href)).not.toContain("/delivery-orders");
+    expect(visibleNavLinks("DELIVERY_DRIVER").map((l) => l.href)).not.toContain("/gudang");
+  });
+
+  it("Rangkap role: Petugas DO + Gudang melihat menu keduanya", () => {
+    const hrefs = visibleNavLinks({ role: "DELIVERY_DRIVER", extraRoles: ["GUDANG"] }).map((l) => l.href);
+    expect(hrefs).toContain("/delivery-orders");
+    expect(hrefs).toContain("/gudang");
   });
 
   it("Finance dan Viewer tidak melihat inventory", () => {

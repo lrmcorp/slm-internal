@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import {
   listMjSaleIds,
@@ -82,10 +82,11 @@ function statusBadgeClass(status: string) {
 }
 
 export default async function TempoPage({ searchParams }: { searchParams?: Promise<SearchParams> }) {
-  const role = await getCurrentRole();
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
   const params = await searchParams || {};
-  if (!can(role, "tempo.view")) {
-    if (!can(role, "tempo.view_due")) redirect("/");
+  if (!can(access, "tempo.view")) {
+    if (!can(access, "tempo.view_due")) redirect("/");
     return (
       <AppShell>
         <TempoDueSoonList page={Math.max(1, Number(valueOf(params, "page") || "1"))} keyword={valueOf(params, "keyword") || undefined} />

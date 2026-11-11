@@ -7,7 +7,7 @@ const fail = (message: string, status = 400) => NextResponse.json({ success: fal
 
 export async function GET() {
   const user = await getCurrentUser();
-  if (!can(user.role, "accounting.view")) return fail("Akses ditolak.", 403);
+  if (!can(user, "accounting.view")) return fail("Akses ditolak.", 403);
   const [assets, policy] = await Promise.all([listFixedAssets(), getFixedAssetPolicy()]);
   return NextResponse.json({ success: true, data: { assets, policy } });
 }
@@ -15,7 +15,7 @@ export async function GET() {
 /** action=confirm_policy { capitalizationThreshold, defaultUsefulLifeMonths } | action=depreciate { period: YYYY-MM } */
 export async function POST(request: Request) {
   const user = await getCurrentUser();
-  if (!can(user.role, "accounting.journal.manage")) return fail("Akses ditolak. Hanya Super Admin.", 403);
+  if (!can(user, "accounting.journal.manage")) return fail("Akses ditolak. Hanya Super Admin.", 403);
   const body = await request.json().catch(() => ({}));
   try {
     if (body?.action === "confirm_policy") {

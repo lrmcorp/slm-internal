@@ -1,13 +1,13 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { roleLabel, type Role } from "@/lib/auth/roles";
+import { rolesLabel, type RoleSubject } from "@/lib/auth/roles";
 import { useBrand } from "@/components/brand/BrandProvider";
 import { activeNavSection, visibleNavSections } from "./navigation";
 import { NavCountBadge } from "./NavCountBadge";
 import type { NavBadges } from "@/lib/layout/navBadges";
 
-export function Sidebar({ role, badges = {} }: { role: Role; badges?: NavBadges }) {
+export function Sidebar({ role, badges = {} }: { role: RoleSubject; badges?: NavBadges }) {
   const brand = useBrand();
   const pathname = usePathname();
   const groups = visibleNavSections(role, { cctv: brand.cctvEnabled, deliveryOrders: brand.deliveryOrdersEnabled });
@@ -23,7 +23,7 @@ export function Sidebar({ role, badges = {} }: { role: Role; badges?: NavBadges 
           </span>
           <div className="min-w-0">
             <p className="truncate text-sm font-bold text-neutral-900">{brand.name}</p>
-            <p className="truncate text-[11px] text-neutral-500">{roleLabel(role)}</p>
+            <p className="truncate text-[11px] text-neutral-500">{rolesLabel(role)}</p>
           </div>
         </div>
 
@@ -55,7 +55,7 @@ export function Sidebar({ role, badges = {} }: { role: Role; badges?: NavBadges 
 
         {/* Footer info */}
         <div className="border-t border-neutral-100 px-6 py-4 text-[11px] text-neutral-500">
-          Login sebagai {roleLabel(role)}
+          Login sebagai {rolesLabel(role)}
         </div>
       </div>
     </aside>

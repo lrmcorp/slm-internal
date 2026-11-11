@@ -1,6 +1,6 @@
 import { AppShell } from "@/components/layout/AppShell";
 import { requirePermission } from "@/lib/auth/requirePermission";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { getFixedAssetPolicy, listFixedAssets } from "@/lib/accounting/fixedAssets";
 import { FixedAssetsView } from "@/components/accounting/FixedAssetsView";
@@ -10,7 +10,8 @@ export const dynamic = "force-dynamic";
 
 export default async function FixedAssetsPage() {
   await requirePermission("accounting.view");
-  const role = await getCurrentRole();
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
   const [assets, policy] = await Promise.all([listFixedAssets(), getFixedAssetPolicy()]);
   const iso = (d: Date | null) => (d ? d.toISOString() : null);
   return (
@@ -24,7 +25,7 @@ export default async function FixedAssetsPage() {
       <FixedAssetsView
         assets={assets.map((a) => ({ ...a, acquisitionDate: iso(a.acquisitionDate), availableForUseDate: iso(a.availableForUseDate), createdAt: undefined, updatedAt: undefined }))}
         policy={policy}
-        canManage={can(role, "accounting.journal.manage")}
+        canManage={can(access, "accounting.journal.manage")}
         defaultPeriod={jakartaMonthKey(new Date())}
       />
     </AppShell>

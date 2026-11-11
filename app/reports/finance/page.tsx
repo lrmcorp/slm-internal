@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { Input } from "@/components/ui/Input";
 import { Select } from "@/components/ui/Select";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { listBookkeepingTypes, listRekeningAccounts, type RekeningAccount } from "@/lib/business/masterData";
 import { jakartaMonthFromKey } from "@/lib/date/jakarta";
@@ -127,8 +127,9 @@ export default async function FinanceReportsPage({
 }: {
   searchParams?: Promise<SearchParams>;
 }) {
-  const role = await getCurrentRole();
-  if (!can(role, "reports.finance_view")) redirect("/");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "reports.finance_view")) redirect("/");
 
   const params = (await searchParams) || {};
   const month = jakartaMonthFromKey(valueOf(params, "month"));

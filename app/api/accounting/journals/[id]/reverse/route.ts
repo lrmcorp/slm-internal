@@ -5,7 +5,7 @@ import { reverseJournalEntry } from "@/lib/accounting/journalStore";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
-  if (!can(user.role, "accounting.journal.manage")) {
+  if (!can(user, "accounting.journal.manage")) {
     return NextResponse.json(
       { success: false, message: "Akses ditolak. Memerlukan hak akses kelola jurnal." },
       { status: 403 }

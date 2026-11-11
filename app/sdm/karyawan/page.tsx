@@ -2,15 +2,16 @@ import { AppShell } from "@/components/layout/AppShell";
 import { EmployeeManager } from "@/components/sdm/EmployeeManager";
 import { requirePermission } from "@/lib/auth/requirePermission";
 import { getCurrentRole } from "@/lib/auth/session";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { listEmployees, getOrganizationTree } from "@/lib/sdm/employeeStore";
 
 export const dynamic = "force-dynamic";
 
 export default async function SdmKaryawanPage() {
   await requirePermission("sdm.view");
-  const role = await getCurrentRole();
-  const canManage = can(role, "sdm.employee.manage");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  const canManage = can(access, "sdm.employee.manage");
 
   const [employees, orgTree] = await Promise.all([
     listEmployees(),

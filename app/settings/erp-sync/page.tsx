@@ -1,15 +1,16 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { ErpSyncSettingsForm } from "@/components/settings/ErpSyncSettingsForm";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { getErpSyncSetting } from "@/lib/settings/erpSync";
 
 export const dynamic = "force-dynamic";
 
 export default async function ErpSyncSettingsPage() {
-  const role = await getCurrentRole();
-  if (!can(role, "settings.erp_sync.manage")) redirect("/settings");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "settings.erp_sync.manage")) redirect("/settings");
   const setting = await getErpSyncSetting();
 
   return (

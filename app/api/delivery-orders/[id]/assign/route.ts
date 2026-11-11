@@ -1,4 +1,4 @@
-import { isPackingRole } from "@/lib/auth/roles";
+import { isPackingRole, primaryRole } from "@/lib/auth/roles";
 import { NextResponse } from "next/server";
 import { getCurrentRole, getCurrentUser } from "@/lib/auth/session";
 import { can } from "@/lib/auth/roles";
@@ -12,10 +12,11 @@ export async function POST(
   request: Request,
   context: { params: Promise<{ id: string }> }
 ) {
-  const role = await getCurrentRole();
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
   const actor = await getCurrentUser();
-  const isAssignAuthorized = can(role, "do.assign");
-  const isDeliveryDriver = isPackingRole(role);
+  const isAssignAuthorized = can(access, "do.assign");
+  const isDeliveryDriver = isPackingRole(access);
 
   const { id } = await context.params;
   const body = await request.json().catch(() => ({}));

@@ -5,7 +5,7 @@ import { getIncomeStatement } from "@/lib/reports/financialStatements";
 
 export async function GET(request: Request) {
   const user = await getCurrentUser();
-  if (!can(user.role, "reports.finance_view") && !can(user.role, "accounting.view")) {
+  if (!can(user, "reports.finance_view") && !can(user, "accounting.view")) {
     return NextResponse.json(
       { success: false, message: "Tidak memiliki hak akses melihat Laporan Laba Rugi." },
       { status: 403 }

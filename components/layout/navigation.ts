@@ -1,4 +1,4 @@
-import { can, type Permission, type Role } from "@/lib/auth/roles";
+import { can, primaryRole, type Permission, type Role, type RoleSubject } from "@/lib/auth/roles";
 
 export type NavCategory =
   | "MENU UTAMA"
@@ -490,23 +490,25 @@ function isCctvLink(href: string) {
   return CCTV_HREFS.some((h) => href === h || href.startsWith(`${h}/`));
 }
 
-export function visibleNavLinks(role: Role, options: NavOptions = {}): NavLink[] {
+export function visibleNavLinks(role: RoleSubject, options: NavOptions = {}): NavLink[] {
+  const main = primaryRole(role);
   return NAV_LINKS.filter((link) => {
     if (options.cctv === false && isCctvLink(link.href)) return false;
     if (options.deliveryOrders === false && (link.href === "/delivery-orders" || link.href.startsWith("/delivery-orders/"))) return false;
-    if (link.ownerOnly && role !== "OWNER") return false;
+    if (link.ownerOnly && main !== "OWNER") return false;
     if (!can(role, link.permission) && !(link.anyPermission ?? []).some((p) => can(role, p))) return false;
-    if (link.hideForRoles?.includes(role)) return false;
+    if (link.hideForRoles?.includes(main)) return false;
     return true;
   });
 }
 
-export function visibleNavGroups(role: Role): NavGroup[] {
+export function visibleNavGroups(role: RoleSubject): NavGroup[] {
+  const main = primaryRole(role);
   const links = NAV_LINKS.filter((link) => {
-    if (link.ownerOnly && role !== "OWNER") return false;
+    if (link.ownerOnly && main !== "OWNER") return false;
     if (!can(role, link.permission) && !(link.anyPermission ?? []).some((p) => can(role, p))) return false;
-    if (link.hideForRoles?.includes(role)) return false;
-    if (role === "OWNER" && link.hideForOwner) return false;
+    if (link.hideForRoles?.includes(main)) return false;
+    if (main === "OWNER" && link.hideForOwner) return false;
     return true;
   });
 
@@ -589,7 +591,7 @@ const SECTION_GROUP_ORDER: NavSectionGroup[] = ["Utama", "Penjualan & Kas", "Sto
 export type VisibleNavSection = { id: string; label: string; href: string; links: NavLink[] };
 
 /** Modul yang punya minimal satu halaman yang boleh dibuka role ini, dengan tab-tabnya. */
-export function visibleNavSections(role: Role, options: NavOptions = {}): { group: NavSectionGroup; sections: VisibleNavSection[] }[] {
+export function visibleNavSections(role: RoleSubject, options: NavOptions = {}): { group: NavSectionGroup; sections: VisibleNavSection[] }[] {
   const allowed = new Map(visibleNavLinks(role, options).map((l) => [l.href, l]));
   const sections = NAV_SECTIONS.map((s) => {
     const links = s.hrefs.map((h) => allowed.get(h)).filter((l): l is NavLink => Boolean(l)).map((l) => ({ ...l, label: s.tabs?.[l.href] ?? l.label }));

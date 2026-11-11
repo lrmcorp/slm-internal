@@ -1,3 +1,4 @@
+import { isPackingRole } from "@/lib/auth/roles";
 import { notFound, redirect } from "next/navigation";
 import { cctvEnabledForRequest, deliveryOrdersEnabled } from "@/lib/features";
 import { prisma } from "@/lib/db/prisma";
@@ -18,7 +19,7 @@ export default async function DeliveryOrderDetailPage({
   if (!deliveryOrdersEnabled()) notFound();
   const showCctv = await cctvEnabledForRequest();
   const user = await getCurrentUser();
-  if (!can(user.role, "do.view")) {
+  if (!can(user, "do.view")) {
     redirect("/");
   }
 
@@ -48,8 +49,8 @@ export default async function DeliveryOrderDetailPage({
 
   const cctvDetection = cctvDetectionRaw;
 
-  const canAssign = can(user.role, "do.assign");
-  const canProcess = can(user.role, "do.process");
+  const canAssign = can(user, "do.assign");
+  const canProcess = can(user, "do.process");
 
   return (
     <AppShell>
@@ -62,6 +63,7 @@ export default async function DeliveryOrderDetailPage({
           canAssign={canAssign}
           canProcess={canProcess}
           currentUserRole={user.role}
+          isPackingOfficer={isPackingRole(user)}
           currentUserName={user.name || user.id}
         />
       </div>

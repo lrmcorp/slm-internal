@@ -4,7 +4,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { Input } from "@/components/ui/Input";
 import { ResponsiveFilterPanel } from "@/components/ui/ResponsiveFilterPanel";
 import { Select } from "@/components/ui/Select";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { listAuditPaginated, type AuditAction, type AuditEntityType } from "@/lib/audit/store";
 
@@ -43,8 +43,9 @@ function activeFilterLabels(params: Record<string, string | string[] | undefined
 }
 
 export default async function AuditTrailPage({ searchParams }: Props) {
-  const role = await getCurrentRole();
-  if (!can(role, "audit.view")) redirect("/no-access");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "audit.view")) redirect("/no-access");
   const params = await searchParams || {};
   const result = await listAuditPaginated({
     role,

@@ -1,4 +1,4 @@
-import { isPackingRole } from "@/lib/auth/roles";
+import { isPackingRole, primaryRole, type RoleSubject } from "@/lib/auth/roles";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { deliveryOrdersEnabled } from "@/lib/features";
@@ -37,20 +37,20 @@ function pageHref(params: SearchParams, page: number): string {
 }
 
 /** Halaman DO dibuka tanpa filter oleh Petugas DO / Gudang. */
-function isPackingDefaultView(params: SearchParams, userRole?: string) {
+function isPackingDefaultView(params: SearchParams, userRole?: Parameters<typeof isPackingRole>[0]) {
   return isPackingRole(userRole) && !("officerId" in params) && !("view" in params) && !("status" in params);
 }
 
 function filtersFromParams(
   params: SearchParams,
-  userRole?: string,
+  userRole?: RoleSubject,
   userId?: string
 ): ListDeliveryOrdersFilter {
   const officerId = valueOf(params, "officerId") || undefined;
   // Petugas DO / Gudang: bawaannya semua antrean yang belum diproses (bukan hanya tugas sendiri).
   const rawStatus = valueOf(params, "status") || (isPackingDefaultView(params, userRole) ? "belum_selesai" : undefined);
   // Non-Super Admin (bukan OWNER) tidak diizinkan memfilter DO selesai
-  const status = userRole !== "OWNER" && rawStatus === "selesai" ? undefined : rawStatus;
+  const status = (!userRole || primaryRole(userRole) !== "OWNER") && rawStatus === "selesai" ? undefined : rawStatus;
 
   return {
     search: valueOf(params, "search") || undefined,
@@ -120,7 +120,7 @@ export default async function DeliveryOrdersPage({
 }) {
   if (!deliveryOrdersEnabled()) notFound();
   const user = await getCurrentUser();
-  if (!can(user.role, "do.view")) {
+  if (!can(user, "do.view")) {
     redirect("/");
   }
 
@@ -128,11 +128,11 @@ export default async function DeliveryOrdersPage({
   const page = Math.max(1, Number(valueOf(params, "page") || "1"));
 
   const isAllExplicit = valueOf(params, "view") === "all";
-  const isDriver = isPackingRole(user.role);
-  const isDefaultView = isPackingDefaultView(params, user.role);
+  const isDriver = isPackingRole(user);
+  const isDefaultView = isPackingDefaultView(params, user);
   const effectiveOfficerId = valueOf(params, "officerId") || undefined;
 
-  const filters = filtersFromParams(params, user.role, user.id);
+  const filters = filtersFromParams(params, user, user.id);
 
   const [{ data: paged, meta }, officers] = await Promise.all([
     listDeliveryOrdersPage(
@@ -142,8 +142,8 @@ export default async function DeliveryOrdersPage({
     listDeliveryOfficers()
   ]);
 
-  const canAssign = can(user.role, "do.assign");
-  const canProcess = can(user.role, "do.process");
+  const canAssign = can(user, "do.assign");
+  const canProcess = can(user, "do.process");
   const totalPages = meta.totalPages;
   const activeFilters = activeFilterLabels(isDefaultView ? { ...params, status: "belum_selesai" } : params, officers, effectiveOfficerId, user.id);
 
@@ -295,6 +295,7 @@ export default async function DeliveryOrdersPage({
           canProcess={canProcess}
           currentUserId={user.id}
           currentUserRole={user.role}
+          isPackingOfficer={isPackingRole(user)}
           currentUserName={user.name || user.id}
         />
 

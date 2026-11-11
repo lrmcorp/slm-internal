@@ -15,7 +15,7 @@ export default async function DeliveryOrderPrintPage({
   searchParams?: Promise<{ auto?: string; userName?: string }>;
 }) {
   const user = await getCurrentUser();
-  if (!can(user.role, "do.view")) {
+  if (!can(user, "do.view")) {
     redirect("/");
   }
 

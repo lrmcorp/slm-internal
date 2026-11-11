@@ -5,7 +5,7 @@ import { getGeneralLedger } from "@/lib/accounting/ledgerStore";
 
 export async function GET(request: Request) {
   const user = await getCurrentUser();
-  if (!can(user.role, "accounting.view")) {
+  if (!can(user, "accounting.view")) {
     return NextResponse.json({ success: false, message: "Akses ditolak." }, { status: 403 });
   }
 

@@ -24,7 +24,7 @@ export function salesRecordScopeForUser(user: CurrentUser): SalesRecordScope | u
 }
 
 export function canViewSalesRecord(user: CurrentUser, sale: Sale): boolean {
-  if (!can(user.role, "penjualan.create") && !can(user.role, "reports.view") && !can(user.role, "penjualan.manage")) return false;
+  if (!can(user, "penjualan.create") && !can(user, "reports.view") && !can(user, "penjualan.manage")) return false;
   if (sale.source === "MJ") return true;
   return true;
 }

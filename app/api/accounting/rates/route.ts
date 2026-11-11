@@ -7,7 +7,7 @@ import type { RateType } from "@prisma/client";
 
 export async function GET(request: Request) {
   const user = await getCurrentUser();
-  if (!can(user.role, "accounting.view")) {
+  if (!can(user, "accounting.view")) {
     return NextResponse.json({ success: false, message: "Akses ditolak." }, { status: 403 });
   }
 
@@ -30,7 +30,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const user = await getCurrentUser();
-  if (!can(user.role, "accounting.rates.manage")) {
+  if (!can(user, "accounting.rates.manage")) {
     return NextResponse.json({ success: false, message: "Akses ditolak. Memerlukan hak akses kelola kurs." }, { status: 403 });
   }
 
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
 
 export async function DELETE(request: Request) {
   const user = await getCurrentUser();
-  if (!can(user.role, "accounting.rates.manage")) {
+  if (!can(user, "accounting.rates.manage")) {
     return NextResponse.json({ success: false, message: "Akses ditolak." }, { status: 403 });
   }
 

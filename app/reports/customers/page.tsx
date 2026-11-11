@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { jakartaDateKey } from "@/lib/date/jakarta";
 import { listBookkeepingTypes } from "@/lib/business/masterData";
@@ -58,8 +58,9 @@ export default async function CustomerReportsPage({
 }: {
   searchParams?: SearchParams;
 }) {
-  const role = await getCurrentRole();
-  if (!can(role, "reports.view")) redirect("/");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "reports.view")) redirect("/");
 
   const params = await searchParams;
   const today = jakartaDateKey(new Date());

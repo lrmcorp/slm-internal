@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { listExpenseFilterOptions, listExpenseRecordsPage, type ExpenseRecordFilters } from "@/lib/expenses/store";
 import { Input } from "@/components/ui/Input";
@@ -64,9 +64,10 @@ function activeFilterLabels(params: SearchParams) {
 }
 
 export default async function PengeluaranHistoryPage({ searchParams }: { searchParams?: Promise<SearchParams> }) {
-  const role = await getCurrentRole();
-  if (!can(role, "pengeluaran.view")) redirect("/");
-  const canManage = can(role, "pengeluaran.manage");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "pengeluaran.view")) redirect("/");
+  const canManage = can(access, "pengeluaran.manage");
   const params = await searchParams || {};
   const page = Math.max(1, Number(valueOf(params, "page") || "1"));
   const [{ data: paged, meta }, { tipeOptions, rekeningOptions }] = await Promise.all([
@@ -85,7 +86,7 @@ export default async function PengeluaranHistoryPage({ searchParams }: { searchP
           <h2 className="aj-page-title text-3xl font-bold">Riwayat Pengeluaran</h2>
           <p className="mt-2 text-sm text-slate-600">Daftar pengeluaran permanen beserta status approval dan ERP sync.</p>
         </div>
-        {can(role, "pengeluaran.create") && <Link href="/pengeluaran/input" className="rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-brand-700">+ Input Pengeluaran</Link>}
+        {can(access, "pengeluaran.create") && <Link href="/pengeluaran/input" className="rounded-xl bg-brand-600 px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-brand-700">+ Input Pengeluaran</Link>}
       </div>
       <ResponsiveFilterPanel
         title="Filter pengeluaran"

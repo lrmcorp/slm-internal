@@ -6,7 +6,7 @@ import type { LoanType, LoanStatus } from "@prisma/client";
 
 export async function GET(request: Request) {
   const user = await getCurrentUser();
-  if (!can(user.role, "sdm.view")) {
+  if (!can(user, "sdm.view")) {
     return NextResponse.json({ success: false, message: "Tidak punya akses melihat data kasbon/uang muka." }, { status: 403 });
   }
 

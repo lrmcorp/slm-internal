@@ -27,7 +27,7 @@ export default async function ProductReportPrintPage({
   searchParams?: SearchParams;
 }) {
   const user = await getCurrentUser();
-  if (!can(user.role, "reports.view")) redirect("/");
+  if (!can(user, "reports.view")) redirect("/");
 
   const params = await searchParams;
   const today = jakartaDateKey(new Date());

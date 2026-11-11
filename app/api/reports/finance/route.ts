@@ -6,7 +6,7 @@ import { generateFinanceReportExcel } from "@/lib/reports/excelExport";
 
 export async function GET(request: Request) {
   const user = await getCurrentUser();
-  if (!can(user.role, "reports.finance_view")) {
+  if (!can(user, "reports.finance_view")) {
     return Response.json(
       { success: false, message: "Tidak punya akses laporan finance." },
       { status: 403 },

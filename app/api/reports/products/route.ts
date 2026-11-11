@@ -6,7 +6,7 @@ import { generateProductReportExcel } from "@/lib/reports/excelExport";
 
 export async function GET(request: Request) {
   const user = await getCurrentUser();
-  if (!can(user.role, "reports.view")) {
+  if (!can(user, "reports.view")) {
     return Response.json(
       { success: false, message: "Tidak punya akses laporan produk." },
       { status: 403 },

@@ -3,7 +3,7 @@ import type { InventoryMovementType } from "@prisma/client";
 import { AppShell } from "@/components/layout/AppShell";
 import { InventoryHeader, MOVEMENT_LABEL, Pager, filterButton, filterInput, fmtDate, fmtQty } from "@/components/inventory/ui";
 import { locationLabel } from "@/components/inventory/labels";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { listLocations, listMovements, listProductOptions } from "@/lib/inventory/service";
 
@@ -11,8 +11,9 @@ export const dynamic = "force-dynamic";
 type SP = Promise<{ productId?: string; locationId?: string; type?: string; reference?: string; from?: string; to?: string; page?: string }>;
 
 export default async function MutasiStokPage({ searchParams }: { searchParams: SP }) {
-  const role = await getCurrentRole();
-  if (!can(role, "inventory.movement.view")) redirect("/no-access");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "inventory.movement.view")) redirect("/no-access");
   const p = await searchParams;
   const type = p.type && p.type in MOVEMENT_LABEL ? (p.type as InventoryMovementType) : undefined;
   const [locations, products, result] = await Promise.all([

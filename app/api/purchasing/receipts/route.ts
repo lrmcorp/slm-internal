@@ -6,7 +6,7 @@ import { PurchaseReceiptSchema } from "@/lib/validation/purchasingSchema";
 
 export async function POST(request: Request) {
   const user = await getCurrentUser();
-  if (!can(user.role, "purchasing.order.manage")) {
+  if (!can(user, "purchasing.order.manage")) {
     return NextResponse.json({ success: false, message: "Akses ditolak." }, { status: 403 });
   }
 

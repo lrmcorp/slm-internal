@@ -1,7 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { recordAudit } from "@/lib/audit/store";
-import { can, parseRole, type Role } from "@/lib/auth/roles";
+import { ROLES, can, parseRole, type Role } from "@/lib/auth/roles";
 import { getCurrentUser } from "@/lib/auth/session";
 import { hashPassword } from "@/lib/auth/password";
 
@@ -11,6 +11,8 @@ export type ManagedUser = {
   email?: string | null;
   name: string;
   role: Role;
+  /** Role tambahan (rangkap jabatan). */
+  extraRoles: Role[];
   isActive: boolean;
   hasPassword: boolean;
   lastLoginAt?: Date | null;
@@ -23,9 +25,17 @@ export type UserInput = {
   email?: unknown;
   name?: unknown;
   role?: unknown;
+  extraRoles?: unknown;
   isActive?: unknown;
   password?: unknown;
 };
+
+/** Role tambahan yang sah: dikenal, bukan Super Admin, dan bukan role utama. */
+function normalizeExtraRoles(value: unknown, primary: Role): Role[] {
+  if (!Array.isArray(value)) return [];
+  const list = value.filter((r): r is Role => typeof r === "string" && (ROLES as readonly string[]).includes(r) && r !== "OWNER" && r !== primary);
+  return Array.from(new Set(list));
+}
 
 export class UserForbiddenError extends Error {
   constructor(message = "Tidak punya akses kelola user.") {
@@ -69,6 +79,7 @@ function toManagedUser(user: {
   email: string | null;
   name: string;
   role: Role;
+  extraRoles?: Role[] | null;
   isActive: boolean;
   passwordHash?: string | null;
   lastLoginAt: Date | null;
@@ -81,6 +92,7 @@ function toManagedUser(user: {
     email: user.email,
     name: user.name,
     role: user.role,
+    extraRoles: (user.extraRoles ?? []).filter((r) => r !== user.role),
     isActive: user.isActive,
     hasPassword: Boolean(user.passwordHash),
     lastLoginAt: user.lastLoginAt,
@@ -127,6 +139,7 @@ export async function createUser(input: UserInput | null): Promise<ManagedUser> 
       email: data.email,
       name: data.name,
       role: data.role,
+      extraRoles: normalizeExtraRoles(input?.extraRoles, data.role),
       isActive: data.isActive,
       passwordHash,
       passwordUpdatedAt: new Date(),
@@ -149,8 +162,10 @@ export async function updateUser(id: string, input: UserInput | null): Promise<M
   if (password) assertPasswordStrength(password, "Password baru");
   const nextIsActive = typeof body.isActive === "boolean" ? body.isActive : before.isActive;
   const nextRole = body.role ? data.role : before.role;
+  const nextExtraRoles = normalizeExtraRoles("extraRoles" in body ? body.extraRoles : before.extraRoles, nextRole);
+  const extrasChanged = nextExtraRoles.slice().sort().join(",") !== (before.extraRoles ?? []).filter((r) => r !== before.role).slice().sort().join(",");
   // Selain Super Admin: tidak boleh memberi role Super Admin, mengubah akun Super Admin, atau mengubah role sendiri.
-  if (actor.role !== "OWNER" && (nextRole === "OWNER" || before.role === "OWNER" || (before.externalId === actor.id && nextRole !== before.role))) {
+  if (actor.role !== "OWNER" && (nextRole === "OWNER" || before.role === "OWNER" || (before.externalId === actor.id && (nextRole !== before.role || extrasChanged)))) {
     throw new UserForbiddenError();
   }
   if (before.externalId === actor.id && before.isActive && !nextIsActive) throw new Error("User tidak boleh menonaktifkan dirinya sendiri.");
@@ -164,6 +179,7 @@ export async function updateUser(id: string, input: UserInput | null): Promise<M
       email: data.email,
       name: data.name,
       role: nextRole,
+      extraRoles: nextExtraRoles,
       isActive: nextIsActive,
       ...(password ? {
         passwordHash: hashPassword(password),

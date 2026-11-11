@@ -7,7 +7,7 @@ import { accountSchema } from "@/lib/validation/accountingSchema";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
-  if (!can(user.role, "accounting.view")) {
+  if (!can(user, "accounting.view")) {
     return NextResponse.json({ success: false, message: "Akses ditolak." }, { status: 403 });
   }
 
@@ -28,7 +28,7 @@ export async function GET(request: Request, { params }: { params: Promise<{ id: 
 
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
-  if (!can(user.role, "accounting.coa.manage")) {
+  if (!can(user, "accounting.coa.manage")) {
     return NextResponse.json({ success: false, message: "Akses ditolak. Memerlukan hak akses kelola COA." }, { status: 403 });
   }
 
@@ -52,7 +52,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
 
 export async function DELETE(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
-  if (!can(user.role, "accounting.coa.manage")) {
+  if (!can(user, "accounting.coa.manage")) {
     return NextResponse.json({ success: false, message: "Akses ditolak. Memerlukan hak akses kelola COA." }, { status: 403 });
   }
 

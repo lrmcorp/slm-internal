@@ -10,7 +10,7 @@ const fail = (message: string, status = 400) => NextResponse.json({ success: fal
 /** Dry run: hanya membaca. Tidak ada saldo yang berubah. */
 export async function GET() {
   const user = await getCurrentUser();
-  if (!can(user.role, "accounting.view")) return fail("Akses ditolak.", 403);
+  if (!can(user, "accounting.view")) return fail("Akses ditolak.", 403);
   return NextResponse.json({ success: true, data: await getInventoryReconciliation() });
 }
 
@@ -20,7 +20,7 @@ export async function GET() {
  */
 export async function POST(request: Request) {
   const user = await getCurrentUser();
-  if (!can(user.role, "accounting.journal.manage")) return fail("Akses ditolak. Hanya Super Admin.", 403);
+  if (!can(user, "accounting.journal.manage")) return fail("Akses ditolak. Hanya Super Admin.", 403);
   const body = await request.json().catch(() => ({}));
   const actor = { id: user.id, name: user.name, role: user.role };
   const kind = (body?.kind === "EQUIPMENT" ? "EQUIPMENT" : "MERCHANDISE") as CorrectionKind;

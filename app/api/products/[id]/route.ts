@@ -1,18 +1,19 @@
 import { NextResponse } from "next/server";
 import { barangSchema } from "@/lib/validation/barangSchema";
 import { deactivateProduct, getProduct, updateProduct } from "@/lib/api/products";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { canListProducts } from "@/lib/auth/apiPermissions";
 import { withoutCost } from "@/lib/inventory/costFields";
 
 export async function GET(_: Request, { params }: { params: Promise<{ id: string }> }) {
-  const role = await getCurrentRole();
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
   if (!canListProducts(role)) return NextResponse.json({ success: false, message: "Tidak punya akses melihat produk." }, { status: 403 });
   const { id } = await params;
   const response = await getProduct(id);
   // Harga modal hanya untuk role yang mengurus master barang / barang masuk, sama dengan modul inventory.
-  const canSeeCost = can(role, "inventory.master") || can(role, "inventory.receive") || can(role, "stock.manage");
+  const canSeeCost = can(access, "inventory.master") || can(access, "inventory.receive") || can(access, "stock.manage");
   return NextResponse.json(canSeeCost ? response : withoutCost(response), { status: response.success ? 200 : 404 });
 }
 export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {

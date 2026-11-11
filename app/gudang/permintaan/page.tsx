@@ -23,7 +23,7 @@ const STATUS: Record<string, { label: string; cls: string }> = {
 
 export default async function PermintaanBarangPage() {
   const user = await getCurrentUser();
-  if (!can(user.role, "gudang.request.create")) redirect("/no-access");
+  if (!can(user, "gudang.request.create")) redirect("/no-access");
   // Sales melihat permintaannya sendiri; Super Admin, Supervisor, Manager melihat semua.
   const seeAll = user.role === "OWNER" || user.role === "SUPERVISOR" || user.role === "MANAGER";
   const from = jakartaDateKey(new Date(Date.now() - 30 * 86_400_000));

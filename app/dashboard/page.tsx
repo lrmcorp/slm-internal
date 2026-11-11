@@ -11,7 +11,7 @@ import { PaymentBreakdownChart, type PaymentPeriod } from "@/components/dashboar
 import { salePaymentParts } from "@/lib/sales/payments";
 import { listCatalogProducts } from "@/lib/inventory/catalog";
 import { getOpenCloudStatus } from "@/lib/opencloud/auth";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole, getCurrentUser } from "@/lib/auth/session";
 import { listSalesRecords } from "@/lib/sales/store";
 import { listExpenseRecords } from "@/lib/expenses/store";
@@ -116,8 +116,9 @@ function activeFilterLabels(params: SearchParams) {
 
 export default async function DashboardPage({ searchParams }: { searchParams?: Promise<SearchParams> }) {
   const showCctv = await cctvEnabledForRequest();
-  const role = await getCurrentRole();
-  if (!can(role, "dashboard.view")) redirect("/no-access");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "dashboard.view")) redirect("/no-access");
   const user = await getCurrentUser();
 
   if (role === "SUPERVISOR") {
@@ -140,7 +141,7 @@ export default async function DashboardPage({ searchParams }: { searchParams?: P
   const monthStr = jakartaMonthKey();
   const paymentPeriod = paymentPeriodFromParams(params, monthStr, todayStr);
   const isOwner = role === "OWNER";
-  const canViewOperationalProfit = can(role, "settings.profit.manage");
+  const canViewOperationalProfit = can(access, "settings.profit.manage");
   // Hanya data yang dipakai: grafik 6 bulan (atau rentang filter), periode pembayaran, bulan ini, dan hari ini.
   const dataFrom = dashboardDataFrom(filters, paymentPeriod.from, monthStr);
   // Semua sumber data tidak saling bergantung: diambil bersamaan supaya dashboard (halaman pembuka aplikasi) cepat tampil.
@@ -199,7 +200,7 @@ export default async function DashboardPage({ searchParams }: { searchParams?: P
         <div>
           <h2 className="aj-page-title text-2xl font-bold sm:text-3xl">Halo, {user.name}</h2>
         </div>
-        {can(role, "penjualan.create") && <Link href="/penjualan/input"><Button>+ Input Penjualan</Button></Link>}
+        {can(access, "penjualan.create") && <Link href="/penjualan/input"><Button>+ Input Penjualan</Button></Link>}
       </div>
       {dataSourceNotice && <p className="mt-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-900">{dataSourceNotice}</p>}
       {operationalProfit && (

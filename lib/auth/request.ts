@@ -5,7 +5,10 @@ export type AuthProvider = "demo" | "trusted_header" | "local_credentials" | "an
 export type ResolvedUser = {
   id: string;
   name: string;
+  /** Role utama: menentukan halaman awal dan label. */
   role: Role;
+  /** Role tambahan (rangkap jabatan). Hak akses = gabungan role + extraRoles. */
+  extraRoles?: Role[];
 };
 
 type CookieReader = {

@@ -1,11 +1,12 @@
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { getExpenseRecord } from "@/lib/expenses/store";
 import { formatExpenseDotMatrix, toEscPosPrn } from "@/lib/print/dotMatrix";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const role = await getCurrentRole();
-  if (!can(role, "pengeluaran.view") && !can(role, "reports.finance_view")) {
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "pengeluaran.view") && !can(access, "reports.finance_view")) {
     return Response.json({ success: false, message: "Tidak punya akses cetak pengeluaran." }, { status: 403 });
   }
   const { id } = await params;

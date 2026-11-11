@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { cctvEnabledForRequest } from "@/lib/features";
 import { AppShell } from "@/components/layout/AppShell";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { formatJakartaDateTime } from "@/lib/date/jakarta";
 import {
@@ -41,9 +41,10 @@ function pageHref(params: Record<string, string | string[] | undefined>, newPara
 
 export default async function CctvReportsMultiTabPage({ searchParams }: Props) {
   const showCctv = await cctvEnabledForRequest();
-  const role = await getCurrentRole();
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
   if (!showCctv) notFound();
-  if (!can(role, "reports.view")) redirect("/no-access");
+  if (!can(access, "reports.view")) redirect("/no-access");
 
   const params = await searchParams;
   const rawTab = valueOf(params, "tab") || "outbound";

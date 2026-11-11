@@ -5,7 +5,7 @@ import { reopenAccountingPeriod } from "@/lib/accounting/periodStore";
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
-  if (!can(user.role, "accounting.period.manage")) {
+  if (!can(user, "accounting.period.manage")) {
     return NextResponse.json(
       { success: false, message: "Akses ditolak. Memerlukan hak akses kelola periode tutup buku." },
       { status: 403 }

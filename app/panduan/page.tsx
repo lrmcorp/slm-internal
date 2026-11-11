@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
-import { can, roleLabel, type Permission } from "@/lib/auth/roles";
+import { can, roleLabel, type Permission, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 
 export const dynamic = "force-dynamic";
@@ -252,11 +252,12 @@ function sectionVisible(role: Parameters<typeof can>[0], section: GuideSection) 
 }
 
 export default async function PanduanPage() {
-  const role = await getCurrentRole();
-  if (!can(role, "guide.view")) redirect("/no-access");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "guide.view")) redirect("/no-access");
   const visibleSections = sections.filter((section) => sectionVisible(role, section));
-  const visibleRoleGuides = roleGuides.filter((item) => item.permissions.some((permission) => can(role, permission)));
-  const canViewWorkflows = can(role, "penjualan.create") || can(role, "erp_sync.retry") || can(role, "settings.erp_sync.manage");
+  const visibleRoleGuides = roleGuides.filter((item) => item.permissions.some((permission) => can(access, permission)));
+  const canViewWorkflows = can(access, "penjualan.create") || can(access, "erp_sync.retry") || can(access, "settings.erp_sync.manage");
 
   return (
     <AppShell>

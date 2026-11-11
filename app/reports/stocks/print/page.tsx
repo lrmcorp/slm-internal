@@ -26,7 +26,7 @@ export default async function StockReportPrintPage({
   searchParams?: SearchParams;
 }) {
   const user = await getCurrentUser();
-  if (!can(user.role, "stock.view") && !can(user.role, "reports.view"))
+  if (!can(user, "stock.view") && !can(user, "reports.view"))
     redirect("/");
 
   const params = await searchParams;

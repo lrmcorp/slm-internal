@@ -23,6 +23,8 @@ type Props = {
   canProcess: boolean;
   currentUserId: string;
   currentUserRole: string;
+  /** Punya role Petugas DO (utama atau tambahan). */
+  isPackingOfficer?: boolean;
   currentUserName?: string;
 };
 
@@ -32,6 +34,7 @@ export function DeliveryOrderQueueTable({
   canAssign,
   canProcess,
   currentUserRole,
+  isPackingOfficer,
   currentUserName
 }: Props) {
   const { showToast } = useToast();
@@ -236,13 +239,13 @@ export function DeliveryOrderQueueTable({
                   <span className="text-slate-400 italic">Belum ditugaskan</span>
                 )}
               </div>
-              {(canAssign || isPackingRole(currentUserRole)) && (
+              {(canAssign || (isPackingOfficer ?? isPackingRole(currentUserRole))) && (
                 <div className="w-full">
                   <SearchableSelect
                     placeholder={
                       assigningId === item.id
                         ? "Menugaskan..."
-                        : `+ ${isPackingRole(currentUserRole) ? "Ajak Petugas DO" : "Tambah Petugas DO"}`
+                        : `+ ${(isPackingOfficer ?? isPackingRole(currentUserRole)) ? "Ajak Petugas DO" : "Tambah Petugas DO"}`
                     }
                     searchPlaceholder="Cari nama petugas..."
                     disabled={assigningId === item.id}
@@ -256,7 +259,7 @@ export function DeliveryOrderQueueTable({
                       .map((o) => ({
                         value: o.id,
                         label: o.name,
-                        badge: o.role === "DELIVERY_DRIVER" ? "Petugas DO" : o.role === "GUDANG" ? "Gudang" : o.role
+                        badge: o.role === "DELIVERY_DRIVER" ? "Petugas DO" : o.role
                       }))}
                     onSelect={(officerId) => handleAssign(item.id, officerId)}
                     align="left"
@@ -377,13 +380,13 @@ export function DeliveryOrderQueueTable({
                         <span className="text-xs text-slate-400 italic">Belum ditugaskan</span>
                       )}
                     </div>
-                    {(canAssign || isPackingRole(currentUserRole)) && (
+                    {(canAssign || (isPackingOfficer ?? isPackingRole(currentUserRole))) && (
                       <div className="mt-1">
                         <SearchableSelect
                           placeholder={
                             assigningId === item.id
                               ? "Menugaskan..."
-                              : `+ ${isPackingRole(currentUserRole) ? "Ajak Petugas DO" : "Tambah Petugas DO"}`
+                              : `+ ${(isPackingOfficer ?? isPackingRole(currentUserRole)) ? "Ajak Petugas DO" : "Tambah Petugas DO"}`
                           }
                           searchPlaceholder="Cari nama petugas..."
                           disabled={assigningId === item.id}
@@ -397,7 +400,7 @@ export function DeliveryOrderQueueTable({
                             .map((o) => ({
                               value: o.id,
                               label: o.name,
-                              badge: o.role === "DELIVERY_DRIVER" ? "Petugas DO" : o.role === "GUDANG" ? "Gudang" : o.role
+                              badge: o.role === "DELIVERY_DRIVER" ? "Petugas DO" : o.role
                             }))}
                           onSelect={(officerId) => handleAssign(item.id, officerId)}
                           align="left"

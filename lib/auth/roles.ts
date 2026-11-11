@@ -79,8 +79,8 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   ],
   // Petugas DO = tim packing
   DELIVERY_DRIVER: ["do.view", "do.process", "inventory.stock.view", "inventory.movement.view"],
-  // Gudang: memproses permintaan barang dari sales, dan merangkap packing DO (sama dengan Petugas DO).
-  GUDANG: ["gudang.request.process", "do.view", "do.process", "inventory.stock.view", "inventory.movement.view", "inventory.transfer"],
+  // Gudang: memproses permintaan barang dari sales. Yang juga packing DO diberi role tambahan Petugas DO.
+  GUDANG: ["gudang.request.process", "inventory.stock.view", "inventory.movement.view", "inventory.transfer"],
   VIEWER: []
 };
 
@@ -94,9 +94,29 @@ export function roleLabel(role: Role) {
   return ROLE_LABEL[role];
 }
 
-export function can(role: Role | { role: Role }, permission: Permission) {
-  const resolvedRole = typeof role === "string" ? role : role.role;
-  return ROLE_PERMISSIONS[resolvedRole]?.includes(permission) ?? false;
+/** Role utama + role tambahan seorang user (rangkap jabatan). */
+export type RoleSubject = Role | { role: Role; extraRoles?: readonly Role[] | null };
+
+/** Semua role milik subject, role utama di depan, tanpa duplikat. */
+export function rolesOf(subject: RoleSubject): Role[] {
+  if (typeof subject === "string") return [subject];
+  const extras = (subject.extraRoles ?? []).filter((r) => r !== subject.role && ROLES.includes(r));
+  return [subject.role, ...Array.from(new Set(extras))];
+}
+
+/** Role utama (untuk halaman awal, label, dan aturan khusus Super Admin). */
+export function primaryRole(subject: RoleSubject): Role {
+  return typeof subject === "string" ? subject : subject.role;
+}
+
+/** true bila user memegang role ini, sebagai role utama atau tambahan. */
+export function hasRole(subject: RoleSubject, role: Role) {
+  return rolesOf(subject).includes(role);
+}
+
+/** Boleh bila salah satu role user punya permission ini. */
+export function can(subject: RoleSubject, permission: Permission) {
+  return rolesOf(subject).some((role) => ROLE_PERMISSIONS[role]?.includes(permission) ?? false);
 }
 
 export function landingPageForRole(role: Role) {
@@ -113,11 +133,18 @@ export function landingPageForRole(role: Role) {
  * Siapa yang boleh menambah/ganti/hapus FOTO barang. Pengelola Master Barang, ditambah Admin (Sales)
  * untuk sementara atas permintaan pemilik (8 Nov 2026). Hanya foto; hak Master Barang lain tidak berubah.
  */
-export function canEditProductPhoto(role: Role) {
-  return can(role, "inventory.master") || role === "ADMIN";
+export function canEditProductPhoto(role: RoleSubject) {
+  return can(role, "inventory.master") || hasRole(role, "ADMIN");
 }
 
-/** Role yang bekerja sebagai petugas packing DO (Petugas DO, dan Gudang yang merangkap packing). */
-export function isPackingRole(role: Role | string | undefined | null) {
-  return role === "DELIVERY_DRIVER" || role === "GUDANG";
+/** Petugas packing DO: punya role Petugas DO (utama atau tambahan). */
+export function isPackingRole(subject: RoleSubject | string | undefined | null) {
+  if (!subject) return false;
+  if (typeof subject === "string") return subject === "DELIVERY_DRIVER";
+  return hasRole(subject, "DELIVERY_DRIVER");
+}
+
+/** Label semua role, mis. "Petugas DO + Gudang". */
+export function rolesLabel(subject: RoleSubject) {
+  return rolesOf(subject).map((r) => ROLE_LABEL[r]).join(" + ");
 }

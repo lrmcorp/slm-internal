@@ -8,7 +8,7 @@ import type { AccountCategory } from "@prisma/client";
 
 export async function GET(request: Request) {
   const user = await getCurrentUser();
-  if (!can(user.role, "accounting.view")) {
+  if (!can(user, "accounting.view")) {
     return NextResponse.json({ success: false, message: "Akses ditolak." }, { status: 403 });
   }
 
@@ -31,7 +31,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const user = await getCurrentUser();
-  if (!can(user.role, "accounting.coa.manage")) {
+  if (!can(user, "accounting.coa.manage")) {
     return NextResponse.json({ success: false, message: "Akses ditolak. Memerlukan hak akses kelola COA." }, { status: 403 });
   }
 

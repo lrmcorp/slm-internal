@@ -2,6 +2,7 @@ import "server-only";
 import webpush from "web-push";
 import { prisma } from "@/lib/db/prisma";
 import { pushConfig } from "./config";
+import type { Role } from "@/lib/auth/roles";
 
 export type PushPayload = { title: string; body: string; url: string; tag?: string };
 export type PushFailure = { status?: number; reason: string; device: string };
@@ -24,7 +25,7 @@ const MAX_FAILURES = 5;
  * Kirim ke langganan yang cocok. Tidak pernah melempar error: notifikasi tidak boleh menggagalkan
  * penjualan atau pergerakan stok yang memicunya. Alasan gagal dicatat di log server.
  */
-async function sendToSubscriptions(where: { role?: { in: string[] }; userId?: string }, payload: PushPayload): Promise<PushResult> {
+async function sendToSubscriptions(where: { role?: { in: string[] }; userId?: string | { in: string[] } }, payload: PushPayload): Promise<PushResult> {
   const config = pushConfig();
   const empty: PushResult = { devices: 0, sent: 0, removed: 0, failures: [] };
   if (!config.enabled) return empty;
@@ -64,10 +65,17 @@ async function sendToSubscriptions(where: { role?: { in: string[] }; userId?: st
   }
 }
 
-/** Kirim ke semua perangkat milik role tertentu. */
+/** Kirim ke semua perangkat user yang memegang salah satu role ini (role utama atau role tambahan). */
 export async function sendPushToRoles(roles: readonly string[], payload: PushPayload): Promise<PushResult> {
   if (roles.length === 0) return { devices: 0, sent: 0, removed: 0, failures: [] };
-  return sendToSubscriptions({ role: { in: Array.from(roles) } }, payload);
+  const list = Array.from(roles) as Role[];
+  if (typeof prisma.user?.findMany !== "function") return sendToSubscriptions({ role: { in: list } }, payload);
+  const users = await prisma.user.findMany({
+    where: { isActive: true, OR: [{ role: { in: list } }, { extraRoles: { hasSome: list } }] },
+    select: { externalId: true },
+  }).catch(() => null);
+  if (!users) return sendToSubscriptions({ role: { in: list } }, payload);
+  return sendToSubscriptions({ userId: { in: users.map((u) => u.externalId) } }, payload);
 }
 
 /** Kirim ke semua perangkat milik satu user (dipakai tombol uji di Profil). */

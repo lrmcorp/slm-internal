@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { AttachmentPreview } from "@/components/attachments/AttachmentPreview";
 import { AppShell } from "@/components/layout/AppShell";
 import { TransactionCancelButton } from "@/components/transactions/TransactionCancelButton";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { getExpenseRecord } from "@/lib/expenses/store";
 
@@ -29,12 +29,13 @@ function statusTone(value?: string) {
 }
 
 export default async function ExpenseDetailPage({ params }: { params: Promise<{ id: string }> }) {
-  const role = await getCurrentRole();
-  if (!can(role, "pengeluaran.view")) redirect("/");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "pengeluaran.view")) redirect("/");
   const { id } = await params;
   const expense = await getExpenseRecord(id);
   if (!expense) redirect("/pengeluaran");
-  const canManage = can(role, "pengeluaran.manage");
+  const canManage = can(access, "pengeluaran.manage");
 
   return (
     <AppShell>

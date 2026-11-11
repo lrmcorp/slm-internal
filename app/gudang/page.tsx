@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { InventoryHeader } from "@/components/inventory/ui";
 import { WarehouseProcessCard } from "@/components/gudang/WarehouseProcessCard";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { jakartaDateKey } from "@/lib/date/jakarta";
 import { listWarehouseRequests } from "@/lib/inventory/warehouseRequests";
@@ -13,8 +13,9 @@ const qty = (n: number | null) => (n ?? 0).toLocaleString("id-ID", { maximumFrac
 const time = new Intl.DateTimeFormat("id-ID", { timeZone: "Asia/Jakarta", hour: "2-digit", minute: "2-digit" });
 
 export default async function GudangPage() {
-  const role = await getCurrentRole();
-  if (!can(role, "gudang.request.process")) redirect("/no-access");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "gudang.request.process")) redirect("/no-access");
   const today = jakartaDateKey();
   const [waiting, done] = await Promise.all([
     listWarehouseRequests({ status: ["MENUNGGU"], order: "asc", take: 50 }),

@@ -8,7 +8,7 @@ export async function GET(
   context: { params: Promise<{ id: string }> }
 ) {
   const user = await getCurrentUser();
-  if (!can(user.role, "do.view")) {
+  if (!can(user, "do.view")) {
     return NextResponse.json({ success: false, message: "Tidak memiliki akses melihat Delivery Order." }, { status: 403 });
   }
 

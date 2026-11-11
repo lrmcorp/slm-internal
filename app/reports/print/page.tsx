@@ -26,7 +26,7 @@ export default async function DailyReportPrintPage({
   searchParams?: SearchParams;
 }) {
   const user = await getCurrentUser();
-  if (!can(user.role, "reports.view")) redirect("/");
+  if (!can(user, "reports.view")) redirect("/");
 
   const params = await searchParams;
   const selectedDate = jakartaDateFromKey(params?.date);

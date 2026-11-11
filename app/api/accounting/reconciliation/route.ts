@@ -9,7 +9,7 @@ import {
 
 export async function GET() {
   const user = await getCurrentUser();
-  if (!can(user.role, "accounting.view")) {
+  if (!can(user, "accounting.view")) {
     return NextResponse.json({ success: false, message: "Akses ditolak." }, { status: 403 });
   }
 
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
   const user = await getCurrentUser();
   const body = await request.clone().json().catch(() => ({}));
   if (body?.action === "post_unposted") {
-    if (!can(user.role, "accounting.journal.manage")) {
+    if (!can(user, "accounting.journal.manage")) {
       return NextResponse.json({ success: false, message: "Akses ditolak. Posting jurnal hanya untuk Super Admin." }, { status: 403 });
     }
     try {
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, message: error instanceof Error ? error.message : "Gagal posting pengeluaran." }, { status: 500 });
     }
   }
-  if (!can(user.role, "accounting.coa.manage")) {
+  if (!can(user, "accounting.coa.manage")) {
     return NextResponse.json({ success: false, message: "Akses ditolak. Memerlukan hak akses finance/owner." }, { status: 403 });
   }
 

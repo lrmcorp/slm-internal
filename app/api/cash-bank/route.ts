@@ -8,14 +8,14 @@ const forbidden = () => NextResponse.json({ success: false, message: "Tidak puny
 
 export async function GET() {
   const user = await getCurrentUser();
-  if (!can(user.role, "cashbank.manage")) return forbidden();
+  if (!can(user, "cashbank.manage")) return forbidden();
   const [balances, mutations] = await Promise.all([cashBankBalances(), listCashBankMutations()]);
   return NextResponse.json({ success: true, data: { balances, mutations } });
 }
 
 export async function POST(request: Request) {
   const user = await getCurrentUser();
-  if (!can(user.role, "cashbank.manage")) return forbidden();
+  if (!can(user, "cashbank.manage")) return forbidden();
   try {
     const input = cashBankSchema.parse(await request.json().catch(() => null));
     const journal = await createCashBankMutation(input, { id: user.id, name: user.name, role: user.role });

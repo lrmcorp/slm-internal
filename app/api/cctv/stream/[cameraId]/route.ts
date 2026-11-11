@@ -1,7 +1,7 @@
 import { cctvEnabled, requestHost } from "@/lib/features";
 import { NextRequest, NextResponse } from "next/server";
 import { getCurrentRole } from "@/lib/auth/session";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getConfiguredCameraStreams } from "@/lib/cctv/streams";
 import { getCctvSystemStatus } from "@/lib/cctv/client";
 
@@ -12,8 +12,9 @@ export async function GET(
   { params }: { params: Promise<{ cameraId: string }> }
 ) {
   if (!cctvEnabled(process.env, requestHost(req.headers) || req.nextUrl.hostname)) return new NextResponse("Not Found", { status: 404 });
-  const role = await getCurrentRole();
-  if (role !== "OWNER" || !can(role, "dashboard.view")) {
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (role !== "OWNER" || !can(access, "dashboard.view")) {
     return NextResponse.json(
       { error: "Forbidden: Akses siaran langsung CCTV terbatas untuk Super Admin (Owner)." },
       { status: 403 }

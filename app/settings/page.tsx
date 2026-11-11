@@ -4,14 +4,15 @@ import { AppShell } from "@/components/layout/AppShell";
 import { RoleSelector } from "@/components/settings/RoleSelector";
 import { isDemoRoleSelectorEnabled } from "@/lib/auth/demoUi";
 import { getCurrentRole } from "@/lib/auth/session";
-import { can, roleLabel } from "@/lib/auth/roles";
+import { can, roleLabel, primaryRole } from "@/lib/auth/roles";
 import { getWhatsappProviderStatus } from "@/lib/whatsapp/whatsappClient";
 
 export const dynamic = "force-dynamic";
 
 export default async function SettingsPage() {
-  const role = await getCurrentRole();
-  if (!can(role, "settings.view")) redirect("/no-access");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "settings.view")) redirect("/no-access");
   const mode =
     process.env.NEXT_PUBLIC_APP_MODE === "production"
       ? "Produksi"
@@ -19,7 +20,7 @@ export default async function SettingsPage() {
   const whatsappStatus = getWhatsappProviderStatus();
   const showRoleSelector = isDemoRoleSelectorEnabled();
   const cards = [
-    can(role, "settings.tipe.manage")
+    can(access, "settings.tipe.manage")
       ? {
           href: "/settings/tipe",
           title: "Tipe Pembukuan",
@@ -27,7 +28,7 @@ export default async function SettingsPage() {
           tone: "emerald",
         }
       : null,
-    can(role, "settings.rekening.manage")
+    can(access, "settings.rekening.manage")
       ? {
           href: "/settings/rekening",
           title: "Rekening",
@@ -35,7 +36,7 @@ export default async function SettingsPage() {
           tone: "emerald",
         }
       : null,
-    can(role, "settings.rekening.manage")
+    can(access, "settings.rekening.manage")
       ? {
           href: "/settings/katalog-payment",
           title: "Rekening Katalog Online",
@@ -43,7 +44,7 @@ export default async function SettingsPage() {
           tone: "emerald",
         }
       : null,
-    can(role, "settings.profit.manage")
+    can(access, "settings.profit.manage")
       ? {
           href: "/settings/profit-slm",
           title: "Profit Operasional",
@@ -51,7 +52,7 @@ export default async function SettingsPage() {
           tone: "emerald",
         }
       : null,
-    can(role, "settings.erp_sync.manage")
+    can(access, "settings.erp_sync.manage")
       ? {
           href: "/settings/erp-sync",
           title: "Integrasi & ERP Sync",
@@ -59,7 +60,7 @@ export default async function SettingsPage() {
           tone: "emerald",
         }
       : null,
-    can(role, "users.manage")
+    can(access, "users.manage")
       ? {
           href: "/settings/users",
           title: "Users",
@@ -67,7 +68,7 @@ export default async function SettingsPage() {
           tone: "slate",
         }
       : null,
-    can(role, "settings.whatsapp.manage")
+    can(access, "settings.whatsapp.manage")
       ? {
           href: "/settings/whatsapp",
           title: "WhatsApp",
@@ -75,7 +76,7 @@ export default async function SettingsPage() {
           tone: "emerald",
         }
       : null,
-    can(role, "tempo.view")
+    can(access, "tempo.view")
       ? {
           href: "/tempo",
           title: "Tempo",
@@ -83,7 +84,7 @@ export default async function SettingsPage() {
           tone: "emerald",
         }
       : null,
-    can(role, "audit.view")
+    can(access, "audit.view")
       ? {
           href: "/audit-trail",
           title: "Audit Trail",

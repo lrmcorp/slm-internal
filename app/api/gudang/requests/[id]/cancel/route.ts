@@ -7,7 +7,7 @@ import { warehouseRequestError } from "@/lib/inventory/warehouseRequestHttp";
 /** Batalkan permintaan yang belum diproses gudang. Sales hanya miliknya sendiri; Super Admin/Supervisor semua. */
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
-  if (!can(user.role, "gudang.request.create")) return NextResponse.json({ success: false, message: "Tidak punya akses membatalkan permintaan barang." }, { status: 403 });
+  if (!can(user, "gudang.request.create")) return NextResponse.json({ success: false, message: "Tidak punya akses membatalkan permintaan barang." }, { status: 403 });
   const { id } = await params;
   const body = (await request.json().catch(() => ({}))) as { reason?: string };
   try {

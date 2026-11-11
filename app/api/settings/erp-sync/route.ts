@@ -1,19 +1,21 @@
 import { NextResponse } from "next/server";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { getErpSyncSetting, updateErpSyncSetting } from "@/lib/settings/erpSync";
 import { erpSyncSettingSchema, validationMessage } from "@/lib/validation/settingsSchema";
 
 export async function GET() {
-  const role = await getCurrentRole();
-  if (!can(role, "settings.erp_sync.manage")) return NextResponse.json({ success: false, message: "Tidak punya akses lihat setting ERP Sync." }, { status: 403 });
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "settings.erp_sync.manage")) return NextResponse.json({ success: false, message: "Tidak punya akses lihat setting ERP Sync." }, { status: 403 });
   const data = await getErpSyncSetting();
   return NextResponse.json({ success: true, data });
 }
 
 export async function PUT(request: Request) {
-  const role = await getCurrentRole();
-  if (!can(role, "settings.erp_sync.manage")) return NextResponse.json({ success: false, message: "Tidak punya akses kelola setting ERP Sync." }, { status: 403 });
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "settings.erp_sync.manage")) return NextResponse.json({ success: false, message: "Tidak punya akses kelola setting ERP Sync." }, { status: 403 });
   const body = await request.json().catch(() => null);
   const parsed = erpSyncSettingSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ success: false, message: validationMessage(parsed.error, "Setting ERP Sync tidak valid.") }, { status: 400 });

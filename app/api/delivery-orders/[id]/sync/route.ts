@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getCurrentRole } from "@/lib/auth/session";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { syncDeliveryOrderForSale } from "@/lib/deliveryOrders/store";
 import { prisma } from "@/lib/db/prisma";
 
@@ -8,8 +8,9 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const role = await getCurrentRole();
-  if (!can(role, "do.assign") && !can(role, "penjualan.create") && !can(role, "penjualan.manage") && !can(role, "do.process")) {
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "do.assign") && !can(access, "penjualan.create") && !can(access, "penjualan.manage") && !can(access, "do.process")) {
     return NextResponse.json(
       { success: false, message: "Tidak memiliki hak akses untuk menyinkronkan DO." },
       { status: 403 }

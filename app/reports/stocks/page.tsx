@@ -2,7 +2,7 @@ import Link from "next/link";
 import { stockViewType } from "@/lib/inventory/config";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { getStockInventoryReport } from "@/lib/reports/stockReports";
 
@@ -59,8 +59,9 @@ export default async function StockReportsPage({
 }: {
   searchParams?: SearchParams;
 }) {
-  const role = await getCurrentRole();
-  if (!can(role, "stock.view") && !can(role, "reports.view")) redirect("/");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "stock.view") && !can(access, "reports.view")) redirect("/");
 
   const params = await searchParams;
   // Sama dengan halaman Stok Gudang & Toko: Super Admin default Gudang + Toko, role lain Toko.

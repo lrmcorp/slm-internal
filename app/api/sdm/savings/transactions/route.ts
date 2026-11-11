@@ -10,7 +10,7 @@ import type { SavingsTransactionType } from "@prisma/client";
 
 export async function GET(request: Request) {
   const user = await getCurrentUser();
-  if (!can(user.role, "sdm.view")) {
+  if (!can(user, "sdm.view")) {
     return NextResponse.json(
       { success: false, message: "Tidak memiliki hak akses melihat transaksi simpanan." },
       { status: 403 }
@@ -51,7 +51,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   const user = await getCurrentUser();
-  if (!can(user.role, "sdm.savings.manage") && !can(user.role, "sdm.kasbon.manage")) {
+  if (!can(user, "sdm.savings.manage") && !can(user, "sdm.kasbon.manage")) {
     return NextResponse.json(
       { success: false, message: "Tidak memiliki hak akses memproses transaksi simpanan." },
       { status: 403 }

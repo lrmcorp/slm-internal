@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { canListRekening } from "@/lib/auth/apiPermissions";
 import { listAllRekeningAccounts, listBookkeepingTypes, listRekeningAccounts, saveRekeningAccounts } from "@/lib/business/masterData";
@@ -17,8 +17,9 @@ async function validateTipeIds(tipeIds: string[]) {
 }
 
 export async function GET(request: Request) {
-  const role = await getCurrentRole();
-  if (!can(role, "settings.rekening.manage") && !canListRekening(role)) return NextResponse.json({ success: false, message: "Tidak punya akses lihat Rekening." }, { status: 403 });
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "settings.rekening.manage") && !canListRekening(role)) return NextResponse.json({ success: false, message: "Tidak punya akses lihat Rekening." }, { status: 403 });
   const { searchParams } = new URL(request.url);
   const tipeId = searchParams.get("tipeId");
   const all = await listRekeningAccounts();
@@ -27,8 +28,9 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const role = await getCurrentRole();
-  if (!can(role, "settings.rekening.manage")) return NextResponse.json({ success: false, message: "Tidak punya akses kelola Rekening." }, { status: 403 });
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "settings.rekening.manage")) return NextResponse.json({ success: false, message: "Tidak punya akses kelola Rekening." }, { status: 403 });
   const body = await request.json().catch(() => null);
   const parsed = rekeningCreateSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ success: false, message: validationMessage(parsed.error, "Nama dan bank rekening wajib diisi.") }, { status: 400 });
@@ -58,8 +60,9 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  const role = await getCurrentRole();
-  if (!can(role, "settings.rekening.manage")) return NextResponse.json({ success: false, message: "Tidak punya akses kelola Rekening." }, { status: 403 });
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "settings.rekening.manage")) return NextResponse.json({ success: false, message: "Tidak punya akses kelola Rekening." }, { status: 403 });
   const body = await request.json().catch(() => null);
   const parsed = rekeningUpdateSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ success: false, message: validationMessage(parsed.error, "Data rekening tidak valid.") }, { status: 400 });

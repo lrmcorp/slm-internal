@@ -4,20 +4,21 @@ import { InventoryDocumentForm } from "@/components/inventory/InventoryDocumentF
 import { GrnPostAll, GrnPostForm } from "@/components/inventory/GrnPostForm";
 import { InventoryHeader, fmtDate, fmtQty } from "@/components/inventory/ui";
 import { AddPanel } from "@/components/inventory/AddPanel";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { listLocations, listPendingPurchaseReceipts, listProductOptions, listStockInHistory } from "@/lib/inventory/service";
 
 export const dynamic = "force-dynamic";
 
 export default async function BarangMasukPage() {
-  const role = await getCurrentRole();
-  if (!can(role, "inventory.receive")) redirect("/no-access");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "inventory.receive")) redirect("/no-access");
   const [locations, products, pending, history] = await Promise.all([listLocations(), listProductOptions(), listPendingPurchaseReceipts(), listStockInHistory()]);
   return (
     <AppShell>
       <InventoryHeader title="Barang Masuk" description={<>Catat barang yang baru tiba di gudang atau toko. Barang dari PO yang sudah diterima di Pembelian muncul di bawah: pilih lokasi lalu klik <b>Masukkan ke stok</b>. Barang tanpa PO: klik <b>Barang Masuk Manual</b>.</>} />
-      <AddPanel label="Barang Masuk Manual"><InventoryDocumentForm mode="stock-in" canSetKoli={can(role, "inventory.master")} locations={locations} products={products} /></AddPanel>
+      <AddPanel label="Barang Masuk Manual"><InventoryDocumentForm mode="stock-in" canSetKoli={can(access, "inventory.master")} locations={locations} products={products} /></AddPanel>
 
       <section className="mb-8">
         <h3 className="mb-3 font-bold text-slate-800">Penerimaan Pembelian (GRN) belum masuk stok</h3>

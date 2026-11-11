@@ -1,3 +1,4 @@
+import { primaryRole } from "@/lib/auth/roles";
 import { NextResponse } from "next/server";
 import { anikaRequest } from "@/lib/api/anikaClient";
 import { buildErpShape } from "@/lib/api/erpShapeAudit";
@@ -9,7 +10,7 @@ function debugEnabled() {
 
 export async function GET() {
   if (!debugEnabled()) return NextResponse.json({ success: false, message: "Debug ERP shape hanya tersedia di development." }, { status: 404 });
-  if ((await getCurrentRole()) !== "OWNER") return NextResponse.json({ success: false, message: "Tidak punya akses debug ERP shape." }, { status: 403 });
+  if (primaryRole(await getCurrentRole()) !== "OWNER") return NextResponse.json({ success: false, message: "Tidak punya akses debug ERP shape." }, { status: 403 });
 
   const [products, stocks] = await Promise.all([
     anikaRequest<unknown>("/products"),

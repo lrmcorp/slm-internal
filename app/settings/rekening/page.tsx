@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { listAllRekeningAccounts, listBookkeepingTypes } from "@/lib/business/masterData";
 import { RekeningManager } from "@/components/settings/RekeningManager";
@@ -8,8 +8,9 @@ import { RekeningManager } from "@/components/settings/RekeningManager";
 export const dynamic = "force-dynamic";
 
 export default async function RekeningPage() {
-  const role = await getCurrentRole();
-  if (!can(role, "settings.rekening.manage")) redirect("/settings");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "settings.rekening.manage")) redirect("/settings");
   const types = await listBookkeepingTypes();
   const rekenings = await listAllRekeningAccounts();
   return (

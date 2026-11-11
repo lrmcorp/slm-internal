@@ -3,7 +3,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { EmployeeSubledgerView } from "@/components/sdm/EmployeeSubledgerView";
 import { requirePermission } from "@/lib/auth/requirePermission";
 import { getCurrentRole } from "@/lib/auth/session";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getEmployeeLedger, listEmployeeLoans } from "@/lib/sdm/loanStore";
 import { listRekeningAccounts } from "@/lib/business/masterData";
 
@@ -15,8 +15,9 @@ export default async function SdmEmployeeKasbonSubledgerPage({
   params: Promise<{ employeeId: string }>;
 }) {
   await requirePermission("sdm.view");
-  const role = await getCurrentRole();
-  const canManage = can(role, "sdm.kasbon.manage");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  const canManage = can(access, "sdm.kasbon.manage");
 
   const { employeeId } = await params;
   const [ledgerData, activeLoans, rekenings] = await Promise.all([

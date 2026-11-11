@@ -203,7 +203,7 @@ export async function getApprovalRequest(id: string): Promise<ApprovalRequest | 
 
 export async function updateApprovalStatus(id: string, action: ApprovalAction, reason?: string): Promise<ApprovalRequest> {
   const user = await getCurrentUser();
-  if (!can(user.role, "approval.approve")) throw new ApprovalForbiddenError();
+  if (!can(user, "approval.approve")) throw new ApprovalForbiddenError();
   if (isProductionMode()) {
     const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const row = await tx.approvalRequest.findUnique({ where: { id } });

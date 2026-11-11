@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { currentAnikaErpToken } from "@/lib/auth/anikaErp";
 import { resolveAuthProvider } from "@/lib/auth/request";
@@ -98,8 +98,9 @@ export default async function ErpSyncPage({
 }: {
   searchParams?: Promise<SearchParams>;
 }) {
-  const role = await getCurrentRole();
-  if (!can(role, "erp_sync.retry")) redirect("/");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "erp_sync.retry")) redirect("/");
   const params = (await searchParams) || {};
   const salesPage = toPage(valueOf(params, "salesPage"));
   const expensePage = toPage(valueOf(params, "expensePage"));

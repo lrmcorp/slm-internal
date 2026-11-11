@@ -3,15 +3,16 @@ import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { OpnameImportForm } from "@/components/inventory/OpnameImportForm";
 import { InventoryHeader } from "@/components/inventory/ui";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { listLocations } from "@/lib/inventory/service";
 
 export const dynamic = "force-dynamic";
 
 export default async function ImportOpnamePage() {
-  const role = await getCurrentRole();
-  if (!can(role, "inventory.import")) redirect("/no-access");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "inventory.import")) redirect("/no-access");
   const locations = await listLocations();
   return (
     <AppShell>

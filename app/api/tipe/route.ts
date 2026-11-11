@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { canViewMasterData } from "@/lib/auth/apiPermissions";
 import { listBookkeepingTypes, saveBookkeepingTypes } from "@/lib/business/masterData";
@@ -7,15 +7,17 @@ import { recordAudit } from "@/lib/audit/store";
 import { tipeCreateSchema, tipeUpdateSchema, validationMessage } from "@/lib/validation/settingsSchema";
 
 export async function GET() {
-  const role = await getCurrentRole();
-  if (!canViewMasterData(role) && !can(role, "settings.tipe.manage")) return NextResponse.json({ success: false, message: "Tidak punya akses lihat Tipe." }, { status: 403 });
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!canViewMasterData(role) && !can(access, "settings.tipe.manage")) return NextResponse.json({ success: false, message: "Tidak punya akses lihat Tipe." }, { status: 403 });
   const types = await listBookkeepingTypes();
   return NextResponse.json({ success: true, data: types });
 }
 
 export async function POST(request: Request) {
-  const role = await getCurrentRole();
-  if (!can(role, "settings.tipe.manage")) return NextResponse.json({ success: false, message: "Tidak punya akses kelola Tipe." }, { status: 403 });
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "settings.tipe.manage")) return NextResponse.json({ success: false, message: "Tidak punya akses kelola Tipe." }, { status: 403 });
   const body = await request.json().catch(() => null);
   const parsed = tipeCreateSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ success: false, message: validationMessage(parsed.error, "Kode dan nama tipe tidak valid.") }, { status: 400 });
@@ -30,8 +32,9 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
-  const role = await getCurrentRole();
-  if (!can(role, "settings.tipe.manage")) return NextResponse.json({ success: false, message: "Tidak punya akses kelola Tipe." }, { status: 403 });
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "settings.tipe.manage")) return NextResponse.json({ success: false, message: "Tidak punya akses kelola Tipe." }, { status: 403 });
   const body = await request.json().catch(() => null);
   const parsed = tipeUpdateSchema.safeParse(body);
   if (!parsed.success) return NextResponse.json({ success: false, message: validationMessage(parsed.error, "Data tipe tidak valid.") }, { status: 400 });

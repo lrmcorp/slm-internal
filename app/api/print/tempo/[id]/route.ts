@@ -1,11 +1,12 @@
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { formatTempoPaymentDotMatrix, toEscPosPrn } from "@/lib/print/dotMatrix";
 import { getTempoReceivable, listTempoPayments } from "@/lib/tempo/store";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
-  const role = await getCurrentRole();
-  if (!can(role, "tempo.view") && !can(role, "reports.finance_view")) {
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "tempo.view") && !can(access, "reports.finance_view")) {
     return Response.json({ success: false, message: "Tidak punya akses cetak Tempo." }, { status: 403 });
   }
   const { id } = await params;

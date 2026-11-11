@@ -98,7 +98,7 @@ export async function loginWithPassword(input: unknown) {
     throw new Error(INVALID_MESSAGE);
   }
 
-  if (!withinAccessHours(user.role)) throw new Error(outsideHoursMessage(user.role));
+  if (![user.role, ...(user.extraRoles ?? [])].some((r) => withinAccessHours(r))) throw new Error(outsideHoursMessage(user.role));
 
   await prisma.user.update({
     where: { id: user.id },

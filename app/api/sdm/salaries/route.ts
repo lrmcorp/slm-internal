@@ -5,7 +5,7 @@ import { listSalaryPayments, getSalarySummary } from "@/lib/sdm/salaryStore";
 
 export async function GET(request: Request) {
   const user = await getCurrentUser();
-  if (!can(user.role, "sdm.salary.view")) {
+  if (!can(user, "sdm.salary.view")) {
     return NextResponse.json({ success: false, message: "Tidak punya akses melihat data riwayat gaji." }, { status: 403 });
   }
 

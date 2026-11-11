@@ -1,11 +1,12 @@
 import { NextResponse } from "next/server";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { listProductCategories, listUnitOfMeasures } from "@/lib/api/productReferences";
 
 export async function GET() {
-  const role = await getCurrentRole();
-  if (!can(role, "penjualan.create") && !can(role, "stock.manage")) {
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "penjualan.create") && !can(access, "stock.manage")) {
     return NextResponse.json({ success: false, message: "Tidak punya akses referensi produk ERP." }, { status: 403 });
   }
   const [categories, uoms] = await Promise.all([listProductCategories(), listUnitOfMeasures()]);

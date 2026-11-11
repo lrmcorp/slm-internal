@@ -14,6 +14,7 @@ vi.mock("@/lib/auth/session", () => ({
 
 vi.mock("@/lib/auth/roles", () => ({
   can: vi.fn().mockReturnValue(true),
+  primaryRole: (subject: unknown) => (typeof subject === "string" ? subject : (subject as { role: string }).role),
 }));
 
 vi.mock("@/lib/business/masterData", () => ({

@@ -3,21 +3,22 @@ import { AppShell } from "@/components/layout/AppShell";
 import { InventoryDocumentForm } from "@/components/inventory/InventoryDocumentForm";
 import { AddPanel } from "@/components/inventory/AddPanel";
 import { InventoryHeader, Pager, fmtDate, fmtQty } from "@/components/inventory/ui";
-import { can } from "@/lib/auth/roles";
+import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { listLocations, listOpnames, listProductOptions } from "@/lib/inventory/service";
 
 export const dynamic = "force-dynamic";
 
 export default async function OpnamePage({ searchParams }: { searchParams: Promise<{ page?: string }> }) {
-  const role = await getCurrentRole();
-  if (!can(role, "inventory.opname")) redirect("/no-access");
+  const access = await getCurrentRole();
+  const role = primaryRole(access);
+  if (!can(access, "inventory.opname")) redirect("/no-access");
   const p = await searchParams;
   const [locations, products, result] = await Promise.all([listLocations(), listProductOptions(), listOpnames({ page: Number(p.page) || 1 })]);
   return (
     <AppShell>
       <InventoryHeader title="Stock Opname" description={<>Hitung fisik barang, lalu isi jumlah sebenarnya. Stok sistem akan <b>diganti</b> dengan hasil hitung, dan selisihnya tercatat di kartu stok.</>} />
-      {can(role, "inventory.opname") && <AddPanel label="Buat Stock Opname"><InventoryDocumentForm mode="opname" canSetKoli={can(role, "inventory.master")} locations={locations} products={products} /></AddPanel>}
+      {can(access, "inventory.opname") && <AddPanel label="Buat Stock Opname"><InventoryDocumentForm mode="opname" canSetKoli={can(access, "inventory.master")} locations={locations} products={products} /></AddPanel>}
       <div className="aj-surface overflow-x-auto">
         <table className="min-w-full text-sm">
           <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-600">
