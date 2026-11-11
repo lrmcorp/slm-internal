@@ -323,6 +323,9 @@ function buildDeliveryOrderWhere(
 ): Prisma.DeliveryOrderWhereInput {
   const andConditions: Prisma.DeliveryOrderWhereInput[] = [];
 
+  // DO dari penjualan yang dibatalkan tidak masuk antrean (semua role).
+  andConditions.push({ salesRecord: { approvalStatus: { not: "cancelled" } } });
+
   // Hide DO yang sudah selesai dari non-super admin (hanya OWNER yang boleh melihat)
   if (!user || user.role !== "OWNER") {
     andConditions.push({
@@ -600,6 +603,12 @@ export async function getDeliveryOrderDetail(
   };
 }
 
+/** DO milik penjualan yang dibatalkan tidak boleh ditugaskan, di-packing, atau dikirim lagi. */
+async function assertSaleNotCancelled(tx: Prisma.TransactionClient, salesRecordId: string) {
+  const sale = await tx.salesRecord.findUnique({ where: { id: salesRecordId }, select: { approvalStatus: true } });
+  if (sale?.approvalStatus === "cancelled") throw new Error("Penjualan untuk DO ini sudah dibatalkan, DO tidak perlu diproses.");
+}
+
 export async function assignDeliveryOrder(
   id: string,
   assignedUserId: string,
@@ -612,6 +621,7 @@ export async function assignDeliveryOrder(
     });
     if (!doRow) throw new Error("Delivery Order tidak ditemukan.");
 
+    await assertSaleNotCancelled(tx, doRow.salesRecordId);
     if (doRow.status === "selesai" && actor?.role !== "OWNER") {
       throw new Error("Delivery Order yang sudah selesai tidak dapat diubah kecuali oleh Super Admin.");
     }
@@ -677,6 +687,7 @@ export async function addDeliveryOrderAssignee(
     });
     if (!doRow) throw new Error("Delivery Order tidak ditemukan.");
 
+    await assertSaleNotCancelled(tx, doRow.salesRecordId);
     if (doRow.status === "selesai" && actor?.role !== "OWNER") {
       throw new Error("Delivery Order yang sudah selesai tidak dapat diubah kecuali oleh Super Admin.");
     }
@@ -739,6 +750,7 @@ export async function removeDeliveryOrderAssignee(
     });
     if (!doRow) throw new Error("Delivery Order tidak ditemukan.");
 
+    await assertSaleNotCancelled(tx, doRow.salesRecordId);
     if (doRow.status === "selesai" && actor?.role !== "OWNER") {
       throw new Error("Delivery Order yang sudah selesai tidak dapat diubah kecuali oleh Super Admin.");
     }
@@ -794,6 +806,7 @@ export async function updateDeliveryOrderPacking(
     });
     if (!doRow) throw new Error("Delivery Order tidak ditemukan.");
 
+    await assertSaleNotCancelled(tx, doRow.salesRecordId);
     if (doRow.status === "selesai" && actor?.role !== "OWNER") {
       throw new Error("Delivery Order yang sudah selesai tidak dapat diubah kecuali oleh Super Admin.");
     }
@@ -849,6 +862,7 @@ export async function completeDeliveryOrderShipping(
     });
     if (!doRow) throw new Error("Delivery Order tidak ditemukan.");
 
+    await assertSaleNotCancelled(tx, doRow.salesRecordId);
     if (doRow.status === "selesai" && actor?.role !== "OWNER") {
       throw new Error("Delivery Order yang sudah selesai tidak dapat diubah kecuali oleh Super Admin.");
     }

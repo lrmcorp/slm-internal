@@ -12,7 +12,8 @@ const mocks = vi.hoisted(() => {
     updateMany: vi.fn()
   };
   const salesRecord = {
-    update: vi.fn()
+    update: vi.fn(),
+    findUnique: vi.fn(async () => ({ approvalStatus: "approved" }))
   };
 
   const tx = {

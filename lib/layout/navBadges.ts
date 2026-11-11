@@ -20,7 +20,7 @@ export async function getNavBadges(role: Role): Promise<NavBadges> {
   const canTempo = can(role, "tempo.view");
   const canTempoDue = can(role, "tempo.view_due");
   const [openDo, tempo] = await Promise.all([
-    can(role, "do.view") ? safe(() => prisma.deliveryOrder.count({ where: { status: { not: "selesai" } } })) : null,
+    can(role, "do.view") ? safe(() => prisma.deliveryOrder.count({ where: { status: { not: "selesai" }, salesRecord: { approvalStatus: { not: "cancelled" } } } })) : null,
     canTempo || canTempoDue ? safe(() => getTempoMetricsSummary({})) : null
   ]);
   if (openDo) badges.do = { count: openDo, title: `${openDo} Delivery Order belum selesai` };

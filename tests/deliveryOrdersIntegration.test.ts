@@ -640,7 +640,10 @@ describe("Regression Testing: Roles & Permissions Integrity", () => {
     expect(mocks.deliveryOrder.findMany).toHaveBeenLastCalledWith(
       expect.objectContaining({
         where: {
-          status: { not: "selesai" }
+          AND: [
+            { salesRecord: { approvalStatus: { not: "cancelled" } } },
+            { status: { not: "selesai" } }
+          ]
         }
       })
     );
@@ -650,7 +653,10 @@ describe("Regression Testing: Roles & Permissions Integrity", () => {
     expect(mocks.deliveryOrder.findMany).toHaveBeenLastCalledWith(
       expect.objectContaining({
         where: {
-          status: { not: "selesai" }
+          AND: [
+            { salesRecord: { approvalStatus: { not: "cancelled" } } },
+            { status: { not: "selesai" } }
+          ]
         }
       })
     );
@@ -778,5 +784,19 @@ describe("Regression Testing: Roles & Permissions Integrity", () => {
     expect(existing).toBeDefined();
     expect(existing?.status).toBe("selesai");
     expect(existing?.status === "selesai" && driverUser.role !== "OWNER").toBe(true);
+  });
+});
+
+describe("DO dari penjualan yang dibatalkan", () => {
+  it("tidak masuk antrean untuk role mana pun, termasuk Super Admin", async () => {
+    const { listDeliveryOrdersPage } = await import("@/lib/deliveryOrders/store");
+    mocks.deliveryOrder.count.mockResolvedValue(0);
+    mocks.deliveryOrder.findMany.mockResolvedValue([]);
+    for (const role of ["OWNER", "DELIVERY_DRIVER", "GUDANG", "ADMIN"]) {
+      await listDeliveryOrdersPage({ page: 1, pageSize: 10 }, { id: "u", name: "U", role } as any);
+      const where = mocks.deliveryOrder.findMany.mock.calls.at(-1)?.[0]?.where;
+      const clauses = where?.AND ?? [where];
+      expect(clauses.some((c: any) => c?.salesRecord?.approvalStatus?.not === "cancelled"), role).toBe(true);
+    }
   });
 });
