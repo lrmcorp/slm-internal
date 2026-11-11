@@ -75,7 +75,9 @@ export async function postMovement(tx: Tx, line: MovementLine, actor?: Inventory
 
   const balance = await lockBalance(tx, line.productId, line.locationId);
   const next = applyDelta(balance, line.delta, line.unitCost);
-  if (next.quantity < 0 && !(line.allowNegative ?? location.allowNegative)) {
+  // Hanya barang keluar yang bisa ditolak karena stok kurang. Barang masuk ke lokasi yang stoknya minus
+  // (mis. toko setelah penjualan tanpa stok) selalu diterima walau hasilnya masih minus.
+  if (line.delta < 0 && next.quantity < 0 && !(line.allowNegative ?? location.allowNegative)) {
     const product = await tx.inventoryProduct.findUnique({ where: { id: line.productId }, select: { sku: true, name: true } });
     throw new InventoryError(
       "INSUFFICIENT_STOCK",
