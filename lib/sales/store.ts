@@ -150,6 +150,8 @@ export type SalesRecordFilters = {
   approvalStatus?: string;
   syncStatus?: string;
   cctvStatus?: string;
+  /** Sembunyikan draft (termasuk simpan otomatis) bila status tidak dipilih; draft punya halaman sendiri. */
+  excludeDrafts?: boolean;
 };
 export type SalesRecordScope = {
   createdByUserId?: string;
@@ -222,6 +224,7 @@ export function buildSalesWhere(filters: SalesRecordFilters, scope: SalesRecordS
     });
   }
   if (filters.approvalStatus) where.approvalStatus = filters.approvalStatus;
+  else if (filters.excludeDrafts) where.approvalStatus = { not: "draft" };
   if (filters.syncStatus) where.syncStatus = filters.syncStatus;
   if (filters.cctvStatus && filters.cctvStatus !== "all") {
     if (filters.cctvStatus === "detected" || filters.cctvStatus === "ya") {
@@ -272,6 +275,7 @@ export function filterSalesRecordsInMemory(sales: Sale[], filters: SalesRecordFi
       if (!rekeningValues.some((v) => v === target || v.includes(target))) return false;
     }
     if (filters.approvalStatus && (sale.approvalStatus || "approved") !== filters.approvalStatus) return false;
+    if (!filters.approvalStatus && filters.excludeDrafts && sale.approvalStatus === "draft") return false;
     if (filters.syncStatus && (sale.syncStatus || "local") !== filters.syncStatus) return false;
     if (filters.cctvStatus && filters.cctvStatus !== "all") {
       const isDetected = sale.doPackingStatus === "sudah";

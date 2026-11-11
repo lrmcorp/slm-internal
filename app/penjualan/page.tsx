@@ -56,7 +56,9 @@ function filtersFromParams(params: SearchParams): SalesRecordFilters {
     rekening: valueOf(params, "rekening") || undefined,
     approvalStatus: valueOf(params, "approvalStatus") || undefined,
     syncStatus: valueOf(params, "syncStatus") || undefined,
-    cctvStatus: valueOf(params, "cctvStatus") || undefined
+    cctvStatus: valueOf(params, "cctvStatus") || undefined,
+    // Draft (termasuk simpan otomatis) ada di halaman Draft, bukan di Riwayat Penjualan.
+    excludeDrafts: true
   };
 }
 
@@ -149,7 +151,7 @@ export default async function PenjualanHistoryPage({ searchParams }: { searchPar
           <div className="mt-2 grid gap-3 md:grid-cols-5">
         <label className="text-sm font-medium text-slate-700">Tipe<Select name="tipe" defaultValue={valueOf(params, "tipe") || ""} className="mt-1"><option value="">Semua</option>{activeTipeOptions.map((item) => <option key={item.id} value={item.code}>{item.code}</option>)}</Select></label>
         <label className="text-sm font-medium text-slate-700">Rekening / bank<Select name="rekening" defaultValue={valueOf(params, "rekening") || ""} className="mt-1"><option value="">Semua</option>{activeRekeningOptions.map((item) => <option key={item.id} value={item.id}>{rekeningLabel(item)}</option>)}</Select></label>
-        <label className="text-sm font-medium text-slate-700">Approval<Select name="approvalStatus" defaultValue={valueOf(params, "approvalStatus") || ""} className="mt-1"><option value="">Semua</option>{approvalStatuses.map((item) => <option key={item} value={item}>{approvalLabel(item)}</option>)}</Select></label>
+        <label className="text-sm font-medium text-slate-700">Approval<Select name="approvalStatus" defaultValue={valueOf(params, "approvalStatus") || ""} className="mt-1"><option value="">Semua (tanpa draft)</option>{approvalStatuses.map((item) => <option key={item} value={item}>{approvalLabel(item)}</option>)}</Select></label>
         <label className="text-sm font-medium text-slate-700">ERP Sync<Select name="syncStatus" defaultValue={valueOf(params, "syncStatus") || ""} className="mt-1"><option value="">Semua</option>{syncStatuses.map((item) => <option key={item} value={item}>{item}</option>)}</Select></label>
         {showCctv && <label className="text-sm font-medium text-slate-700">Status Packing (DO)<Select name="cctvStatus" defaultValue={valueOf(params, "cctvStatus") || ""} className="mt-1"><option value="">Semua</option><option value="detected">Sudah Dipacking</option><option value="undetected">Belum Dipacking</option></Select></label>}
           </div>

@@ -111,6 +111,8 @@ export default async function BarangKeluarPage({ searchParams }: { searchParams:
         </div>
       </section>
 
+      {report.reconciliation && <Reconciliation r={report.reconciliation} />}
+
       <section className="aj-surface">
         <div className="hidden grid-cols-[minmax(0,1fr)_7rem_9rem_9rem_1.5rem] gap-3 border-b border-slate-200 bg-slate-50 px-5 py-2.5 text-xs font-semibold uppercase tracking-wide text-slate-500 md:grid">
           <span>Barang</span><span className="text-right">Qty</span><span className="text-right">Pembeli · Nota</span><span className="text-right">Nilai</span><span />
@@ -178,5 +180,39 @@ export default async function BarangKeluarPage({ searchParams }: { searchParams:
         </ul>
       </section>
     </AppShell>
+  );
+}
+
+/** Rincian kenapa total Barang Keluar berbeda dengan total Riwayat Penjualan di periode yang sama. */
+function Reconciliation({ r }: { r: NonNullable<Awaited<ReturnType<typeof getGoodsOutReport>>["reconciliation"]> }) {
+  const rows = [
+    { label: "Nota menunggu approval / ditolak", note: "belum dihitung sampai disetujui", ...r.pendingApproval },
+    { label: "Nota tipe AJ", note: "dicatat di ERP Aneka Jaya, bukan omset SLM", ...r.ajType },
+    { label: "Transaksi uji", note: "tidak dihitung", ...r.testTransactions },
+    { label: "Selisih harga nota MJ", note: "Riwayat memakai harga MJ, laporan ini bagian SLM", ...r.mjMarkup },
+  ].filter((row) => row.count > 0);
+  const rounding = Math.round(r.rounding);
+  const matched = rows.length === 0 && Math.abs(rounding) < 1 && r.otherAmount < 1;
+  return (
+    <details className="aj-surface mb-5 text-sm" open={!matched}>
+      <summary className="flex min-h-11 cursor-pointer list-none flex-wrap items-center justify-between gap-2 px-4 py-2.5 [&::-webkit-details-marker]:hidden">
+        <span className="font-semibold text-slate-800">Cocokkan dengan Riwayat Penjualan</span>
+        <span className="text-xs text-slate-600">Riwayat: {r.riwayatCount.toLocaleString("id-ID")} nota · {rupiah(r.riwayatTotal)}{matched ? " · sama" : ""}</span>
+      </summary>
+      <div className="border-t border-slate-100 px-4 py-3">
+        <table className="w-full">
+          <tbody className="divide-y divide-slate-100">
+            <tr><td className="py-1.5">Total Riwayat Penjualan <span className="text-xs text-slate-500">(semua nota kecuali draft dan batal)</span></td><td className="py-1.5 text-right font-semibold tabular-nums">{rupiah(r.riwayatTotal)}</td></tr>
+            {rows.map((row) => (
+              <tr key={row.label}><td className="py-1.5 pl-3 text-slate-700">− {row.label} ({row.count} nota) <span className="block text-xs text-slate-500">{row.note}</span></td><td className="py-1.5 text-right tabular-nums text-slate-700">−{rupiah(row.total)}</td></tr>
+            ))}
+            {Math.abs(rounding) >= 1 && <tr><td className="py-1.5 pl-3 text-slate-700">− Pembulatan</td><td className="py-1.5 text-right tabular-nums text-slate-700">−{rupiah(rounding)}</td></tr>}
+            {r.otherAmount >= 1 && <tr><td className="py-1.5 pl-3 text-slate-700">− Tagihan di luar barang (ongkir, dll.)</td><td className="py-1.5 text-right tabular-nums text-slate-700">−{rupiah(r.otherAmount)}</td></tr>}
+            <tr><td className="py-1.5 font-semibold">= Nilai barang terjual (laporan ini)</td><td className="py-1.5 text-right font-bold tabular-nums">{rupiah(r.goodsAmount)}</td></tr>
+          </tbody>
+        </table>
+        <p className="mt-2 text-xs text-slate-500">Draft tidak dihitung di kedua laporan. Nota batal tidak dihitung.</p>
+      </div>
+    </details>
   );
 }

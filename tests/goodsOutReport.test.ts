@@ -74,3 +74,33 @@ describe("laporan barang keluar", () => {
     expect(JSON.stringify(mocks.findMany.mock.calls[0][0].where)).toContain("admin-1");
   });
 });
+
+describe("pencocokan Barang Keluar dengan Riwayat Penjualan", () => {
+  it("total Riwayat = menunggu approval + AJ + uji + selisih MJ + pembulatan + ongkir + nilai barang", async () => {
+    vi.clearAllMocks();
+    mocks.names.mockResolvedValue({});
+    const pending = sale("7", "Tono", [["TALI-1", 3, 5_000]], { approvalStatus: "pending_approval" });
+    const test = sale("8", "Uji", [["TALI-1", 1, 5_000]], { isTestTransaction: true });
+    const reportRows = rows.filter((r) => r.approvalStatus === "approved");
+    // Panggilan 1: nota laporan (disetujui). Panggilan 2: semua nota Riwayat (bukan draft/batal).
+    mocks.findMany.mockResolvedValueOnce(reportRows).mockResolvedValueOnce([...rows, pending, test]);
+    const report = await getGoodsOutReport({ from: "2026-11-09", to: "2026-11-09" });
+    const r = report.reconciliation!;
+    const riwayat = [...rows, pending, test].reduce((sum, row) => sum + Number(row.total), 0);
+    expect(r.riwayatTotal).toBe(riwayat);
+    expect(r.pendingApproval).toEqual({ count: 1, total: 15_000 });
+    expect(r.ajType).toEqual({ count: 1, total: 1_000_000 });
+    expect(r.testTransactions).toEqual({ count: 1, total: 5_000 });
+    expect(r.mjMarkup).toEqual({ count: 1, total: 20_000 });
+    expect(r.goodsAmount).toBe(report.totals.amount);
+    expect(r.pendingApproval.total + r.ajType.total + r.testTransactions.total + r.mjMarkup.total + r.rounding + r.otherAmount + r.goodsAmount).toBeCloseTo(r.riwayatTotal, 0);
+  });
+
+  it("tidak ada rincian pencocokan saat laporan disaring per barang", async () => {
+    vi.clearAllMocks();
+    mocks.names.mockResolvedValue({});
+    mocks.findMany.mockResolvedValue(rows);
+    const report = await getGoodsOutReport({ from: "2026-11-09", to: "2026-11-09", keyword: "tali" });
+    expect(report.reconciliation).toBeUndefined();
+  });
+});

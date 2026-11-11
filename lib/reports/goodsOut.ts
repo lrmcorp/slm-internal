@@ -31,8 +31,27 @@ export type GoodsOutItem = {
   lines: GoodsOutLine[];
 };
 
+/**
+ * Pencocokan dengan total Riwayat Penjualan (nota tidak batal dan bukan draft) di periode yang sama:
+ * riwayatTotal = notInReport.* + mjMarkup + goodsAmount + otherAmount.
+ */
+export type GoodsOutReconciliation = {
+  riwayatTotal: number;
+  riwayatCount: number;
+  pendingApproval: { count: number; total: number };
+  ajType: { count: number; total: number };
+  testTransactions: { count: number; total: number };
+  /** Nota MJ lama: Riwayat memakai harga MJ, Barang Keluar memakai bagian SLM (harga MJ / 1,1). */
+  mjMarkup: { count: number; total: number };
+  /** Selisih kecil nota lain antara total nota dan omset (pembulatan). */
+  rounding: number;
+  goodsAmount: number;
+  otherAmount: number;
+};
+
 export type GoodsOutReport = {
   items: GoodsOutItem[];
+  reconciliation?: GoodsOutReconciliation;
   totals: {
     quantityLines: number;
     /** Nilai barang terjual. */
@@ -65,6 +84,8 @@ export async function getGoodsOutReport(input: { from: string; to: string; keywo
 
   const bySku = new Map<string, GoodsOutItem & { invoices: Set<string>; buyers: Set<string> }>();
   let otherAmount = 0;
+  let mjMarkup = { count: 0, total: 0 };
+  let rounding = 0;
   for (const row of sales) {
     const metadata = row.integrationMetadata && typeof row.integrationMetadata === "object" ? (row.integrationMetadata as Record<string, unknown>) : {};
     const sale = {
@@ -80,6 +101,9 @@ export async function getGoodsOutReport(input: { from: string; to: string; keywo
 
     const nota = hitungLabaNota(sale, 0, new Map());
     otherAmount += nota.omset - nota.items.reduce((sum, item) => sum + item.omset, 0);
+    const markup = (Number(row.total) || 0) - nota.omset;
+    if (isTransaksiMj(sale) && Math.abs(markup) >= 1) mjMarkup = { count: mjMarkup.count + 1, total: mjMarkup.total + markup };
+    else rounding += markup;
     const isMj = isTransaksiMj(sale);
     const slmShare = isMj && sale.mjPriceBasis !== "slm" ? 1 / 1.1 : 1;
 
@@ -124,8 +148,32 @@ export async function getGoodsOutReport(input: { from: string; to: string; keywo
   if (filtered) items = items.filter((entry) => entry.sku.toLowerCase().includes(keyword) || (entry.name ?? "").toLowerCase().includes(keyword));
   items.sort((a, b) => b.amount - a.amount || b.quantity - a.quantity);
 
+  // Pencocokan dengan Riwayat Penjualan (hanya bila semua barang ditampilkan).
+  let reconciliation: GoodsOutReconciliation | undefined;
+  if (!filtered) {
+    const all = await prisma.salesRecord.findMany({
+      where: { AND: [buildSalesWhere({ from: input.from, to: input.to }, input.scope), { approvalStatus: { notIn: ["draft", "cancelled"] } }] },
+      select: { total: true, approvalStatus: true, isTestTransaction: true, tipeId: true, tipeCodeSnapshot: true, source: true, createdByUserId: true },
+    });
+    const bucket = () => ({ count: 0, total: 0 });
+    const pendingApproval = bucket(), ajType = bucket(), testTransactions = bucket();
+    let riwayatTotal = 0;
+    for (const s of all) {
+      const total = Number(s.total) || 0;
+      riwayatTotal += total;
+      const target = s.approvalStatus !== "approved" ? pendingApproval
+        : s.isTestTransaction ? testTransactions
+        : !apakahPenjualanOperasional({ tipeId: s.tipeId, tipeCodeSnapshot: s.tipeCodeSnapshot, source: s.source ?? undefined, createdByUserId: s.createdByUserId } as unknown as Sale) ? ajType
+        : null;
+      if (target) { target.count += 1; target.total += total; }
+    }
+    const goodsAmount = items.reduce((sum, entry) => sum + entry.amount, 0);
+    reconciliation = { riwayatTotal, riwayatCount: all.length, pendingApproval, ajType, testTransactions, mjMarkup, rounding, goodsAmount, otherAmount };
+  }
+
   return {
     items,
+    reconciliation,
     totals: {
       quantityLines: items.reduce((sum, entry) => sum + entry.lines.length, 0),
       amount: items.reduce((sum, entry) => sum + entry.amount, 0),
