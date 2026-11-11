@@ -1,4 +1,4 @@
-export const ROLES = ["OWNER", "SUPERVISOR", "ADMIN", "FINANCE", "MANAGER", "DELIVERY_DRIVER", "VIEWER"] as const;
+export const ROLES = ["OWNER", "SUPERVISOR", "ADMIN", "FINANCE", "MANAGER", "DELIVERY_DRIVER", "GUDANG", "VIEWER"] as const;
 export type Role = (typeof ROLES)[number];
 
 export const ALL_PERMISSIONS = [
@@ -9,7 +9,7 @@ export const ALL_PERMISSIONS = [
   "tempo.view", "tempo.view_due", "tempo.mark_paid", "tempo.cancel", "tempo.write_off", "audit.view", "erp_sync.retry", "rekening.reset",
   "master_data.view", "guide.view", "do.view", "do.process", "do.assign",
   "sdm.view", "sdm.employee.manage", "sdm.kasbon.manage", "sdm.salary.view", "sdm.savings.manage",
-  "cashbank.manage", "accounting.view", "accounting.journal.manage", "accounting.coa.manage", "accounting.period.manage", "accounting.rates.manage",
+  "cashbank.manage", "gudang.request.create", "gudang.request.process", "gudang.report.view", "accounting.view", "accounting.journal.manage", "accounting.coa.manage", "accounting.period.manage", "accounting.rates.manage",
   "purchasing.view", "purchasing.order.manage", "purchasing.invoice.manage", "purchasing.payment.manage",
   // Inventory gudang & toko: satu permission per menu
   "inventory.stock.view", "inventory.movement.view", "inventory.transfer", "inventory.receive",
@@ -26,6 +26,7 @@ export const ROLE_LABEL: Record<Role, string> = {
   FINANCE: "Finance",
   MANAGER: "Manager",
   DELIVERY_DRIVER: "Petugas DO",
+  GUDANG: "Gudang",
   VIEWER: "Viewer"
 };
 
@@ -54,7 +55,9 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "penjualan.create", "penjualan.manage", "do.view", "do.process", "do.assign",
     // Tempo terbatas: hanya daftar yang jatuh tempo ≤ 3 hari, tanpa total nominal
     "tempo.view_due",
-    "inventory.stock.view", "inventory.opname", "inventory.transfer"
+    "inventory.stock.view", "inventory.opname", "inventory.transfer",
+    // Sales meminta barang dari gudang.
+    "gudang.request.create"
   ],
   FINANCE: [
     "pengeluaran.view", "pengeluaran.create", "tempo.view", "tempo.mark_paid",
@@ -71,10 +74,13 @@ export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
     "master_data.view",
     ...MANAGER_SDM_SYSTEM,
     "purchasing.view", "purchasing.order.manage", "purchasing.invoice.manage",
-    ...INVENTORY_MANAGER
+    ...INVENTORY_MANAGER,
+    "gudang.request.create", "gudang.report.view"
   ],
   // Petugas DO = tim packing
   DELIVERY_DRIVER: ["do.view", "do.process", "inventory.stock.view", "inventory.movement.view"],
+  // Gudang: memproses permintaan barang dari sales, dan merangkap packing DO (sama dengan Petugas DO).
+  GUDANG: ["gudang.request.process", "do.view", "do.process", "inventory.stock.view", "inventory.movement.view", "inventory.transfer"],
   VIEWER: []
 };
 
@@ -99,6 +105,7 @@ export function landingPageForRole(role: Role) {
   if (role === "FINANCE") return "/tempo";
   if (role === "MANAGER") return "/approval";
   if (role === "DELIVERY_DRIVER") return "/delivery-orders";
+  if (role === "GUDANG") return "/gudang";
   return "/no-access";
 }
 
@@ -108,4 +115,9 @@ export function landingPageForRole(role: Role) {
  */
 export function canEditProductPhoto(role: Role) {
   return can(role, "inventory.master") || role === "ADMIN";
+}
+
+/** Role yang bekerja sebagai petugas packing DO (Petugas DO, dan Gudang yang merangkap packing). */
+export function isPackingRole(role: Role | string | undefined | null) {
+  return role === "DELIVERY_DRIVER" || role === "GUDANG";
 }

@@ -1,3 +1,4 @@
+import { isPackingRole } from "@/lib/auth/roles";
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { deliveryOrdersEnabled } from "@/lib/features";
@@ -44,7 +45,7 @@ function filtersFromParams(
   const hasExplicitOfficerParam = "officerId" in params;
   let officerId = valueOf(params, "officerId") || undefined;
 
-  if (userRole === "DELIVERY_DRIVER" && !hasExplicitOfficerParam && !isAllExplicit) {
+  if (isPackingRole(userRole) && !hasExplicitOfficerParam && !isAllExplicit) {
     officerId = userId;
   }
 
@@ -129,7 +130,7 @@ export default async function DeliveryOrdersPage({
 
   const isAllExplicit = valueOf(params, "view") === "all";
   const hasExplicitOfficerParam = "officerId" in params;
-  const isDriver = user.role === "DELIVERY_DRIVER";
+  const isDriver = isPackingRole(user.role);
   const defaultToMyTasks = isDriver && !hasExplicitOfficerParam && !isAllExplicit;
   const effectiveOfficerId = defaultToMyTasks ? user.id : (valueOf(params, "officerId") || undefined);
 

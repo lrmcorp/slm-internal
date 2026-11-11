@@ -1,7 +1,7 @@
 import "server-only";
 import { prisma } from "@/lib/db/prisma";
 import { PUSH_AUDIENCE, pushConfig } from "./config";
-import { sendPushToRoles } from "./send";
+import { sendPushToRoles, sendPushToUser } from "./send";
 import { jakartaDateKey } from "@/lib/date/jakarta";
 
 function addDaysKey(key: string, days: number) {
@@ -168,5 +168,49 @@ export async function notifyNewDeliveryOrder(deliveryOrderId: string) {
     });
   } catch (error) {
     console.error("[push] notifikasi DO gagal:", error instanceof Error ? error.message : error);
+  }
+}
+
+/** "Permintaan Barang", isi: "<no> - <n> item - <sales>". */
+export function warehouseRequestMessage(input: { requestNumber: string; itemCount: number; requestedByName: string }) {
+  return { title: "Permintaan Barang", body: `${input.requestNumber} - ${input.itemCount} item - ${input.requestedByName}` };
+}
+
+/** "Barang kurang: PB-..", isi: "Apel 3/5 Lusin, Jeruk 0/2 Lusin" (dikirim/diminta). */
+export function warehouseShortageMessage(input: { requestNumber: string; lines: { name: string; unit: string; requested: number; fulfilled: number }[] }) {
+  const shown = input.lines.slice(0, 4).map((l) => `${l.name} ${qty(l.fulfilled)}/${qty(l.requested)} ${l.unit}`);
+  const more = input.lines.length > 4 ? `, +${input.lines.length - 4} barang lain` : "";
+  return { title: `Barang kurang: ${input.requestNumber}`, body: `${shown.join(", ")}${more}` };
+}
+
+/** Kabari petugas Gudang ada permintaan barang baru. */
+export async function notifyWarehouseRequest(requestId: string) {
+  if (!pushConfig().enabled) return;
+  try {
+    const row = await prisma.warehouseRequest.findUnique({ where: { id: requestId }, select: { id: true, requestNumber: true, requestedByName: true, _count: { select: { items: true } } } });
+    if (!row) return;
+    await sendPushToRoles(PUSH_AUDIENCE.warehouseRequest, { ...warehouseRequestMessage({ requestNumber: row.requestNumber, itemCount: row._count.items, requestedByName: row.requestedByName }), url: "/gudang", tag: `pb-${row.id}` });
+  } catch (error) {
+    console.error("[push] notifikasi permintaan barang gagal:", error instanceof Error ? error.message : error);
+  }
+}
+
+/** Gudang mengirim kurang dari permintaan: kabari sales pembuatnya dan Super Admin. */
+export async function notifyWarehouseShortage(requestId: string) {
+  if (!pushConfig().enabled) return;
+  try {
+    const row = await prisma.warehouseRequest.findUnique({ where: { id: requestId }, include: { items: { orderBy: { sortOrder: "asc" } } } });
+    if (!row) return;
+    const lines = row.items
+      .map((i) => ({ name: i.name, unit: i.unit, requested: Number(i.requestedQty), fulfilled: Number(i.fulfilledQty ?? 0) }))
+      .filter((l) => l.fulfilled < l.requested);
+    if (!lines.length) return;
+    const message = warehouseShortageMessage({ requestNumber: row.requestNumber, lines });
+    await Promise.all([
+      sendPushToUser(row.requestedByUserId, { ...message, url: "/gudang/permintaan", tag: `pb-short-${row.id}` }),
+      sendPushToRoles(PUSH_AUDIENCE.warehouseShortage, { ...message, url: "/gudang/laporan", tag: `pb-short-${row.id}` }),
+    ]);
+  } catch (error) {
+    console.error("[push] notifikasi selisih gudang gagal:", error instanceof Error ? error.message : error);
   }
 }

@@ -15,6 +15,7 @@ enum Role {
   MANAGER
   DELIVERY_DRIVER
   VIEWER
+  GUDANG
 }
 
 enum ApprovalStatus {
@@ -1583,4 +1584,57 @@ model PushSubscription {
 
   @@index([role])
   @@index([userId])
+}
+
+// =====================================================================
+// Permintaan barang ke gudang: sales meminta, petugas Gudang memproses
+// (centang / ubah qty), lalu stok dipindah lewat InventoryTransfer.
+// =====================================================================
+
+enum WarehouseRequestStatus {
+  MENUNGGU
+  SELESAI
+  SEBAGIAN
+  BATAL
+}
+
+model WarehouseRequest {
+  id                String                 @id @default(cuid())
+  requestNumber     String                 @unique
+  fromLocationId    String
+  toLocationId      String
+  status            WarehouseRequestStatus @default(MENUNGGU)
+  notes             String?
+  requestedByUserId String
+  requestedByName   String
+  processedByUserId String?
+  processedByName   String?
+  processedAt       DateTime?
+  processNotes      String?
+  transferId        String?
+  cancelledAt       DateTime?
+  cancelReason      String?
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
+  items             WarehouseRequestItem[]
+
+  @@index([status, createdAt])
+  @@index([requestedByUserId, createdAt])
+}
+
+model WarehouseRequestItem {
+  id           String           @id @default(cuid())
+  requestId    String
+  request      WarehouseRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  productId    String
+  sku          String
+  name         String
+  unit         String
+  requestedQty Decimal          @db.Decimal(18, 2)
+  fulfilledQty Decimal?         @db.Decimal(18, 2)
+  note         String?
+  sortOrder    Int              @default(0)
+
+  @@index([requestId])
+  @@index([productId])
 }

@@ -21,8 +21,8 @@ export function sessionTtlFor(role?: Role) {
 type Env = Record<string, string | undefined>;
 type Hours = { start: number; end: number };
 
-/** Admin (kasir) dan Petugas DO (packing) selesai lebih awal dari role lain. */
-const ROLE_END_DEFAULT: Partial<Record<Role, number>> = { ADMIN: 17 * 60, DELIVERY_DRIVER: 17 * 60 };
+/** Admin (kasir), Petugas DO (packing), dan Gudang selesai lebih awal dari role lain. */
+const ROLE_END_DEFAULT: Partial<Record<Role, number>> = { ADMIN: 17 * 60, DELIVERY_DRIVER: 17 * 60, GUDANG: 17 * 60 };
 
 function parseHours(raw: string): Hours | null | undefined {
   const value = raw.trim().toLowerCase();

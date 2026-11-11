@@ -2292,6 +2292,48 @@ paths:
           $ref: "#/components/responses/Forbidden"
         "404":
           $ref: "#/components/responses/NotFound"
+  /api/gudang/requests:
+    post:
+      summary: Sales membuat permintaan barang ke gudang.
+      description: "Permission gudang.request.create. Body: fromLocationId, toLocationId, notes, items[{productId, quantity}]."
+      responses:
+        "201":
+          description: Permintaan dibuat (status MENUNGGU) dan petugas Gudang dikabari.
+        "400":
+          description: Data tidak valid.
+        "403":
+          description: Tidak punya akses.
+  /api/gudang/requests/{id}/process:
+    post:
+      summary: Petugas Gudang menyelesaikan permintaan dengan qty yang benar-benar dikirim.
+      description: "Permission gudang.request.process. Body: items[{itemId, fulfilledQty, note}]. Stok dipindah lewat transfer; bila kurang, sales dan Super Admin dikabari."
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Status SELESAI atau SEBAGIAN.
+        "400":
+          description: Qty tidak valid.
+        "409":
+          description: Sudah diproses.
+  /api/gudang/requests/{id}/cancel:
+    post:
+      summary: Batalkan permintaan yang belum diproses gudang.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Dibatalkan.
+        "409":
+          description: Sudah diproses gudang.
   /api/push/test:
     post:
       summary: Kirim notifikasi uji ke semua perangkat user yang sedang login.

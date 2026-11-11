@@ -1,4 +1,5 @@
 "use client";
+import { isPackingRole } from "@/lib/auth/roles";
 
 import { useState, useRef } from "react";
 import Link from "next/link";
@@ -67,7 +68,7 @@ export function DeliveryOrderDetailView({
   const photoSectionRef = useRef<HTMLDivElement>(null);
 
   const isOwner = currentUserRole === "OWNER";
-  const canInvite = canAssign || currentUserRole === "DELIVERY_DRIVER";
+  const canInvite = canAssign || isPackingRole(currentUserRole);
 
   const handleSyncItems = async () => {
     setIsSyncing(true);
@@ -501,14 +502,14 @@ export function DeliveryOrderDetailView({
             {canInvite && (
               <div className="w-full sm:w-auto">
                 <SearchableSelect
-                  placeholder={`+ ${currentUserRole === "DELIVERY_DRIVER" ? "Ajak Petugas DO Lainnya" : "Tambah Petugas DO"}`}
+                  placeholder={`+ ${isPackingRole(currentUserRole) ? "Ajak Petugas DO Lainnya" : "Tambah Petugas DO"}`}
                   searchPlaceholder="Cari nama atau role..."
                   options={officers
                     .filter((o) => !assignedList.some((ao) => ao.userId === o.id))
                     .map((o) => ({
                       value: o.id,
                       label: o.name,
-                      badge: o.role === "DELIVERY_DRIVER" ? "Petugas DO" : o.role
+                      badge: o.role === "DELIVERY_DRIVER" ? "Petugas DO" : o.role === "GUDANG" ? "Gudang" : o.role
                     }))}
                   onSelect={(officerId) => handleAddOfficer(officerId)}
                   align="right"

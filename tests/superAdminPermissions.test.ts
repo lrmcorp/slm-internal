@@ -27,7 +27,8 @@ describe("Super Admin permission contract", () => {
     expect(ROLE_PERMISSIONS.ADMIN).toEqual([
       "penjualan.create", "penjualan.manage", "do.view", "do.process", "do.assign",
       "tempo.view_due",
-      "inventory.stock.view", "inventory.opname", "inventory.transfer"
+      "inventory.stock.view", "inventory.opname", "inventory.transfer",
+      "gudang.request.create"
     ]);
     for (const permission of ["pengeluaran.view", "pengeluaran.create", "stock.view", "stock.create", "master_data.view", "guide.view"] as const) {
       expect(can("ADMIN", permission)).toBe(false);

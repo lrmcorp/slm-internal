@@ -36,6 +36,9 @@ const PROTECTED: Array<{ path: string; permission: Parameters<typeof can>[1] | P
   { path: "/inventory/produk", permission: "inventory.master" },
   { path: "/inventory/lokasi", permission: "inventory.location" },
   { path: "/inventory", permission: "inventory.stock.view" },
+  { path: "/gudang/permintaan", permission: "gudang.request.create" },
+  { path: "/gudang/laporan", permission: "gudang.report.view" },
+  { path: "/gudang", permission: "gudang.request.process" },
 ];
 
 /**

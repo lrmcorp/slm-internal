@@ -1,3 +1,4 @@
+import { isPackingRole } from "@/lib/auth/roles";
 import { NextResponse } from "next/server";
 import { getCurrentRole, getCurrentUser } from "@/lib/auth/session";
 import { can } from "@/lib/auth/roles";
@@ -14,7 +15,7 @@ export async function POST(
   const role = await getCurrentRole();
   const actor = await getCurrentUser();
   const isAssignAuthorized = can(role, "do.assign");
-  const isDeliveryDriver = role === "DELIVERY_DRIVER";
+  const isDeliveryDriver = isPackingRole(role);
 
   const { id } = await context.params;
   const body = await request.json().catch(() => ({}));

@@ -27,7 +27,7 @@ describe("notifikasi DO terbaru untuk Petugas DO", () => {
     const { notifyNewDeliveryOrder } = await import("@/lib/push/notify");
     await notifyNewDeliveryOrder("do1");
     expect(sent).toHaveLength(1);
-    expect(sent[0].roles).toEqual(["DELIVERY_DRIVER"]);
+    expect(sent[0].roles).toEqual(["DELIVERY_DRIVER", "GUDANG"]);
     expect(sent[0].payload).toMatchObject({ title: "DO Terbaru", body: "Bu Ani - 3 item - Nia", url: "/delivery-orders/do1" });
   });
 

@@ -1,4 +1,5 @@
 "use client";
+import { isPackingRole } from "@/lib/auth/roles";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -235,13 +236,13 @@ export function DeliveryOrderQueueTable({
                   <span className="text-slate-400 italic">Belum ditugaskan</span>
                 )}
               </div>
-              {(canAssign || currentUserRole === "DELIVERY_DRIVER") && (
+              {(canAssign || isPackingRole(currentUserRole)) && (
                 <div className="w-full">
                   <SearchableSelect
                     placeholder={
                       assigningId === item.id
                         ? "Menugaskan..."
-                        : `+ ${currentUserRole === "DELIVERY_DRIVER" ? "Ajak Petugas DO" : "Tambah Petugas DO"}`
+                        : `+ ${isPackingRole(currentUserRole) ? "Ajak Petugas DO" : "Tambah Petugas DO"}`
                     }
                     searchPlaceholder="Cari nama petugas..."
                     disabled={assigningId === item.id}
@@ -255,7 +256,7 @@ export function DeliveryOrderQueueTable({
                       .map((o) => ({
                         value: o.id,
                         label: o.name,
-                        badge: o.role === "DELIVERY_DRIVER" ? "Petugas DO" : o.role
+                        badge: o.role === "DELIVERY_DRIVER" ? "Petugas DO" : o.role === "GUDANG" ? "Gudang" : o.role
                       }))}
                     onSelect={(officerId) => handleAssign(item.id, officerId)}
                     align="left"
@@ -376,13 +377,13 @@ export function DeliveryOrderQueueTable({
                         <span className="text-xs text-slate-400 italic">Belum ditugaskan</span>
                       )}
                     </div>
-                    {(canAssign || currentUserRole === "DELIVERY_DRIVER") && (
+                    {(canAssign || isPackingRole(currentUserRole)) && (
                       <div className="mt-1">
                         <SearchableSelect
                           placeholder={
                             assigningId === item.id
                               ? "Menugaskan..."
-                              : `+ ${currentUserRole === "DELIVERY_DRIVER" ? "Ajak Petugas DO" : "Tambah Petugas DO"}`
+                              : `+ ${isPackingRole(currentUserRole) ? "Ajak Petugas DO" : "Tambah Petugas DO"}`
                           }
                           searchPlaceholder="Cari nama petugas..."
                           disabled={assigningId === item.id}
@@ -396,7 +397,7 @@ export function DeliveryOrderQueueTable({
                             .map((o) => ({
                               value: o.id,
                               label: o.name,
-                              badge: o.role === "DELIVERY_DRIVER" ? "Petugas DO" : o.role
+                              badge: o.role === "DELIVERY_DRIVER" ? "Petugas DO" : o.role === "GUDANG" ? "Gudang" : o.role
                             }))}
                           onSelect={(officerId) => handleAssign(item.id, officerId)}
                           align="left"
