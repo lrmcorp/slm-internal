@@ -27,4 +27,5 @@ export const PUSH_AUDIENCE = {
   newSale: ["OWNER", "SUPERVISOR"],
   lowStock: ["OWNER", "SUPERVISOR", "MANAGER"],
   tempoDue: ["OWNER", "SUPERVISOR", "FINANCE"],
+  newDeliveryOrder: ["DELIVERY_DRIVER"],
 } as const;

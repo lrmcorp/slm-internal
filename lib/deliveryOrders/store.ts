@@ -56,6 +56,7 @@ export async function syncDeliveryOrderForSale(
   options: { previousShipped?: DeliveryOrderShippedSnapshot[] } = {}
 ) {
   if (!deliveryOrdersEnabled()) return null;
+  let createdDeliveryOrderId: string | null = null;
   const runner = async (tx: Prisma.TransactionClient) => {
     if (!tx?.deliveryOrder || !tx?.salesRecord) return null;
 
@@ -184,6 +185,7 @@ export async function syncDeliveryOrderForSale(
         },
         include: { items: DO_ITEMS_IN_SALE_ORDER }
       });
+      createdDeliveryOrderId = targetDo.id;
     } else {
       // Reconcile items if existing has 0 items or needs synchronization
       const currentItems = targetDo.items || [];
@@ -281,10 +283,18 @@ export async function syncDeliveryOrderForSale(
     return targetDo;
   };
 
+  // Kabari Petugas DO setelah DO baru tersimpan (notifikasi menunggu bila transaksi luar belum selesai).
+  const announce = <T,>(result: T) => {
+    if (createdDeliveryOrderId) {
+      const id = createdDeliveryOrderId;
+      void import("@/lib/push/notify").then(({ notifyNewDeliveryOrder }) => notifyNewDeliveryOrder(id)).catch(() => undefined);
+    }
+    return result;
+  };
   if (customTx) {
-    return runner(customTx);
+    return announce(await runner(customTx));
   }
-  return prisma.$transaction(runner);
+  return announce(await prisma.$transaction(runner));
 }
 
 export async function createDeliveryOrderForSale(saleId: string, customTx?: Prisma.TransactionClient) {

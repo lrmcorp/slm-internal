@@ -131,3 +131,42 @@ export async function notifyTempoDue(today: string = jakartaDateKey()): Promise<
     return { sent: 0 };
   }
 }
+
+/** "DO Terbaru", isi: "<customer> - <n> item - <nama sales>". */
+export function newDeliveryOrderMessage(input: { customerName: string; itemCount: number; salesName?: string | null }) {
+  const parts = [input.customerName.trim() || "Customer", `${input.itemCount} item`];
+  if (input.salesName?.trim()) parts.push(input.salesName.trim());
+  return { title: "DO Terbaru", body: parts.join(" - ") };
+}
+
+/**
+ * Notifikasi untuk Petugas DO saat DO baru dibuat. DO dibuat di dalam transaksi database, jadi baris DO
+ * ditunggu sebentar sampai tersimpan. Hanya DO dari penjualan hari ini (impor data lama tidak dikabarkan).
+ */
+export async function notifyNewDeliveryOrder(deliveryOrderId: string) {
+  if (!pushConfig().enabled) return;
+  try {
+    let row = null;
+    for (let attempt = 0; attempt < 5 && !row; attempt++) {
+      if (attempt) await new Promise((resolve) => setTimeout(resolve, 2000));
+      row = await prisma.deliveryOrder.findUnique({
+        where: { id: deliveryOrderId },
+        select: {
+          id: true,
+          items: { select: { id: true } },
+          salesRecord: { select: { customerName: true, createdByNameSnapshot: true, approvalStatus: true, isTestTransaction: true, transactionDateKey: true, saleDate: true } },
+        },
+      });
+    }
+    const sale = row?.salesRecord;
+    if (!row || !sale || sale.isTestTransaction || sale.approvalStatus === "draft" || sale.approvalStatus === "cancelled") return;
+    if ((sale.transactionDateKey ?? jakartaDateKey(sale.saleDate)) !== jakartaDateKey()) return;
+    await sendPushToRoles(PUSH_AUDIENCE.newDeliveryOrder, {
+      ...newDeliveryOrderMessage({ customerName: sale.customerName, itemCount: row.items.length, salesName: sale.createdByNameSnapshot }),
+      url: `/delivery-orders/${row.id}`,
+      tag: `do-${row.id}`,
+    });
+  } catch (error) {
+    console.error("[push] notifikasi DO gagal:", error instanceof Error ? error.message : error);
+  }
+}

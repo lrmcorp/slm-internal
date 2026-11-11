@@ -17,6 +17,7 @@ export default async function ProfilePage() {
     (PUSH_AUDIENCE.newSale as readonly string[]).includes(user.role) ? "Transaksi baru di Riwayat Penjualan" : null,
     (PUSH_AUDIENCE.lowStock as readonly string[]).includes(user.role) ? "Barang menyentuh stok minimum" : null,
     (PUSH_AUDIENCE.tempoDue as readonly string[]).includes(user.role) ? "Tempo jatuh tempo (setiap pagi)" : null,
+    (PUSH_AUDIENCE.newDeliveryOrder as readonly string[]).includes(user.role) ? "DO baru untuk dipacking" : null,
   ].filter((topic): topic is string => Boolean(topic));
 
   return (
