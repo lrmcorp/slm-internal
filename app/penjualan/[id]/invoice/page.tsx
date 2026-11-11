@@ -1,6 +1,6 @@
 import { notFound, redirect } from "next/navigation";
 import { getCurrentUser } from "@/lib/auth/session";
-import { tempoPrintsAsInvoice } from "@/lib/print/tempoPrintMode";
+import { tempoPrintsAsInvoiceForPage } from "@/lib/print/tempoPrintMode";
 import { can } from "@/lib/auth/roles";
 import { getSalesRecordForUser } from "@/lib/sales/access";
 import { listAllRekeningAccounts } from "@/lib/business/masterData";
@@ -177,7 +177,7 @@ export default async function SalesInvoicePage({
       dateTime={formattedDateTime}
       dueDate={formattedDueDate}
       isTempo={sale.paymentMethod === "Tempo"}
-      tempoAsInvoice={tempoPrintsAsInvoice()}
+      tempoAsInvoice={await tempoPrintsAsInvoiceForPage()}
       customer={customer}
       items={invoiceItems}
       totalAmount={Number(sale.total || 0)}
