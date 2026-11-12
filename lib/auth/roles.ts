@@ -13,7 +13,9 @@ export const ALL_PERMISSIONS = [
   "purchasing.view", "purchasing.order.manage", "purchasing.invoice.manage", "purchasing.payment.manage",
   // Inventory gudang & toko: satu permission per menu
   "inventory.stock.view", "inventory.movement.view", "inventory.transfer", "inventory.receive",
-  "inventory.opname", "inventory.adjust", "inventory.import", "inventory.master", "inventory.location"
+  "inventory.opname", "inventory.adjust", "inventory.import", "inventory.master", "inventory.location",
+  // Kalkulator Modal dan Import Packing List: hanya Super Admin (Supervisor cukup Master Barang).
+  "inventory.costing"
 ] as const;
 export type Permission = (typeof ALL_PERMISSIONS)[number];
 

@@ -16,7 +16,7 @@ const overridesSchema = z.record(z.string(), z.object({
  * Field: file (.xlsx), mode ("preview" | "save"), overrides (JSON per SKU), addStock ("true"), locationId, movementDate.
  * File diunggah ulang saat simpan, jadi server menghitung dari isi file yang sama dengan pratinjau.
  */
-export const POST = inventoryRoute("inventory.master", async (request, ctx) => {
+export const POST = inventoryRoute("inventory.costing", async (request, ctx) => {
   const form = await request.formData().catch(() => null);
   const file = form?.get("file");
   if (!form || !file || typeof file === "string") throw new InventoryError("VALIDATION", "File Excel wajib diunggah.");

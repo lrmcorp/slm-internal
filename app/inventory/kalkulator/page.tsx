@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 export default async function CostCalculatorPage() {
   const access = await getCurrentRole();
   const role = primaryRole(access);
-  if (!can(access, "inventory.master")) redirect("/no-access");
+  if (!can(access, "inventory.costing")) redirect("/no-access");
   const [rmb, cbm] = await Promise.all([getRmbRate(), getCbmRate()]);
   return (
     <AppShell>

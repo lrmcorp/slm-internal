@@ -1,3 +1,4 @@
+import { can } from "@/lib/auth/roles";
 import { describe, expect, it } from "vitest";
 import { visibleNavLinks } from "@/components/layout/navigation";
 import type { Role } from "@/lib/auth/roles";
@@ -20,7 +21,13 @@ describe("menu inventory per role", () => {
     const expected = ["Stok Gudang & Toko", "Terjual dari Gudang", "Mutasi / Kartu Stok", "Transfer Stok", "Barang Masuk", "Stock Opname", "Stock Adjustment"];
     expect(inventoryMenu("MANAGER")).toEqual(["Stok Gudang & Toko", "Terjual dari Gudang", "Permintaan Barang", "Laporan Selisih Gudang", ...expected.slice(2)]);
     // Barang Keluar memuat nota penjualan, jadi hanya untuk role yang boleh melihat penjualan.
-    expect(inventoryMenu("SUPERVISOR")).toEqual(["Stok Gudang & Toko", "Terjual dari Gudang", "Proses Permintaan Gudang", "Permintaan Barang", "Laporan Selisih Gudang", "Barang Keluar", ...expected.slice(2), "Master Barang", "Kalkulator Modal"]);
+    expect(inventoryMenu("SUPERVISOR")).toEqual(["Stok Gudang & Toko", "Terjual dari Gudang", "Proses Permintaan Gudang", "Permintaan Barang", "Laporan Selisih Gudang", "Barang Keluar", ...expected.slice(2), "Master Barang"]);
+  });
+
+  it("Kalkulator Modal dan Import Packing List hanya Super Admin; Supervisor cukup Master Barang", () => {
+    expect(can("OWNER", "inventory.costing")).toBe(true);
+    expect(can("SUPERVISOR", "inventory.master")).toBe(true);
+    expect(can("SUPERVISOR", "inventory.costing")).toBe(false);
   });
 
   it("Petugas DO (packing) hanya stok dan mutasi", () => {

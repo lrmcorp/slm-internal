@@ -239,7 +239,7 @@ export const NAV_LINKS: NavLink[] = [
     href: "/inventory/kalkulator",
     label: "Kalkulator Modal",
     icon: "∑",
-    permission: "inventory.master",
+    permission: "inventory.costing",
     category: "INVENTORY GUDANG & TOKO",
   },
   {
