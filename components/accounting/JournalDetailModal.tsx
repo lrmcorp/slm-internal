@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/lib/currency";
 import { formatJakartaDate } from "@/lib/date/jakarta";
@@ -236,6 +237,12 @@ export function JournalDetailModal({ journal, onClose, onJournalReversed, onEdit
           <div className="flex flex-wrap gap-2">
             {onEdit && journal.sourceType === "MANUAL" && journal.status === "POSTED" && !journal.isReversal && !showReverseConfirm && (
               <Button onClick={() => onEdit(journal)}>Edit Jurnal</Button>
+            )}
+            {onEdit && journal.sourceType === "CASH_BANK" && journal.status === "POSTED" && !journal.isReversal && !showReverseConfirm && (
+              <Link href={`/kas-bank?edit=${journal.id}#ubah`} className="inline-flex min-h-9 items-center rounded-sm bg-brand-700 px-3 py-2 text-sm font-semibold text-white hover:bg-brand-800">Ubah di Mutasi Kas &amp; Bank</Link>
+            )}
+            {onEdit && !["MANUAL", "CASH_BANK"].includes(journal.sourceType) && journal.status === "POSTED" && !journal.isReversal && !showReverseConfirm && (
+              <p className="max-w-sm self-center text-xs text-slate-600">Jurnal otomatis: ubah lewat dokumen asalnya (penjualan, pengeluaran, pembelian) supaya jurnal dan dokumennya tetap sama.</p>
             )}
             {journal.status === "POSTED" && !showReverseConfirm && (
               <Button

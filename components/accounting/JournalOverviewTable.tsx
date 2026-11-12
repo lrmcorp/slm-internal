@@ -240,6 +240,9 @@ export function JournalOverviewTable({ initialJournals, accounts, canManage = fa
                           >
                             Rincian
                           </Button>
+                          {canManage && j.sourceType === "CASH_BANK" && j.status === "POSTED" && !j.isReversal && (
+                            <a href={`/kas-bank?edit=${j.id}#ubah`} className="inline-flex items-center rounded-sm border border-neutral-300 bg-white px-2.5 py-1 text-xs font-semibold text-neutral-700 hover:bg-brand-50">Edit</a>
+                          )}
                           {isEditable(j) && (
                             <Button
                               variant="secondary"
@@ -274,6 +277,7 @@ export function JournalOverviewTable({ initialJournals, accounts, canManage = fa
 
       {/* Manual Journal Modal */}
       <ManualJournalModal
+        key={editingJournal?.id ?? (isManualModalOpen ? "baru" : "tutup")}
         isOpen={isManualModalOpen || Boolean(editingJournal)}
         editing={editingJournal}
         onClose={() => { setIsManualModalOpen(false); setEditingJournal(null); }}

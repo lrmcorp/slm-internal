@@ -5,6 +5,7 @@ import { prisma } from "@/lib/db/prisma";
 import type { Role } from "@/lib/auth/roles";
 import { ensureStandardAccounts, getAccountByCode } from "@/lib/accounting/accountStore";
 import { postJournalEntry, reverseJournalEntry } from "@/lib/accounting/journalStore";
+import { assertPeriodOpen } from "@/lib/accounting/periodStore";
 import { GENERAL_CASH_CODE, cashAccountForRekening } from "@/lib/accounting/rekeningLedger";
 
 /**
@@ -60,7 +61,8 @@ async function rekeningSide(rekeningId: string) {
   return { account: await cashAccountForRekening(rek.id), name: rek.name };
 }
 
-export async function createCashBankMutation(input: CashBankInput, actor: Actor) {
+/** Susun tanggal, keterangan, dan baris jurnal dari isian form (dipakai saat catat dan saat ubah). */
+async function buildCashBankJournal(input: CashBankInput) {
   await ensureStandardAccounts();
   const t = def(input.type);
   const amount = Math.round(input.amount * 100) / 100;
@@ -78,14 +80,59 @@ export async function createCashBankMutation(input: CashBankInput, actor: Actor)
   if (from) lines.push(line(from.account, 0, amount, `Keluar dari ${from.name}`));
   if (counter && t.counterSide === "credit") lines.push(line(counter, 0, amount, t.label));
 
+  return { entryDate: new Date(`${input.date}T12:00:00+07:00`), description, lines: lines.map((l, i) => ({ ...l, sortOrder: i })) };
+}
+
+export async function createCashBankMutation(input: CashBankInput, actor: Actor) {
+  const built = await buildCashBankJournal(input);
   return postJournalEntry({
-    entryDate: new Date(`${input.date}T12:00:00+07:00`),
+    ...built,
     sourceType: "CASH_BANK",
     sourceId: `CB-${input.type}-${crypto.randomUUID()}`,
-    postingType: "CASH_BANK",
-    description,
-    lines: lines.map((l, i) => ({ ...l, sortOrder: i }))
+    postingType: "CASH_BANK"
   }, actor);
+}
+
+/**
+ * Ubah mutasi yang sudah dicatat: jurnal yang sama (nomor tetap) disusun ulang dari isian baru.
+ * Tidak bisa untuk mutasi yang sudah dibatalkan atau periode yang sudah tutup buku. Tercatat di Audit Trail.
+ */
+export async function updateCashBankMutation(journalId: string, input: CashBankInput, actor: Actor) {
+  const original = await prisma.journalEntry.findUnique({ where: { id: journalId }, include: { lines: { orderBy: { sortOrder: "asc" } } } });
+  if (!original || original.sourceType !== "CASH_BANK" || original.isReversal) throw new Error("Mutasi kas & bank tidak ditemukan.");
+  if (original.status === "REVERSED" || original.reversedByJournalId) throw new Error(`Mutasi ${original.journalNumber} sudah dibatalkan, tidak bisa diubah.`);
+  const built = await buildCashBankJournal(input);
+  await assertPeriodOpen(original.entryDate);
+  await assertPeriodOpen(built.entryDate);
+  const accounts = await prisma.account.findMany({ where: { id: { in: built.lines.map((l) => l.accountId) } }, select: { id: true, code: true, name: true } });
+  const byId = new Map(accounts.map((a) => [a.id, a]));
+  const total = built.lines.reduce((sum, l) => sum + l.debit, 0);
+  // Bagian acak sourceId dipertahankan; jenis mengikuti isian baru.
+  const suffix = /^CB-[A-Z_]+-(.+)$/.exec(original.sourceId ?? "")?.[1] ?? crypto.randomUUID();
+  return prisma.$transaction(async (tx) => {
+    await tx.journalLine.deleteMany({ where: { journalEntryId: original.id } });
+    const updated = await tx.journalEntry.update({
+      where: { id: original.id },
+      data: {
+        entryDate: built.entryDate,
+        description: built.description,
+        sourceId: `CB-${input.type}-${suffix}`,
+        totalDebit: total,
+        totalCredit: total,
+        lines: { create: built.lines.map((l) => ({ accountId: l.accountId, accountCodeSnapshot: byId.get(l.accountId)?.code ?? "", accountNameSnapshot: byId.get(l.accountId)?.name ?? "", debit: l.debit, credit: l.credit, memo: l.memo, sortOrder: l.sortOrder })) }
+      },
+      include: { lines: { orderBy: { sortOrder: "asc" } } }
+    });
+    await tx.auditLog.create({
+      data: {
+        id: crypto.randomUUID(), entityType: "coa", entityId: original.id, action: "update",
+        beforeValue: JSON.parse(JSON.stringify(original)), afterValue: JSON.parse(JSON.stringify(updated)),
+        userId: actor.id, userNameSnapshot: actor.name, userRoleSnapshot: actor.role,
+        reason: `Ubah mutasi kas & bank ${original.journalNumber}`
+      }
+    });
+    return updated;
+  });
 }
 
 export function cashBankTypeOf(sourceId: string | null): CashBankType | null {
@@ -94,6 +141,13 @@ export function cashBankTypeOf(sourceId: string | null): CashBankType | null {
 }
 
 export async function listCashBankMutations(limit = 100) {
+  // Akun buku → rekening, untuk mengisi ulang form saat mutasi diubah.
+  const [rekenings, general] = await Promise.all([
+    prisma.rekeningAccount.findMany({ where: { accountId: { not: null } }, select: { id: true, accountId: true } }),
+    getAccountByCode(GENERAL_CASH_CODE)
+  ]);
+  const rekeningOfAccount = new Map<string, string>(rekenings.map((r) => [r.accountId!, r.id]));
+  if (general) rekeningOfAccount.set(general.id, GENERAL_REKENING);
   const rows = await prisma.journalEntry.findMany({
     where: { sourceType: "CASH_BANK", isReversal: false },
     orderBy: [{ entryDate: "desc" }, { createdAt: "desc" }],
@@ -112,6 +166,10 @@ export async function listCashBankMutations(limit = 100) {
       typeLabel: type ? CASH_BANK_TYPES[type].label : "Mutasi kas & bank",
       from: creditCash?.memo?.replace(/^Keluar dari /, "") ?? null,
       to: debitCash?.memo?.replace(/^Masuk ke /, "") ?? null,
+      fromRekeningId: creditCash ? rekeningOfAccount.get(creditCash.accountId) ?? null : null,
+      toRekeningId: debitCash ? rekeningOfAccount.get(debitCash.accountId) ?? null : null,
+      // Keterangan tambahan yang diketik pengguna (setelah " · ").
+      notes: j.description.split(" · ").slice(1).join(" · ") || null,
       amount: Number(j.totalDebit),
       description: j.description,
       cancelled: j.status === "REVERSED" || Boolean(j.reversedByJournalId),

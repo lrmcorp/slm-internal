@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency } from "@/lib/currency";
 import { jakartaDateKey } from "@/lib/date/jakarta";
@@ -41,33 +41,17 @@ type Props = {
 
 export function ManualJournalModal({ isOpen, onClose, accounts, onSuccess, editing }: Props) {
   const { showToast } = useToast();
-  const [entryDate, setEntryDate] = useState(jakartaDateKey(new Date()));
+  // Nilai awal diambil saat modal dipasang; induknya memberi key berbeda tiap buka, jadi isian selalu segar.
+  const [entryDate, setEntryDate] = useState(() => jakartaDateKey(editing ? new Date(editing.entryDate) : new Date()));
   const [sourceRef, setSourceRef] = useState("");
-  const [description, setDescription] = useState("");
-  const [lines, setLines] = useState<JournalLineForm[]>([
-    { accountId: accounts[0]?.id || "", debit: 0, credit: 0, description: "" },
-    { accountId: accounts[1]?.id || "", debit: 0, credit: 0, description: "" },
-  ]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
-  // Setiap kali dibuka: isi dari jurnal yang diedit, atau kosongkan untuk jurnal baru.
-  useEffect(() => {
-    if (!isOpen) return;
-    if (editing) {
-      setEntryDate(jakartaDateKey(new Date(editing.entryDate)));
-      setSourceRef("");
-      setDescription(editing.description);
-      setLines(editing.lines.map((l) => ({ accountId: l.accountId, debit: Number(l.debit) || 0, credit: Number(l.credit) || 0, description: l.description ?? "" })));
-    } else {
-      setEntryDate(jakartaDateKey(new Date()));
-      setSourceRef("");
-      setDescription("");
-      setLines([
+  const [description, setDescription] = useState(editing?.description ?? "");
+  const [lines, setLines] = useState<JournalLineForm[]>(() => editing
+    ? editing.lines.map((l) => ({ accountId: l.accountId, debit: Number(l.debit) || 0, credit: Number(l.credit) || 0, description: l.description ?? "" }))
+    : [
         { accountId: accounts[0]?.id || "", debit: 0, credit: 0, description: "" },
         { accountId: accounts[1]?.id || "", debit: 0, credit: 0, description: "" },
       ]);
-    }
-  }, [isOpen, editing, accounts]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (!isOpen) return null;
 

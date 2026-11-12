@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { AppShell } from "@/components/layout/AppShell";
 import { requirePermission } from "@/lib/auth/requirePermission";
 import { AddPanel } from "@/components/inventory/AddPanel";
@@ -10,10 +11,16 @@ export const dynamic = "force-dynamic";
 
 const rupiah = (n: number) => `Rp ${Math.round(n).toLocaleString("id-ID")}`;
 
-export default async function CashBankPage() {
+export default async function CashBankPage({ searchParams }: { searchParams: Promise<{ edit?: string }> }) {
   await requirePermission("cashbank.manage");
   const [balances, mutations] = await Promise.all([cashBankBalances(), listCashBankMutations()]);
   const showGeneral = Math.abs(balances.general.balance) >= 1;
+  const editId = (await searchParams).edit;
+  const editingRow = editId ? mutations.find((m) => m.id === editId && !m.cancelled && m.type) : undefined;
+  const editing = editingRow ? {
+    id: editingRow.id, journalNumber: editingRow.journalNumber, type: editingRow.type!, date: jakartaDateKey(new Date(editingRow.date)),
+    fromRekeningId: editingRow.fromRekeningId, toRekeningId: editingRow.toRekeningId, amount: editingRow.amount, notes: editingRow.notes
+  } : undefined;
   const rekeningOptions = [
     ...balances.rekenings.map((r) => ({ id: r.id, label: r.name })),
     ...(showGeneral ? [{ id: balances.general.id, label: balances.general.name }] : [])
@@ -32,9 +39,15 @@ export default async function CashBankPage() {
         </p>
       </div>
 
-      <AddPanel label="Catat Mutasi">
-        <CashBankForm types={types} rekenings={rekeningOptions} today={jakartaDateKey()} />
-      </AddPanel>
+      {editing ? (
+        <div id="ubah" className="mb-6">
+          <CashBankForm key={editing.id} types={types} rekenings={rekeningOptions} today={jakartaDateKey()} editing={editing} />
+        </div>
+      ) : (
+        <AddPanel label="Catat Mutasi">
+          <CashBankForm types={types} rekenings={rekeningOptions} today={jakartaDateKey()} />
+        </AddPanel>
+      )}
 
       <section className="mb-8">
         <h3 className="mb-3 font-bold text-slate-800">Saldo per rekening</h3>
@@ -80,6 +93,7 @@ export default async function CashBankPage() {
                   <td className="whitespace-nowrap px-3 py-2 text-right tabular-nums">{rupiah(m.amount)}</td>
                   <td className="px-3 py-2 text-xs">{m.createdBy}</td>
                   <td className="px-3 py-2">
+                    {!m.cancelled && m.type && <Link href={`/kas-bank?edit=${m.id}#ubah`} className="mr-2 inline-flex min-h-11 items-center text-sm font-semibold text-brand-800 underline">Ubah</Link>}
                     {!m.cancelled && <InventoryActionButton endpoint={`/api/cash-bank/${m.id}/cancel`} label="Batalkan" askReason variant="danger" title={`Batalkan ${m.typeLabel.toLowerCase()} ${rupiah(m.amount)}?`} description="Jurnal pembalik dibuat dengan tanggal hari ini, jadi saldo rekening kembali seperti sebelum mutasi ini." />}
                   </td>
                 </tr>

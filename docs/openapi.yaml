@@ -2387,6 +2387,28 @@ paths:
           description: Data tidak valid atau periode sudah ditutup.
         "403":
           description: Tidak punya akses.
+  /api/cash-bank/{id}:
+    put:
+      summary: Ubah mutasi kas & bank. Jurnal yang sama disusun ulang dari isian baru (nomor tetap); tercatat di Audit Trail. Ditolak bila sudah dibatalkan atau periodenya tutup buku.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Mutasi diubah.
+        "400":
+          description: Data tidak valid atau mutasi tidak bisa diubah.
+        "403":
+          description: Tidak punya akses.
   /api/cash-bank/{id}/cancel:
     post:
       summary: Batalkan mutasi kas & bank dengan jurnal pembalik bertanggal hari ini.
