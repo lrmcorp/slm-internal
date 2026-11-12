@@ -87,7 +87,8 @@ function ProductEditor({ row, rate, cbmRate, categories, onDone }: { row: Produc
   const pcs = Number(f.pcsPerUnit) > 0 ? Number(f.pcsPerUnit) : null;
   const rmbPerPcs = f.rmbPerPcs.trim() === "" ? null : Number(f.rmbPerPcs.replace(",", "."));
   // undefined = harga per pcs diisi tetapi isi pcs belum ada, jadi harga per satuan belum bisa dihitung.
-  const rmb = rmbPerPcs == null ? null : pcs ? Math.round(rmbPerPcs * pcs * 10000) / 10000 : undefined;
+  // RMB kosong atau 0 = tanpa RMB: modal diisi manual dalam Rupiah.
+  const rmb = rmbPerPcs == null || !(rmbPerPcs > 0) ? null : pcs ? Math.round(rmbPerPcs * pcs * 10000) / 10000 : undefined;
   const cbm = Number(f.cbmPerUnit) || 0;
   const cbmTariff = f.cbmRateIdr.trim() === "" ? cbmRate ?? 0 : Number(f.cbmRateIdr) || 0;
   const freight = Math.round(cbm * cbmTariff * 100) / 100;
@@ -158,7 +159,7 @@ function ProductEditor({ row, rate, cbmRate, categories, onDone }: { row: Produc
         <p className="text-xs text-slate-600">Barang titipan tidak dihitung sebagai aset SLM. Saat terjual, modalnya dicatat sebagai utang ke penitip. Kepemilikan hanya bisa diganti saat stoknya 0.</p>
       )}
       <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-600">
-        <span>{f.rmbPerPcs.trim() !== "" && !pcs ? "Isi dulu jumlah pcs per satuan agar harga per pcs bisa dihitung. " : null}{previewCost != null ? <>Modal otomatis: ¥{f.rmbPerPcs} × {pcs} pcs = ¥{rmb} × Rp {rate?.toLocaleString("id-ID")}{freight ? ` + ongkir CBM Rp ${freight.toLocaleString("id-ID")}` : ""}{Number(f.extraCostIdr) ? ` + Rp ${Number(f.extraCostIdr).toLocaleString("id-ID")}` : ""} = <b>Rp {previewCost.toLocaleString("id-ID")}</b>{markup != null ? <> · mark-up <b>{markup.toLocaleString("id-ID")}%</b></> : null}</> : rmb != null ? "Kurs RMB belum diatur, jadi modal belum dihitung otomatis." : "Isi Harga RMB agar modal ikut berubah saat kurs RMB diganti."}</span>
+        <span>{rmb === undefined ? "Isi dulu jumlah pcs per satuan agar harga per pcs bisa dihitung. " : null}{previewCost != null ? <>Modal otomatis: ¥{f.rmbPerPcs} × {pcs} pcs = ¥{rmb} × Rp {rate?.toLocaleString("id-ID")}{freight ? ` + ongkir CBM Rp ${freight.toLocaleString("id-ID")}` : ""}{Number(f.extraCostIdr) ? ` + Rp ${Number(f.extraCostIdr).toLocaleString("id-ID")}` : ""} = <b>Rp {previewCost.toLocaleString("id-ID")}</b>{markup != null ? <> · mark-up <b>{markup.toLocaleString("id-ID")}%</b></> : null}</> : rmb != null ? "Kurs RMB belum diatur, jadi modal belum dihitung otomatis." : "Isi Harga RMB agar modal ikut berubah saat kurs RMB diganti."}</span>
         <div className="flex gap-2"><Button variant="secondary" className="min-h-11" onClick={onDone}>Batal</Button><Button className="min-h-11" onClick={save} disabled={busy}>{busy ? "Menyimpan..." : "Simpan"}</Button></div>
       </div>
     </div>

@@ -18,7 +18,8 @@ export function ProductCreateForm({ locations }: { locations: InvLocation[] }) {
 
   // Harga RMB diisi per pcs; disimpan per satuan (per pcs × isi pcs).
   const pcs = Number(form.pcsPerUnit) > 0 ? Math.round(Number(form.pcsPerUnit)) : defaultPcsPerUnit(form.unit || "Lusin");
-  const rmbPerUnit = form.priceRmb ? (pcs ? Math.round(Number(form.priceRmb.replace(",", ".")) * pcs * 10000) / 10000 : undefined) : null;
+  // RMB 0 sama dengan kosong: modal ikut harga Rupiah.
+  const rmbPerUnit = Number(form.priceRmb.replace(",", ".")) > 0 ? (pcs ? Math.round(Number(form.priceRmb.replace(",", ".")) * pcs * 10000) / 10000 : undefined) : null;
 
   async function save() {
     if (rmbPerUnit === undefined) return showToast(`Isi dulu jumlah pcs per ${form.unit || "satuan"}.`, "error");

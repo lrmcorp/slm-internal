@@ -30,7 +30,8 @@ export async function getCbmRate(): Promise<{ rate: number | null; updatedAt?: s
 }
 
 /**
- * Hitung ulang harga modal semua barang yang punya harga RMB dengan kurs & tarif CBM saat ini.
+ * Hitung ulang harga modal semua barang yang punya harga RMB (> 0) dengan kurs & tarif CBM saat ini.
+ * Barang dengan RMB 0 memakai modal Rupiah yang diisi, jadi tidak ikut dihitung ulang.
  * Barang dengan tarif CBM khusus memakai tarif khususnya. Harga jual dan nilai stok tercatat tidak diubah.
  */
 async function recomputeCosts(tx: Prisma.TransactionClient, rmbRate: number | null, cbmRate: number | null) {
@@ -42,7 +43,7 @@ async function recomputeCosts(tx: Prisma.TransactionClient, rmbRate: number | nu
       + COALESCE("cbmPerUnit", 0) * COALESCE("cbmRateIdr", ${cbmRate ?? 0}::numeric)
       + "extraCostIdr", 2),
       "updatedAt" = NOW()
-    WHERE "priceRmb" IS NOT NULL`;
+    WHERE "priceRmb" IS NOT NULL AND "priceRmb" > 0`;
 }
 
 async function saveRate(key: string, description: string, rate: number, actor?: { id?: string; name?: string }) {
@@ -83,7 +84,8 @@ export async function applyRmbCost<T extends CostInputs>(
   existing?: { priceRmb: number | null; extraCostIdr: number; cbmPerUnit?: number | null; cbmRateIdr?: number | null }
 ): Promise<T> {
   const priceRmb = data.priceRmb !== undefined ? data.priceRmb : existing?.priceRmb;
-  if (priceRmb == null) return data;
+  // RMB 0 = tidak dibeli dalam RMB: modal ikut harga Rupiah yang diisi.
+  if (priceRmb == null || priceRmb <= 0) return data;
   const [{ rate }, { rate: globalCbm }] = await Promise.all([getRmbRate(), getCbmRate()]);
   if (!rate) return data;
   const extra = data.extraCostIdr ?? existing?.extraCostIdr ?? 0;

@@ -257,7 +257,7 @@ export async function importOpnameWorkbook(parsed: ParsedOpnameWorkbook, options
   // 1) Master barang: buat yang belum ada, perbarui yang sudah ada bila diminta.
   //    Bila ada Harga RMB dan kurs RMB sudah diatur, modal dihitung dari RMB.
   const { rate } = await getRmbRate();
-  const costOf = (r: OpnameImportRow) => (r.priceRmb != null && rate ? costFromRmb(r.priceRmb, rate) : r.costPrice);
+  const costOf = (r: OpnameImportRow) => (r.priceRmb != null && r.priceRmb > 0 && rate ? costFromRmb(r.priceRmb, rate) : r.costPrice);
   const newRows = parsed.rows.filter((r) => !existing.has(r.sku));
   for (let i = 0; i < newRows.length; i += 500) {
     await prisma.inventoryProduct.createMany({

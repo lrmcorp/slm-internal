@@ -1,4 +1,6 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("server-only", () => ({}));
 import { productUpdateSchema } from "@/lib/inventory/validation";
 
 describe("PATCH barang parsial", () => {
@@ -21,5 +23,15 @@ describe("PATCH parsial lain tanpa default tersembunyi", () => {
   it("akun COA: ganti nama tidak me-reset urutan atau mengaktifkan akun", async () => {
     const { accountUpdateSchema } = await import("@/lib/validation/accountingSchema");
     expect(accountUpdateSchema.parse({ name: "Kas Kecil" })).toEqual({ name: "Kas Kecil" });
+  });
+});
+
+describe("harga RMB 0 = ikut modal Rupiah", () => {
+  it("applyRmbCost tidak menimpa modal bila RMB 0 atau kosong", async () => {
+    const { applyRmbCost } = await import("@/lib/inventory/pricing");
+    expect(await applyRmbCost({ priceRmb: 0, costPrice: 41000 })).toEqual({ priceRmb: 0, costPrice: 41000 });
+    expect(await applyRmbCost({ priceRmb: null, costPrice: 41000 })).toEqual({ priceRmb: null, costPrice: 41000 });
+    // RMB lama 0 di database, kiriman hanya biaya lain: modal tetap dari Rupiah.
+    expect(await applyRmbCost({ extraCostIdr: 500, costPrice: 41000 }, { priceRmb: 0, extraCostIdr: 0 })).toEqual({ extraCostIdr: 500, costPrice: 41000 });
   });
 });
