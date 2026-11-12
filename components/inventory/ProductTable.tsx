@@ -18,7 +18,7 @@ export type ProductRow = {
 
 const fmt = (n: number | null | undefined, d = 2) => (n == null ? "-" : n.toLocaleString("id-ID", { maximumFractionDigits: d }));
 
-export function ProductTable({ rows, rate, cbmRate = null, canManage, initialEditingId }: { rows: ProductRow[]; rate: number | null; cbmRate?: number | null; canManage: boolean; initialEditingId?: string }) {
+export function ProductTable({ rows, rate, cbmRate = null, canManage, initialEditingId, categories = [] }: { rows: ProductRow[]; rate: number | null; cbmRate?: number | null; canManage: boolean; initialEditingId?: string; categories?: string[] }) {
   const [editing, setEditing] = useState<string | null>(canManage && initialEditingId ? initialEditingId : null);
   const editorRef = useRef<HTMLDivElement>(null);
   const editingRow = rows.find((x) => x.id === editing);
@@ -31,7 +31,7 @@ export function ProductTable({ rows, rate, cbmRate = null, canManage, initialEdi
       {editingRow && (
         <div ref={editorRef} className="aj-surface mb-4 scroll-mt-4 border-brand-300 p-4">
           <h3 className="mb-3 font-bold text-slate-900">Ubah {editingRow.sku}</h3>
-          <ProductEditor key={editingRow.id} row={editingRow} rate={rate} cbmRate={cbmRate} onDone={() => setEditing(null)} />
+          <ProductEditor key={editingRow.id} row={editingRow} rate={rate} cbmRate={cbmRate} categories={categories} onDone={() => setEditing(null)} />
         </div>
       )}
     <div className="aj-surface mb-8 overflow-x-auto">
@@ -73,12 +73,12 @@ function MarkupCell({ cost, sell }: { cost: number; sell: number }) {
   return <td className={`px-3 py-2 text-right tabular-nums ${m == null ? "text-slate-400" : m < 0 ? "font-semibold text-rose-700" : ""}`}>{m == null ? "-" : `${fmt(m, 1)}%`}</td>;
 }
 
-function ProductEditor({ row, rate, cbmRate, onDone }: { row: ProductRow; rate: number | null; cbmRate: number | null; onDone: () => void }) {
+function ProductEditor({ row, rate, cbmRate, categories, onDone }: { row: ProductRow; rate: number | null; cbmRate: number | null; categories: string[]; onDone: () => void }) {
   const router = useRouter();
   const { showToast } = useToast();
   const s = (n: number | null | undefined) => (n == null ? "" : String(n));
   const initialPcs = defaultPcsPerUnit(row.unit, row.pcsPerUnit);
-  const [f, setF] = useState({ name: row.name, unit: row.unit, unitsPerKoli: s(row.unitsPerKoli),
+  const [f, setF] = useState({ name: row.name, category: row.category ?? "", unit: row.unit, unitsPerKoli: s(row.unitsPerKoli),
     pcsPerUnit: s(initialPcs),
     // Harga RMB diisi per pcs; yang disimpan per satuan (per pcs × isi pcs).
     rmbPerPcs: row.priceRmb != null && initialPcs ? s(Math.round((row.priceRmb / initialPcs) * 10000) / 10000) : "",
@@ -100,6 +100,8 @@ function ProductEditor({ row, rate, cbmRate, onDone }: { row: ProductRow; rate: 
     try {
       const payload = {
         name: f.name, unit: f.unit,
+        // Kosong = kategori tidak diubah.
+        ...(f.category.trim() && f.category.trim() !== (row.category ?? "") ? { category: f.category.trim() } : {}),
         unitsPerKoli: f.unitsPerKoli.trim() === "" ? null : Number(f.unitsPerKoli),
         pcsPerUnit: pcs ? Math.round(pcs) : null,
         priceRmb: rmb,
@@ -131,6 +133,9 @@ function ProductEditor({ row, rate, cbmRate, onDone }: { row: ProductRow; rate: 
     <div className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-4 lg:grid-cols-5">
         <div className="sm:col-span-2">{field("Nama", "name")}</div>
+        {/* Pilih kategori yang ada, atau ketik kategori baru. */}
+        {field("Kategori", "category", { list: `kategori-${row.id}`, placeholder: "pilih atau ketik baru", autoComplete: "off" })}
+        <datalist id={`kategori-${row.id}`}>{categories.map((c) => <option key={c} value={c} />)}</datalist>
         {field("Satuan", "unit")}
         {field(`Isi per koli (${f.unit || "Lusin"})`, "unitsPerKoli", { inputMode: "decimal", placeholder: "mis. 60" })}
         {field(`Isi pcs per ${f.unit || "Lusin"}`, "pcsPerUnit", { inputMode: "numeric", placeholder: "lusin = 12" })}

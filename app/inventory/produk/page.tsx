@@ -12,7 +12,7 @@ import { can, primaryRole } from "@/lib/auth/roles";
 import { getCurrentRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
 import { getCbmRate, getRmbRate } from "@/lib/inventory/pricing";
-import { listLocations, listProducts, listUnitUsage } from "@/lib/inventory/service";
+import { listLocations, listProductCategories, listProducts, listUnitUsage } from "@/lib/inventory/service";
 
 export const dynamic = "force-dynamic";
 
@@ -23,13 +23,14 @@ export default async function InventoryProductPage({ searchParams }: { searchPar
   const p = await searchParams;
   const canManage = can(access, "inventory.master");
   const canCosting = can(access, "inventory.costing");
-  const [locations, result, rmb, rmbProducts, units, cbm] = await Promise.all([
+  const [locations, result, rmb, rmbProducts, units, cbm, categories] = await Promise.all([
     listLocations(),
     listProducts({ keyword: p.keyword, page: Number(p.page) || 1, pageSize: 50 }),
     getRmbRate(),
     prisma.inventoryProduct.count({ where: { priceRmb: { not: null } } }),
     listUnitUsage(),
-    getCbmRate()
+    getCbmRate(),
+    listProductCategories()
   ]);
   return (
     <AppShell>
@@ -44,7 +45,7 @@ export default async function InventoryProductPage({ searchParams }: { searchPar
         <input name="keyword" defaultValue={p.keyword} placeholder="Cari SKU / nama / barcode" className={`${filterInput} w-full sm:w-72`} />
         <button className={filterButton}>Cari</button>
       </form>
-      <ProductTable rows={result.data} rate={rmb.rate} cbmRate={cbm.rate} canManage={canManage} initialEditingId={p.edit} />
+      <ProductTable rows={result.data} rate={rmb.rate} cbmRate={cbm.rate} canManage={canManage} initialEditingId={p.edit} categories={categories} />
       <Pager basePath="/inventory/produk" params={{ keyword: p.keyword }} page={result.meta.page} totalPages={result.meta.totalPages} />
     </AppShell>
   );

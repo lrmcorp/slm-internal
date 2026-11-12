@@ -320,7 +320,10 @@ export async function updateProduct(idOrSku: string, input: Partial<Omit<Product
     }
   }
   if (input.ownership === "OWN") input = { ...input, consignorName: undefined };
-  const data = await applyRmbCost(input, {
+  // Modal dihitung ulang dari RMB hanya bila salah satu komponen biayanya ikut dikirim.
+  // Ganti kategori/nama saja tidak boleh menggeser modal karena kurs berubah sejak terakhir disimpan.
+  const touchesCost = ["priceRmb", "extraCostIdr", "cbmPerUnit", "cbmRateIdr"].some((k) => input[k as keyof typeof input] !== undefined);
+  const data = !touchesCost ? input : await applyRmbCost(input, {
     priceRmb: product.priceRmb == null ? null : num(product.priceRmb),
     extraCostIdr: num(product.extraCostIdr),
     cbmPerUnit: product.cbmPerUnit == null ? null : num(product.cbmPerUnit),
@@ -1098,6 +1101,12 @@ export async function listStockInHistory(limit = 30) {
 }
 
 /** Daftar satuan yang dipakai beserta jumlah barangnya (untuk ubah satuan massal). */
+/** Kategori barang yang sudah dipakai, untuk pilihan di form Master Barang. */
+export async function listProductCategories() {
+  const rows = await prisma.inventoryProduct.findMany({ where: { category: { not: null } }, select: { category: true }, distinct: ["category"], orderBy: { category: "asc" } });
+  return rows.map((r) => r.category!).filter((c) => c.trim() !== "");
+}
+
 export async function listUnitUsage() {
   const rows = await prisma.inventoryProduct.groupBy({ by: ["unit"], _count: { _all: true }, orderBy: { unit: "asc" } });
   return rows.map((r) => ({ unit: r.unit, count: r._count._all }));

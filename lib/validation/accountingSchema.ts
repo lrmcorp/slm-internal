@@ -19,6 +19,12 @@ export const accountSchema = z.object({
   sortOrder: z.coerce.number().int().default(0),
   isActive: z.boolean().default(true)
 });
+
+/** PATCH akun: parsial tanpa default, supaya ganti nama tidak me-reset urutan atau mengaktifkan akun nonaktif. */
+export const accountUpdateSchema = accountSchema.extend({
+  sortOrder: z.coerce.number().int(),
+  isActive: z.boolean()
+}).partial();
 export type AccountInput = z.infer<typeof accountSchema>;
 
 export const manualJournalLineSchema = z.object({

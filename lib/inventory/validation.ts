@@ -19,7 +19,13 @@ export const locationSchema = z.object({
   isActive: z.boolean().default(true),
   notes: optionalText(1000)
 });
-export const locationUpdateSchema = locationSchema.partial();
+/** Parsial tanpa default (lihat productUpdateSchema). */
+export const locationUpdateSchema = locationSchema.extend({
+  type: z.enum(["WAREHOUSE", "STORE"]),
+  allowNegative: z.boolean(),
+  isDefault: z.boolean(),
+  isActive: z.boolean()
+}).partial();
 
 export const productSchema = z.object({
   sku: z.string().trim().min(1, "SKU wajib diisi").max(80),
@@ -51,7 +57,18 @@ export const productSchema = z.object({
   notes: optionalText(1000),
   initialStock: z.array(z.object({ locationId: z.string().min(1), quantity: qty.min(0), unitCost: z.coerce.number().min(0).optional() })).optional()
 });
-export const productUpdateSchema = productSchema.omit({ initialStock: true }).partial();
+/**
+ * PATCH benar-benar parsial: field yang tidak dikirim tetap undefined. Zod 4 menerapkan .default() di dalam
+ * .partial(), jadi tanpa ini { category } saja akan menimpa sellingPrice/costPrice/minimumStock jadi 0,
+ * unit jadi bawaan, dan isActive jadi true.
+ */
+export const productUpdateSchema = productSchema.omit({ initialStock: true }).extend({
+  unit: z.string().trim().min(1).max(20),
+  minimumStock: z.coerce.number().min(0),
+  costPrice: z.coerce.number().min(0),
+  sellingPrice: z.coerce.number().min(0),
+  isActive: z.boolean()
+}).partial();
 
 /** Referensi produk: id lokal, SKU, atau ID produk ERP (untuk klien API eksternal). */
 const productRef = z.object({

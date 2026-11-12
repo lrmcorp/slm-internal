@@ -3,7 +3,7 @@ import { ZodError } from "zod";
 import { getCurrentUser } from "@/lib/auth/session";
 import { can } from "@/lib/auth/roles";
 import { getAccountById, updateAccount, deleteAccount } from "@/lib/accounting/accountStore";
-import { accountSchema } from "@/lib/validation/accountingSchema";
+import { accountUpdateSchema } from "@/lib/validation/accountingSchema";
 
 export async function GET(request: Request, { params }: { params: Promise<{ id: string }> }) {
   const user = await getCurrentUser();
@@ -35,7 +35,7 @@ export async function PUT(request: Request, { params }: { params: Promise<{ id: 
   const { id } = await params;
   try {
     const json = await request.json();
-    const validated = accountSchema.partial().parse(json);
+    const validated = accountUpdateSchema.parse(json);
     const updated = await updateAccount(id, validated, {
       id: user.id,
       name: user.name,
