@@ -50,7 +50,8 @@ const MANAGER_SDM_SYSTEM: Permission[] = [
 export const ROLE_PERMISSIONS: Record<Role, Permission[]> = {
   OWNER: [...ALL_PERMISSIONS],
   // Gaji tetap rahasia dari Supervisor.
-  SUPERVISOR: ALL_PERMISSIONS.filter((p) => !OWNER_ONLY(p) && p !== "sdm.salary.view" && !p.startsWith("inventory.")).concat(INVENTORY_MANAGER),
+  // Master Barang (isi per koli, harga, modal) juga dibuka untuk Supervisor.
+  SUPERVISOR: ALL_PERMISSIONS.filter((p) => !OWNER_ONLY(p) && p !== "sdm.salary.view" && !p.startsWith("inventory.")).concat(INVENTORY_MANAGER, "inventory.master"),
   ADMIN: [
     "penjualan.create", "penjualan.manage", "do.view", "do.process", "do.assign",
     // Tempo terbatas: hanya daftar yang jatuh tempo ≤ 3 hari, tanpa total nominal
