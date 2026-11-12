@@ -28,6 +28,31 @@ export type ConsignmentSale = {
   total: number;
 };
 
+/** Satu nota yang menjual barang ini tanpa stok. */
+export type ConsignmentProductSale = {
+  saleId: string | null;
+  transactionNumber: string | null;
+  customerName: string;
+  transactionAt: string | null;
+  saleDate: string;
+  location: string;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+};
+
+/** Rekap per barang untuk periode: total qty yang terjual melebihi stok. */
+export type ConsignmentProduct = {
+  sku: string;
+  name: string;
+  unit: string;
+  quantity: number;
+  total: number;
+  notaCount: number;
+  lastSoldAt: string;
+  sales: ConsignmentProductSale[];
+};
+
 export type ConsignmentDay = { dayKey: string; notaCount: number; quantity: number; total: number };
 
 export async function getConsignmentReport(filter: { from: string; to: string; keyword?: string }) {
@@ -90,7 +115,25 @@ export async function getConsignmentReport(filter: { from: string; to: string; k
     d.total += s.total;
     days.set(s.dayKey, d);
   }
+  const products = new Map<string, ConsignmentProduct>();
+  for (const s of list) {
+    for (const l of s.lines) {
+      // Saat dicari, nota yang cocok karena barang lain tidak ikut menambah barang ini.
+      if (keyword && !`${s.customerName} ${s.transactionNumber ?? ""} ${l.sku} ${l.name}`.toLowerCase().includes(keyword)) continue;
+      const soldAt = s.transactionAt ?? s.saleDate;
+      const p = products.get(l.sku) ?? { sku: l.sku, name: l.name, unit: l.unit, quantity: 0, total: 0, notaCount: 0, lastSoldAt: soldAt, sales: [] };
+      p.quantity += l.quantity;
+      p.total += l.amount;
+      if (!p.sales.some((x) => x.saleId !== null && x.saleId === s.saleId)) p.notaCount += 1;
+      if (soldAt > p.lastSoldAt) p.lastSoldAt = soldAt;
+      p.sales.push({ saleId: s.saleId, transactionNumber: s.transactionNumber, customerName: s.customerName, transactionAt: s.transactionAt, saleDate: s.saleDate, location: l.location, quantity: l.quantity, unitPrice: l.unitPrice, amount: l.amount });
+      products.set(l.sku, p);
+    }
+  }
+  const productList = Array.from(products.values()).sort((a, b) => b.quantity - a.quantity || b.total - a.total || a.sku.localeCompare(b.sku));
+
   return {
+    products: productList,
     sales: list,
     days: Array.from(days.values()),
     totals: { notaCount: list.length, total: list.reduce((s, x) => s + x.total, 0), items: list.reduce((s, x) => s + x.lines.length, 0) }

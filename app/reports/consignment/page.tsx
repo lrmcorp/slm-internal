@@ -36,54 +36,52 @@ export default async function ConsignmentReportPage({ searchParams }: { searchPa
       <form className="mb-4 flex flex-wrap items-end gap-2">
         <label className="text-xs font-semibold text-slate-700">Dari<input type="date" name="from" defaultValue={from} className={`${input} mt-1 block`} /></label>
         <label className="text-xs font-semibold text-slate-700">Sampai<input type="date" name="to" defaultValue={to} className={`${input} mt-1 block`} /></label>
-        <label className="min-w-48 flex-1 text-xs font-semibold text-slate-700">Cari<input name="keyword" defaultValue={p.keyword} placeholder="Customer / no transaksi / barang" className={`${input} mt-1 block w-full`} /></label>
+        <label className="min-w-48 flex-1 text-xs font-semibold text-slate-700">Cari<input name="keyword" defaultValue={p.keyword} placeholder="Kode / nama barang, customer, no transaksi" className={`${input} mt-1 block w-full`} /></label>
         <button className="min-h-10 rounded-lg bg-brand-700 px-4 text-sm font-semibold text-white">Terapkan</button>
       </form>
 
       <section className="aj-surface">
         <p className="border-b border-slate-200 px-4 py-3 text-sm text-slate-700">
-          {report.totals.notaCount} nota · {report.totals.items} baris barang · <b>{rupiah(report.totals.total)}</b>
+          {report.products.length} barang · {qty(report.products.reduce((sum, x) => sum + x.quantity, 0))} satuan dari {report.totals.notaCount} nota · <b>{rupiah(report.totals.total)}</b>
         </p>
-        {/* Per hari bisa dilipat: hanya hari terbaru yang terbuka, hari sebelumnya cukup satu baris. */}
-        <div className="divide-y divide-slate-200">
-          {report.days.map((day, dayIndex) => (
-            <details key={day.dayKey} open={dayIndex === 0} className="group">
-              <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 bg-slate-50 px-4 py-2 text-xs hover:bg-slate-100">
-                <span>
-                  <span className="mr-1.5 inline-block text-slate-400 transition-transform group-open:rotate-90">›</span>
-                  <span className="font-semibold text-slate-700">{dayLabel.format(new Date(`${day.dayKey}T00:00:00+07:00`))}</span>
-                  <span className="text-slate-500"> · {day.notaCount} nota · {qty(day.quantity)} satuan</span>
+        {/* Per barang: qty terbanyak di atas. Buka untuk melihat nota yang menjualnya. */}
+        <div className="divide-y divide-slate-100">
+          {report.products.map((item) => (
+            <details key={item.sku} className="group">
+              <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-3 px-4 py-2 text-sm hover:bg-slate-50">
+                <span className="min-w-0">
+                  <span className="flex min-w-0 items-baseline">
+                    <span className="mr-1.5 inline-block shrink-0 text-slate-400 transition-transform group-open:rotate-90">›</span>
+                    <span className="truncate font-semibold text-slate-900">{item.name}</span>
+                  </span>
+                  <span className="block pl-3.5 text-xs text-slate-500"><span className="font-mono">{item.sku}</span> · {item.notaCount} nota · terakhir {dayLabel.format(new Date(item.lastSoldAt.length > 10 ? item.lastSoldAt : `${item.lastSoldAt}T00:00:00+07:00`))}</span>
                 </span>
-                <span className="shrink-0 font-semibold tabular-nums text-slate-800">{rupiah(day.total)}</span>
+                <span className="shrink-0 text-right">
+                  <span className="block font-bold tabular-nums text-slate-900">{qty(item.quantity)} {item.unit}</span>
+                  <span className="block text-xs tabular-nums text-slate-600">{rupiah(item.total)}</span>
+                </span>
               </summary>
-              <div className="divide-y divide-slate-100">
-                {report.sales.filter((s) => s.dayKey === day.dayKey).map((s, index) => (
-                  <details key={s.saleId ?? `${s.dayKey}-${index}`} className="group/nota">
-                    <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 px-4 py-2 text-sm hover:bg-slate-50">
-                      <span className="min-w-0 truncate">
-                        <span className="mr-1.5 inline-block text-slate-400 transition-transform group-open/nota:rotate-90">›</span>
-                        <span className="font-semibold text-slate-900">{s.customerName}</span>
-                        <span className="text-xs text-slate-500"> · {s.transactionAt ? timeLabel.format(new Date(s.transactionAt)) : s.saleDate}{s.transactionNumber ? ` · ${s.transactionNumber}` : ""} · {s.lines.length} barang{s.createdBy ? ` · oleh ${s.createdBy}` : ""}</span>
+              <ul className="divide-y divide-slate-100 bg-slate-50/60 px-4 pb-2 pl-8 text-xs text-slate-600">
+                {item.sales.map((s, i) => (
+                  <li key={`${s.saleId ?? "x"}-${i}`} className="flex items-center justify-between gap-3 py-1.5">
+                    <span className="min-w-0">
+                      <span className="block truncate">
+                        {s.transactionAt ? `${dayLabel.format(new Date(s.transactionAt))} ${timeLabel.format(new Date(s.transactionAt))}` : dayLabel.format(new Date(`${s.saleDate}T00:00:00+07:00`))} · {s.customerName}
                       </span>
-                      <span className="shrink-0 font-bold tabular-nums">{rupiah(s.total)}</span>
-                    </summary>
-                    <div className="px-4 pb-2.5 pl-8">
-                      <ul className="space-y-0.5 text-xs text-slate-600">
-                        {s.lines.map((l, i) => (
-                          <li key={i} className="flex justify-between gap-3">
-                            <span className="min-w-0 truncate"><span className="font-mono">{l.sku}</span> {l.name} · {qty(l.quantity)} {l.unit} × {rupiah(l.unitPrice)} · {l.location}</span>
-                            <span className="shrink-0 tabular-nums">{rupiah(l.amount)}</span>
-                          </li>
-                        ))}
-                      </ul>
-                      {s.saleId && <Link href={`/penjualan/${s.saleId}`} className="mt-1 inline-flex min-h-8 items-center text-xs font-semibold text-brand-800 underline">Detail nota</Link>}
-                    </div>
-                  </details>
+                      <span className="block truncate text-slate-500">
+                        {s.saleId
+                          ? <Link href={`/penjualan/${s.saleId}`} className="font-semibold text-brand-800 underline">{s.transactionNumber ?? "Detail nota"}</Link>
+                          : s.transactionNumber ?? "-"}
+                        {" "}· {s.location} · {qty(s.quantity)} × {rupiah(s.unitPrice)}
+                      </span>
+                    </span>
+                    <span className="shrink-0 tabular-nums">{rupiah(s.amount)}</span>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </details>
           ))}
-          {!report.sales.length && <p className="px-4 py-8 text-center text-sm text-slate-500">Tidak ada penjualan barang tanpa stok di periode ini.</p>}
+          {!report.products.length && <p className="px-4 py-8 text-center text-sm text-slate-500">Tidak ada penjualan barang tanpa stok di periode ini.</p>}
         </div>
       </section>
     </AppShell>

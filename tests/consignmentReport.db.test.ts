@@ -58,6 +58,9 @@ suite("sales without stock & consignment report (postgres)", () => {
     expect(lines.find((l) => l.sku === `NOSTK-${run}`)).toMatchObject({ quantity: 3, amount: 150_000, location: "Ruko" });
     expect(lines.find((l) => l.sku === `PART-${run}`)).toMatchObject({ quantity: 3, amount: 60_000 });
     expect(r.days).toEqual([{ dayKey: day, notaCount: 2, quantity: 6, total: 210_000 }]);
+    // Tampilan per barang: total qty dan nilai per kode, nota penjualnya ada di dalamnya.
+    expect(r.products.find((x) => x.sku === `NOSTK-${run}`)).toMatchObject({ quantity: 3, total: 150_000, notaCount: 1 });
+    expect(r.products.find((x) => x.sku === `NOSTK-${run}`)?.sales[0]).toMatchObject({ quantity: 3, location: "Ruko" });
   });
 
   it("a cancelled sale drops out of the report", async () => {
