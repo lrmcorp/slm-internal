@@ -55,6 +55,25 @@ export type ConsignmentProduct = {
 
 export type ConsignmentDay = { dayKey: string; notaCount: number; quantity: number; total: number };
 
+/** Rekap per barang dari sekumpulan nota. Saat dicari, baris barang lain di nota yang cocok tidak ikut. */
+function aggregateProducts(list: ConsignmentSale[], keyword?: string) {
+  const products = new Map<string, ConsignmentProduct>();
+  for (const s of list) {
+    for (const l of s.lines) {
+      if (keyword && !`${s.customerName} ${s.transactionNumber ?? ""} ${l.sku} ${l.name}`.toLowerCase().includes(keyword)) continue;
+      const soldAt = s.transactionAt ?? s.saleDate;
+      const p = products.get(l.sku) ?? { sku: l.sku, name: l.name, unit: l.unit, quantity: 0, total: 0, notaCount: 0, lastSoldAt: soldAt, sales: [] };
+      p.quantity += l.quantity;
+      p.total += l.amount;
+      if (!p.sales.some((x) => x.saleId !== null && x.saleId === s.saleId)) p.notaCount += 1;
+      if (soldAt > p.lastSoldAt) p.lastSoldAt = soldAt;
+      p.sales.push({ saleId: s.saleId, transactionNumber: s.transactionNumber, customerName: s.customerName, transactionAt: s.transactionAt, saleDate: s.saleDate, location: l.location, quantity: l.quantity, unitPrice: l.unitPrice, amount: l.amount });
+      products.set(l.sku, p);
+    }
+  }
+  return Array.from(products.values()).sort((a, b) => b.quantity - a.quantity || b.total - a.total || a.sku.localeCompare(b.sku));
+}
+
 export async function getConsignmentReport(filter: { from: string; to: string; keyword?: string }) {
   const start = new Date(`${filter.from}T00:00:00+07:00`);
   const end = new Date(new Date(`${filter.to}T00:00:00+07:00`).getTime() + 86_400_000);
@@ -115,27 +134,15 @@ export async function getConsignmentReport(filter: { from: string; to: string; k
     d.total += s.total;
     days.set(s.dayKey, d);
   }
-  const products = new Map<string, ConsignmentProduct>();
-  for (const s of list) {
-    for (const l of s.lines) {
-      // Saat dicari, nota yang cocok karena barang lain tidak ikut menambah barang ini.
-      if (keyword && !`${s.customerName} ${s.transactionNumber ?? ""} ${l.sku} ${l.name}`.toLowerCase().includes(keyword)) continue;
-      const soldAt = s.transactionAt ?? s.saleDate;
-      const p = products.get(l.sku) ?? { sku: l.sku, name: l.name, unit: l.unit, quantity: 0, total: 0, notaCount: 0, lastSoldAt: soldAt, sales: [] };
-      p.quantity += l.quantity;
-      p.total += l.amount;
-      if (!p.sales.some((x) => x.saleId !== null && x.saleId === s.saleId)) p.notaCount += 1;
-      if (soldAt > p.lastSoldAt) p.lastSoldAt = soldAt;
-      p.sales.push({ saleId: s.saleId, transactionNumber: s.transactionNumber, customerName: s.customerName, transactionAt: s.transactionAt, saleDate: s.saleDate, location: l.location, quantity: l.quantity, unitPrice: l.unitPrice, amount: l.amount });
-      products.set(l.sku, p);
-    }
-  }
-  const productList = Array.from(products.values()).sort((a, b) => b.quantity - a.quantity || b.total - a.total || a.sku.localeCompare(b.sku));
+  const productList = aggregateProducts(list, keyword);
+  // Per hari: barang apa saja yang terjual tanpa stok hari itu (hari terbaru di atas).
+  const dayProducts = new Map<string, ConsignmentProduct[]>();
+  for (const day of Array.from(days.keys())) dayProducts.set(day, aggregateProducts(list.filter((x) => x.dayKey === day), keyword));
 
   return {
     products: productList,
     sales: list,
-    days: Array.from(days.values()),
+    days: Array.from(days.values()).map((d) => ({ ...d, products: dayProducts.get(d.dayKey) ?? [] })),
     totals: { notaCount: list.length, total: list.reduce((s, x) => s + x.total, 0), items: list.reduce((s, x) => s + x.lines.length, 0) }
   };
 }
