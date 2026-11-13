@@ -14,7 +14,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ siz
   if (!ALLOWED.has(size)) return new Response("Not found", { status: 404 });
   const [width, height] = size.split("x").map(Number);
   const brand = getAppBrand();
-  const slug = brand.name.trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
+  const slug = brand.iconSlug || brand.name.trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
   const custom = slug ? await readFile(path.join(process.cwd(), "public", "pwa", `${slug}-512.png`)).catch(() => null) : null;
   const logo = Math.round(width * 0.36);
   return new ImageResponse(

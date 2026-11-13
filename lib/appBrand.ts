@@ -9,18 +9,38 @@ import { cctvEnabled, deliveryOrdersEnabled } from "@/lib/features";
  *   APP_COMPANY_NAME    nama badan usaha di kop laporan & login (default "Aneka Jaya / SLM")
  * Komponen client tidak bisa membaca env server: pakai useBrand() dari components/brand/BrandProvider.
  */
-export type AppBrand = { name: string; initials: string; title: string; companyName: string; accent: string | null; cctvEnabled: boolean; deliveryOrdersEnabled: boolean };
+export type AppBrand = {
+  name: string; initials: string; title: string; companyName: string; accent: string | null; cctvEnabled: boolean; deliveryOrdersEnabled: boolean;
+  /** Logo gambar instance (menggantikan kotak inisial). mark = logo kecil di menu, full = logo lengkap di login. */
+  logo?: { mark: string; full: string } | null;
+  /** Nama file ikon layar utama di public/pwa/<iconSlug>-<ukuran>.png. */
+  iconSlug?: string;
+};
+
+/**
+ * Preset identitas per instance. Aktif bila APP_BRAND_PRESET diisi, atau nama/inisial brand sama dengan kunci preset.
+ * Nilai env APP_BRAND_* tetap menang atas preset.
+ */
+const PRESETS: Record<string, { accent: string; companyName: string; logo: { mark: string; full: string } }> = {
+  // SLMJ (slmj.lrmslm.com): logo PT Serba Lancar Mekarindo, biru navy #002A6D sesuai logo.
+  slmj: { accent: "navy", companyName: "PT Serba Lancar Mekarindo", logo: { mark: "/brand/slmj/mark.png", full: "/brand/slmj/logo.png" } }
+};
 
 const read = (key: string) => (typeof process !== "undefined" ? (process.env[key] || "").trim() : "");
 
 export function getAppBrand(): AppBrand {
   const name = read("APP_BRAND_NAME") || read("NEXT_PUBLIC_APP_NAME") || "SLM";
+  const initials = read("APP_BRAND_INITIALS") || "SLM";
+  const presetKey = [read("APP_BRAND_PRESET"), name, initials].map((v) => v.toLowerCase()).find((v) => v in PRESETS);
+  const preset = presetKey ? PRESETS[presetKey] : null;
   return {
     name,
-    initials: read("APP_BRAND_INITIALS") || "SLM",
+    initials,
     title: read("APP_BRAND_TITLE") || `${name} Internal App`,
-    companyName: read("APP_COMPANY_NAME") || "Aneka Jaya / SLM",
-    accent: read("APP_BRAND_ACCENT") || null,
+    companyName: read("APP_COMPANY_NAME") || preset?.companyName || "Aneka Jaya / SLM",
+    accent: read("APP_BRAND_ACCENT") || preset?.accent || null,
+    logo: preset?.logo ?? null,
+    iconSlug: presetKey || name.trim().toLowerCase().replace(/[^a-z0-9-]/g, ""),
     cctvEnabled: cctvEnabled(),
     deliveryOrdersEnabled: deliveryOrdersEnabled()
   };
@@ -28,7 +48,7 @@ export function getAppBrand(): AppBrand {
 
 /** Warna utama brand (hex) untuk ikon dan warna bilah status di HP. */
 export function brandHex(brand: Pick<AppBrand, "accent"> = getAppBrand()) {
-  const accentHex: Record<string, string> = { sky: "#0284c7" };
+  const accentHex: Record<string, string> = { sky: "#0284c7", navy: "#002a6d" };
   return (brand.accent && accentHex[brand.accent]) || "#059669";
 }
 

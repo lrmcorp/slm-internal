@@ -1,4 +1,5 @@
 "use client";
+import { BrandMark } from "@/components/brand/BrandMark";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
@@ -22,7 +23,7 @@ export function MobileNavigationDrawer({ role, userName, badges = {} }: { role: 
     <div className="lg:hidden">
       <div className="sticky top-0 z-40 flex items-center justify-between border-b border-neutral-200 bg-white/95 px-4 py-3 shadow-sm backdrop-blur">
         <div className="flex min-w-0 items-center gap-3">
-          <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-600 text-sm font-black tracking-tighter text-white shadow-sm">{brand.initials}</span>
+          <BrandMark boxClassName="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-brand-600 text-sm font-black tracking-tighter text-white shadow-sm" imageClassName="h-7 w-auto shrink-0" />
           <div className="min-w-0">
             <p className="truncate text-sm font-bold text-neutral-900">{brand.name}</p>
             <p className="truncate text-xs text-neutral-500">{rolesLabel(role)} · {userName}</p>
@@ -43,7 +44,7 @@ export function MobileNavigationDrawer({ role, userName, badges = {} }: { role: 
         <aside id="mobile-navigation-drawer" aria-label="Menu navigasi" className="absolute bottom-0 left-0 top-0 flex w-[min(84vw,20rem)] flex-col border-r border-neutral-200 bg-white shadow-2xl">
           <div className="flex items-center justify-between border-b border-neutral-200 px-5 py-5">
             <div className="flex min-w-0 items-center gap-3">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-600 text-sm font-black tracking-tighter text-white">{brand.initials}</span>
+              <BrandMark boxClassName="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-brand-600 text-sm font-black tracking-tighter text-white" imageClassName="h-8 w-auto shrink-0" />
               <div className="min-w-0">
                 <p className="truncate text-sm font-bold text-neutral-900">{brand.name}</p>
                 <p className="truncate text-[11px] text-neutral-500">{rolesLabel(role)}</p>

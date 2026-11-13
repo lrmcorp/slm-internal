@@ -1,3 +1,4 @@
+import { BrandMark } from "@/components/brand/BrandMark";
 import Link from "next/link";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { AndroidAppLink } from "@/components/auth/AndroidAppLink";
@@ -9,7 +10,7 @@ export function LoginPageShell({ notice }: { notice?: string }) {
       <section className="mx-auto grid min-h-screen w-full max-w-6xl gap-0 px-5 py-6 sm:px-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(380px,0.75fr)] lg:items-center lg:gap-12 lg:px-10">
         <div className="order-2 hidden pb-8 pt-8 lg:order-1 lg:block">
           <div className="flex items-center gap-3">
-            <span className="grid h-12 w-12 place-items-center rounded-sm bg-brand-600 text-base font-black tracking-tight text-white">{APP_BRAND_INITIALS}</span>
+            <BrandMark variant="full" boxClassName="grid h-12 w-12 place-items-center rounded-sm bg-brand-600 text-base font-black tracking-tight text-white" imageClassName="h-16 w-auto" />
             <div>
               <p className="text-sm font-bold text-neutral-950">{APP_BRAND_TITLE}</p>
               <p className="mt-0.5 text-xs font-medium text-neutral-500">Sistem operasional internal</p>
@@ -43,7 +44,7 @@ export function LoginPageShell({ notice }: { notice?: string }) {
         <div className="order-1 flex min-h-[calc(100vh-3rem)] items-center lg:order-2 lg:min-h-0">
           <div className="w-full rounded-sm border border-neutral-200 bg-white p-5 shadow-[0_24px_70px_rgba(23,23,23,0.08)] sm:p-7">
             <div className="flex items-center gap-3 lg:hidden">
-              <span className="grid h-11 w-11 place-items-center rounded-sm bg-brand-600 text-sm font-black tracking-tight text-white">{APP_BRAND_INITIALS}</span>
+              <BrandMark variant="full" boxClassName="grid h-11 w-11 place-items-center rounded-sm bg-brand-600 text-sm font-black tracking-tight text-white" imageClassName="h-12 w-auto" />
               <div>
                 <p className="text-sm font-bold text-neutral-950">{APP_BRAND_TITLE}</p>
                 <p className="mt-0.5 text-xs font-medium text-neutral-500">Sistem operasional internal</p>

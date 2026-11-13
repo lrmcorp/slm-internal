@@ -1,3 +1,4 @@
+import { BrandMark } from "@/components/brand/BrandMark";
 import Link from "next/link";
 import { RoleSelector } from "@/components/settings/RoleSelector";
 import { LoginForm } from "@/components/auth/LoginForm";
@@ -136,7 +137,7 @@ export function AuthLandingPage({ currentRole }: { currentRole: Role }) {
 
           <aside className="rounded-[2rem] border border-slate-200 bg-white p-6 shadow-[0_24px_80px_rgba(15,23,42,0.07)] sm:p-7">
             <div className="flex items-center gap-3">
-              <span className="grid h-12 w-12 place-items-center rounded-2xl bg-brand-600 text-sm font-black tracking-tighter text-white">{APP_BRAND_INITIALS}</span>
+              <BrandMark boxClassName="grid h-12 w-12 place-items-center rounded-2xl bg-brand-600 text-sm font-black tracking-tighter text-white" imageClassName="h-10 w-auto shrink-0" />
               <div>
                 <p className="text-sm font-bold text-slate-950">Status Akses</p>
                 <p className="mt-0.5 text-xs text-slate-500">Kontrol masuk aplikasi internal</p>

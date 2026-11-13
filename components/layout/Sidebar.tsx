@@ -1,4 +1,5 @@
 "use client";
+import { BrandMark } from "@/components/brand/BrandMark";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { rolesLabel, type RoleSubject } from "@/lib/auth/roles";
@@ -18,9 +19,7 @@ export function Sidebar({ role, badges = {} }: { role: RoleSubject; badges?: Nav
       <div className="flex h-full flex-col">
         {/* Brand Header */}
         <div className="flex items-center gap-3 border-b border-neutral-100 px-6 py-6">
-          <span className="grid h-9 w-9 place-items-center rounded-xl bg-brand-600 text-sm font-black tracking-tighter text-white shadow-sm">
-            {brand.initials}
-          </span>
+          <BrandMark boxClassName="grid h-9 w-9 place-items-center rounded-xl bg-brand-600 text-sm font-black tracking-tighter text-white shadow-sm" imageClassName="h-8 w-auto shrink-0" />
           <div className="min-w-0">
             <p className="truncate text-sm font-bold text-neutral-900">{brand.name}</p>
             <p className="truncate text-[11px] text-neutral-500">{rolesLabel(role)}</p>

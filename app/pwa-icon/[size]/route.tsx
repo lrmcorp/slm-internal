@@ -19,7 +19,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ siz
   const size = Number((await params).size);
   if (!SIZES.has(size)) return new Response("Not found", { status: 404 });
   const brand = getAppBrand();
-  const custom = await customIcon(brand.name, size);
+  const custom = await customIcon(brand.iconSlug || brand.name, size);
   if (custom) {
     return new Response(new Uint8Array(custom), { headers: { "content-type": "image/png", "cache-control": "public, max-age=3600" } });
   }

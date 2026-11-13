@@ -3,7 +3,7 @@
 import { createContext, useContext } from "react";
 import type { AppBrand } from "@/lib/appBrand";
 
-const BrandContext = createContext<AppBrand>({ name: "SLM", initials: "SLM", title: "SLM Internal App", companyName: "Aneka Jaya / SLM", accent: null, cctvEnabled: false, deliveryOrdersEnabled: true });
+const BrandContext = createContext<AppBrand>({ name: "SLM", initials: "SLM", title: "SLM Internal App", companyName: "Aneka Jaya / SLM", accent: null, cctvEnabled: false, deliveryOrdersEnabled: true, logo: null });
 
 export function BrandProvider({ brand, children }: { brand: AppBrand; children: React.ReactNode }) {
   return <BrandContext.Provider value={brand}>{children}</BrandContext.Provider>;

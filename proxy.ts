@@ -77,7 +77,7 @@ function withOwnerSessionRenewed(request: NextRequest, response: NextResponse) {
 
 export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  if (pathname.startsWith("/api/") || pathname.startsWith("/_next/") || pathname.startsWith("/uploads/") || pathname.startsWith("/downloads/") || pathname === "/" || pathname === "/no-access" || pathname === "/login" || pathname === "/favicon.ico" || pathname === "/icon.svg" || pathname === "/brand-icon.svg" || pathname === "/manifest.webmanifest" || pathname === "/sw.js" || pathname.startsWith("/pwa-icon/") || pathname.startsWith("/pwa-splash/")) return NextResponse.next();
+  if (pathname.startsWith("/api/") || pathname.startsWith("/_next/") || pathname.startsWith("/uploads/") || pathname.startsWith("/downloads/") || pathname.startsWith("/brand/") || pathname === "/" || pathname === "/no-access" || pathname === "/login" || pathname === "/favicon.ico" || pathname === "/icon.svg" || pathname === "/brand-icon.svg" || pathname === "/manifest.webmanifest" || pathname === "/sw.js" || pathname.startsWith("/pwa-icon/") || pathname.startsWith("/pwa-splash/")) return NextResponse.next();
   const provider = resolveAuthProvider();
   const trustedHeaderMode = provider === "trusted_header";
   const localCredentialsMode = provider === "local_credentials" || provider === "anika_erp";

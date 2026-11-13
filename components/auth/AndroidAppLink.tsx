@@ -13,7 +13,8 @@ export function AndroidAppLink() {
     const ua = navigator.userAgent;
     setShow(/Android/i.test(ua) && !/SLMAndroid/.test(ua));
   }, []);
-  if (!show) return null;
+  // SLMJ belum punya APK sendiri; APK SLM membuka slm.lrmslm.com, jadi jangan ditawarkan di SLMJ.
+  if (!show || brand.iconSlug === "slmj") return null;
   return (
     <a
       href={`/downloads/${app.file}`}
