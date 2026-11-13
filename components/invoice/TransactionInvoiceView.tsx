@@ -98,6 +98,8 @@ export function TransactionInvoiceView({
 
   const isSales = kind === "sales";
   const isTempoSale = isSales && !tempoAsInvoice && (isTempo || payment.method === "Tempo");
+  // Draft belum final: gambar/PDF diberi tanda DRAFT supaya tidak dikira invoice resmi.
+  const isDraft = isSales && approvalStatus === "draft";
   const title = isTempoSale ? "Nota Tempo" : isSales ? "INVOICE" : "BUKTI PENGELUARAN";
   const listUrl = isSales ? "/penjualan" : "/pengeluaran";
   const inputUrl = isSales ? "/penjualan/input" : "/pengeluaran/input";
@@ -136,7 +138,7 @@ export function TransactionInvoiceView({
         /[^a-zA-Z0-9_-]/g,
         "_",
       );
-      const filePrefix = isTempoSale ? "Nota_Tempo" : title;
+      const filePrefix = `${isDraft ? "DRAFT_" : ""}${isTempoSale ? "Nota_Tempo" : title}`;
       link.download = `${filePrefix}-${safeNumber}-${safeEntity}.png`;
       link.href = dataUrl;
       document.body.appendChild(link);
@@ -148,7 +150,7 @@ export function TransactionInvoiceView({
     } finally {
       setIsExportingImage(false);
     }
-  }, [customer, id, isExportingImage, isTempoSale, title, transactionNumber, vendor]);
+  }, [customer, id, isDraft, isExportingImage, isTempoSale, title, transactionNumber, vendor]);
 
   // Export / Print as PDF
   const handlePrintPdf = useCallback(() => {
@@ -314,6 +316,11 @@ export function TransactionInvoiceView({
             <h1 className="text-2xl font-extrabold tracking-tight text-slate-950 sm:text-3xl lg:text-4xl">
               {transactionNumber}
             </h1>
+            {isDraft && (
+              <p className="mt-2 inline-flex items-center rounded-md border-2 border-amber-500 px-2.5 py-1 text-xs font-extrabold uppercase tracking-widest text-amber-700 sm:text-sm">
+                Draft · belum final
+              </p>
+            )}
           </div>
           <div className="text-right">
             {isTempoSale ? (

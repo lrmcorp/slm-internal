@@ -159,6 +159,13 @@ export default async function DraftPenjualanPage({ searchParams }: { searchParam
                 >
                   Lanjutkan / Finalkan
                 </Link>
+                {/* Sama seperti riwayat: lihat invoice, simpan gambar/PDF (ditandai DRAFT). */}
+                <Link
+                  href={`/penjualan/${draft.id}/invoice`}
+                  className="rounded-md border border-slate-300 bg-white px-3 py-2 text-center text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50"
+                >
+                  Invoice / Gambar
+                </Link>
                 {canManage && (
                   <div className="w-24">
                     <TransactionCancelButton
@@ -236,6 +243,12 @@ export default async function DraftPenjualanPage({ searchParams }: { searchParam
                         className="rounded-md bg-brand-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-brand-700 whitespace-nowrap"
                       >
                         Lanjutkan / Finalkan →
+                      </Link>
+                      <Link
+                        href={`/penjualan/${draft.id}/invoice`}
+                        className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 whitespace-nowrap"
+                      >
+                        Invoice / Gambar
                       </Link>
                       {canManage && (
                         <div className="w-20">
