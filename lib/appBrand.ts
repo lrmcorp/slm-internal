@@ -21,7 +21,9 @@ export type AppBrand = {
  * Preset identitas per instance. Aktif bila APP_BRAND_PRESET diisi, atau nama/inisial brand sama dengan kunci preset.
  * Nilai env APP_BRAND_* tetap menang atas preset.
  */
-const PRESETS: Record<string, { accent: string; companyName: string; logo: { mark: string; full: string }; aliases: string[] }> = {
+const PRESETS: Record<string, { accent: string; companyName?: string; logo: { mark: string; full: string }; aliases: string[] }> = {
+  // SLM (slm.lrmslm.com): logo mark hijau zaitun #404731.
+  slm: { accent: "olive", logo: { mark: "/brand/slm/mark.png", full: "/brand/slm/mark.png" }, aliases: ["slm"] },
   // SLMJ (slmj.lrmslm.com, dulu lcr): logo PT Serba Lancar Mekarindo, biru navy #002A6D sesuai logo.
   slmj: {
     accent: "navy", companyName: "PT Serba Lancar Mekarindo", logo: { mark: "/brand/slmj/mark.png", full: "/brand/slmj/logo.png" },
@@ -29,10 +31,18 @@ const PRESETS: Record<string, { accent: string; companyName: string; logo: { mar
   }
 };
 
-/** Kunci preset dari APP_BRAND_PRESET, atau dari nama/inisial/judul brand (tanpa titik, huruf kecil). */
+/**
+ * Kunci preset dari nilai pertama yang cocok, berurutan: APP_BRAND_PRESET, nama, inisial, judul
+ * (tanpa titik, huruf kecil). Urutan ini membuat SLMJ tidak tertukar dengan SLM.
+ */
 function findPreset(values: string[]) {
-  const normal = values.map((v) => v.toLowerCase().replace(/\./g, "").replace(/\s+/g, " ").trim()).filter(Boolean);
-  return Object.keys(PRESETS).find((key) => normal.some((v) => v === key || PRESETS[key].aliases.includes(v)));
+  for (const raw of values) {
+    const v = raw.toLowerCase().replace(/\./g, "").replace(/\s+/g, " ").trim();
+    if (!v) continue;
+    const key = Object.keys(PRESETS).find((k) => v === k || PRESETS[k].aliases.includes(v));
+    if (key) return key;
+  }
+  return undefined;
 }
 
 const read = (key: string) => (typeof process !== "undefined" ? (process.env[key] || "").trim() : "");
@@ -40,7 +50,8 @@ const read = (key: string) => (typeof process !== "undefined" ? (process.env[key
 export function getAppBrand(): AppBrand {
   const name = read("APP_BRAND_NAME") || read("NEXT_PUBLIC_APP_NAME") || "SLM";
   const initials = read("APP_BRAND_INITIALS") || "SLM";
-  const presetKey = findPreset([read("APP_BRAND_PRESET"), name, initials, read("APP_BRAND_TITLE")]);
+  // Inisial bawaan ("SLM") tidak ikut menentukan preset; hanya inisial yang diisi di env.
+  const presetKey = findPreset([read("APP_BRAND_PRESET"), name, read("APP_BRAND_INITIALS"), read("APP_BRAND_TITLE")]);
   const preset = presetKey ? PRESETS[presetKey] : null;
   return {
     name,
@@ -57,7 +68,7 @@ export function getAppBrand(): AppBrand {
 
 /** Warna utama brand (hex) untuk ikon dan warna bilah status di HP. */
 export function brandHex(brand: Pick<AppBrand, "accent"> = getAppBrand()) {
-  const accentHex: Record<string, string> = { sky: "#0284c7", navy: "#002a6d" };
+  const accentHex: Record<string, string> = { sky: "#0284c7", navy: "#002a6d", olive: "#404731" };
   return (brand.accent && accentHex[brand.accent]) || "#059669";
 }
 

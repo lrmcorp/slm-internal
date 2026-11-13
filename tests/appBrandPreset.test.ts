@@ -17,9 +17,21 @@ describe("preset brand per instance", () => {
     vi.stubEnv("APP_BRAND_ACCENT", "sky");
     const { getAppBrand } = await import("@/lib/appBrand");
     expect(getAppBrand().accent).toBe("sky");
-    vi.stubEnv("APP_BRAND_NAME", "SLM");
+    vi.stubEnv("APP_BRAND_NAME", "ANKJY");
+    vi.stubEnv("APP_BRAND_INITIALS", "AJ");
     vi.stubEnv("APP_BRAND_ACCENT", "");
-    expect(getAppBrand()).toMatchObject({ accent: null, logo: null, iconSlug: "slm" });
+    expect(getAppBrand()).toMatchObject({ accent: null, logo: null, iconSlug: "ankjy" });
+  });
+});
+
+describe("preset SLM", () => {
+  afterEach(() => vi.unstubAllEnvs());
+  it("SLM (bawaan) memakai logo mark dan hijau zaitun logo", async () => {
+    vi.stubEnv("APP_BRAND_NAME", "SLM");
+    const { getAppBrand, brandHex } = await import("@/lib/appBrand");
+    const brand = getAppBrand();
+    expect(brand).toMatchObject({ accent: "olive", iconSlug: "slm", logo: { mark: "/brand/slm/mark.png" } });
+    expect(brandHex(brand)).toBe("#404731");
   });
 });
 

@@ -22,6 +22,24 @@
   --brand-600-hex: #059669;
   --brand-700-hex: #047857;
 }
+/* SLM: hijau zaitun sesuai logo (#404731 di brand-600). */
+[data-accent="olive"] {
+  --brand-50: 246 247 241;
+  --brand-100: 233 236 224;
+  --brand-200: 211 217 196;
+  --brand-300: 178 188 154;
+  --brand-400: 133 146 103;
+  --brand-500: 92 104 68;
+  --brand-600: 64 71 49;
+  --brand-700: 52 58 40;
+  --brand-800: 42 47 32;
+  --brand-900: 33 37 26;
+  --brand-950: 20 23 16;
+  --brand-500-hex: #5c6844;
+  --brand-600-hex: #404731;
+  --brand-700-hex: #343a28;
+}
+
 /* SLMJ: biru navy sesuai logo PT Serba Lancar Mekarindo (#002A6D di brand-600). */
 [data-accent="navy"] {
   --brand-50: 238 242 250;
