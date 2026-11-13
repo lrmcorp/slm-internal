@@ -631,7 +631,7 @@ export function SalesHistoryList({
                       />
                     </td>
                     <td className="px-2 py-2">
-                      <div className="grid w-[7.5rem] grid-cols-2">
+                      <div className="grid w-[8.5rem] grid-cols-2 gap-x-2">
                         <Link className={rowLink} href={`/penjualan/${sale.id}`}>
                           Detail
                         </Link>
