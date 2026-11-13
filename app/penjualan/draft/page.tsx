@@ -166,6 +166,13 @@ export default async function DraftPenjualanPage({ searchParams }: { searchParam
                 >
                   Invoice / Gambar
                 </Link>
+                <Link
+                  href={`/print/sales/${draft.id}/continuous`}
+                  title="Cetak Nota Continuous Form (dot matrix)"
+                  className="rounded-md border border-brand-300 bg-brand-50 px-3 py-2 text-center text-xs font-bold text-brand-800 shadow-xs hover:bg-brand-100"
+                >
+                  Cetak
+                </Link>
                 {canManage && (
                   <div className="w-24">
                     <TransactionCancelButton
@@ -249,6 +256,13 @@ export default async function DraftPenjualanPage({ searchParams }: { searchParam
                         className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 whitespace-nowrap"
                       >
                         Invoice / Gambar
+                      </Link>
+                      <Link
+                        href={`/print/sales/${draft.id}/continuous`}
+                        title="Cetak Nota Continuous Form (dot matrix)"
+                        className="rounded-md border border-brand-300 bg-brand-50 px-3 py-1.5 text-xs font-bold text-brand-800 shadow-xs hover:bg-brand-100 whitespace-nowrap"
+                      >
+                        Cetak
                       </Link>
                       {canManage && (
                         <div className="w-20">
