@@ -32,7 +32,7 @@ describe("pengiriman notifikasi push", () => {
     expect(validVapidSubject("mailto:admin@localhost")).toBe(DEFAULT_VAPID_SUBJECT);
     expect(validVapidSubject("https://localhost:3000")).toBe(DEFAULT_VAPID_SUBJECT);
     expect(validVapidSubject("mailto:owner@tokoku.id")).toBe("mailto:owner@tokoku.id");
-    expect(validVapidSubject("https://slm.lrmslm.com")).toBe("https://slm.lrmslm.com");
+    expect(validVapidSubject("https://mkr.lrmslm.com")).toBe("https://mkr.lrmslm.com");
   });
 
   it("403 dari Apple (salah pengaturan server) tidak menghapus perangkat dan alasannya dilaporkan", async () => {

@@ -6,13 +6,13 @@ describe("Tempo dicetak sebagai invoice khusus ANKJY", () => {
     expect(tempoPrintsAsInvoice({}, "ankjy.net")).toBe(true);
     expect(tempoPrintsAsInvoice({}, "WWW.ankjy.net:443")).toBe(true);
     expect(tempoPrintsAsInvoice({}, "ankjy.lrmslm.com")).toBe(true);
-    expect(tempoPrintsAsInvoice({}, "slm.lrmslm.com")).toBe(false);
+    expect(tempoPrintsAsInvoice({}, "mkr.lrmslm.com")).toBe(false);
     expect(tempoPrintsAsInvoice({}, "mj.lrmslm.com")).toBe(false);
     expect(tempoPrintsAsInvoice({})).toBe(false);
   });
 
   it("PRINT_TEMPO_AS_INVOICE memaksa nyala/mati; TEMPO_INVOICE_HOSTS mengganti daftar domain", () => {
-    expect(tempoPrintsAsInvoice({ PRINT_TEMPO_AS_INVOICE: "true" }, "slm.lrmslm.com")).toBe(true);
+    expect(tempoPrintsAsInvoice({ PRINT_TEMPO_AS_INVOICE: "true" }, "mkr.lrmslm.com")).toBe(true);
     expect(tempoPrintsAsInvoice({ PRINT_TEMPO_AS_INVOICE: "false" }, "ankjy.net")).toBe(false);
     expect(tempoPrintsAsInvoice({ TEMPO_INVOICE_HOSTS: "toko.test" }, "toko.test")).toBe(true);
     expect(tempoPrintsAsInvoice({ TEMPO_INVOICE_HOSTS: "toko.test" }, "ankjy.net")).toBe(false);
@@ -21,6 +21,6 @@ describe("Tempo dicetak sebagai invoice khusus ANKJY", () => {
   it("route membaca domain dari header Host", () => {
     const req = (host: string) => new Request("http://localhost/api/print/sales/x", { headers: { host } });
     expect(tempoPrintsAsInvoiceForRequest(req("ankjy.net"))).toBe(true);
-    expect(tempoPrintsAsInvoiceForRequest(req("slm.lrmslm.com"))).toBe(false);
+    expect(tempoPrintsAsInvoiceForRequest(req("mkr.lrmslm.com"))).toBe(false);
   });
 });
