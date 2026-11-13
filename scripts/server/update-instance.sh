@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Update manual instance yang tidak ikut auto-deploy. Jalankan di VPS dari folder repo SLM:
-#   bash scripts/server/update-instance.sh ankjy     # ankjy.net
-#   bash scripts/server/update-instance.sh lcr       # lcr.lrmint.xyz
+#   bash scripts/server/update-instance.sh ankjy     # ankjy.net (juga ankjy.lrmslm.com)
+#   bash scripts/server/update-instance.sh lcr       # slmj.lrmslm.com
 #   bash scripts/server/update-instance.sh katalog   # Katalog Online MJ
 #
 # ankjy dan lcr memakai image yang sama dengan SLM (dibangun auto-deploy SLM). Skrip ini:
@@ -15,7 +15,7 @@ set -euo pipefail
 NAME="${1:-}"
 case "$NAME" in
   ankjy) URL="https://ankjy.net" ;;
-  lcr) URL="https://lcr.lrmint.xyz" ;;
+  lcr) URL="https://slmj.lrmslm.com" ;;
   katalog) URL="" ;;
   *) echo "Pakai: bash scripts/server/update-instance.sh ankjy|lcr|katalog" >&2; exit 2 ;;
 esac
@@ -71,7 +71,7 @@ echo "Image $NAME: $IMAGE, dibuat $(docker image inspect -f '{{.Created}}' "$IMA
 if [ -d /opt/slm/.git ]; then
   echo "Kode SLM di /opt/slm: $(git -C /opt/slm log -1 --format='%h %s (%cr)')"
 fi
-echo "Image dibangun oleh auto-deploy SLM. Kalau slm.lrmint.xyz sudah menampilkan fitur terbaru, image ini sudah baru."
+echo "Image dibangun oleh auto-deploy SLM. Kalau slm.lrmslm.com sudah menampilkan fitur terbaru, image ini sudah baru."
 
 say "4/5 Migrasi database lalu jalankan ulang $NAME"
 (cd "$WD" && "${COMPOSE[@]}" run --rm --no-deps -T "$SERVICE" npm run db:migrate:deploy) || die "Migrasi gagal; aplikasi $NAME yang lama tetap berjalan. Backup ada di /var/backups/slm."

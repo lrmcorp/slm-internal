@@ -40,7 +40,7 @@ export default async function SettingsPage() {
       ? {
           href: "/settings/katalog-payment",
           title: "Rekening Katalog Online",
-          description: "Rekening tujuan transfer pesanan mjkatalog.xyz",
+          description: "Rekening tujuan transfer pesanan katalog.lrmslm.com",
           tone: "emerald",
         }
       : null,
