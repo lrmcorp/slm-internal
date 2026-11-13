@@ -1,0 +1,5 @@
+<resources>
+    <!-- Hijau zaitun sesuai logo SLM (sama dengan web slm.lrmslm.com). -->
+    <color name="brand_primary">#404731</color>
+    <color name="brand_primary_dark">#343A28</color>
+</resources>

@@ -6,7 +6,7 @@ plugins {
 // Tiap brand punya applicationId sendiri, jadi aplikasi SLM dan ANKJY bisa terpasang bersamaan.
 def brands = [
     // oldHosts: domain lama yang dialihkan ke domain baru; tetap dibuka di dalam aplikasi, bukan di browser.
-    slm  : [appId: "id.playgo.slm",   url: "https://slm.lrmslm.com",   versionCode: 3, versionName: "2.1", oldHosts: "slm.lrmint.xyz"],
+    slm  : [appId: "id.playgo.slm",   url: "https://slm.lrmslm.com",   versionCode: 4, versionName: "2.2", oldHosts: "slm.lrmint.xyz"],
     ankjy: [appId: "id.playgo.ankjy", url: "https://ankjy.lrmslm.com", versionCode: 2, versionName: "1.1", oldHosts: "ankjy.net,www.ankjy.net"],
 ]
 def brand = (project.findProperty("brand") ?: "slm").toString()

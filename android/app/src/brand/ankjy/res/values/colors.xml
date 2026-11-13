@@ -1,0 +1,5 @@
+<resources>
+    <!-- Warna ANKJY tetap seperti sebelumnya. -->
+    <color name="brand_primary">#059669</color>
+    <color name="brand_primary_dark">#047857</color>
+</resources>
