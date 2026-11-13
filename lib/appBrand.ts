@@ -66,6 +66,17 @@ export function getAppBrand(): AppBrand {
   };
 }
 
+/**
+ * Versi ikon (favicon, ikon layar utama, splash). Naikkan setiap logo/ikon berubah: alamat ikon ikut berubah
+ * sehingga cache Cloudflare dan browser langsung memakai ikon baru.
+ */
+export const ICON_VERSION = "2026-11-13";
+
+/** Alamat ikon dengan versi + instance, mis. /pwa-icon/180?v=2026-11-13-slm. */
+export function iconUrl(path: string, brand: Pick<AppBrand, "iconSlug"> = getAppBrand()) {
+  return `${path}?v=${ICON_VERSION}-${brand.iconSlug || "app"}`;
+}
+
 /** Warna utama brand (hex) untuk ikon dan warna bilah status di HP. */
 export function brandHex(brand: Pick<AppBrand, "accent"> = getAppBrand()) {
   const accentHex: Record<string, string> = { sky: "#0284c7", navy: "#002a6d", olive: "#404731" };

@@ -1,4 +1,4 @@
-import { brandHex, getAppBrand } from "@/lib/appBrand";
+import { brandHex, getAppBrand, iconUrl } from "@/lib/appBrand";
 
 export const dynamic = "force-dynamic";
 
@@ -18,9 +18,9 @@ export function GET() {
     theme_color: brandHex(brand),
     lang: "id",
     icons: [
-      { src: "/pwa-icon/192", sizes: "192x192", type: "image/png", purpose: "any" },
-      { src: "/pwa-icon/512", sizes: "512x512", type: "image/png", purpose: "any" },
-      { src: "/pwa-icon/512", sizes: "512x512", type: "image/png", purpose: "maskable" },
+      { src: iconUrl("/pwa-icon/192", brand), sizes: "192x192", type: "image/png", purpose: "any" },
+      { src: iconUrl("/pwa-icon/512", brand), sizes: "512x512", type: "image/png", purpose: "any" },
+      { src: iconUrl("/pwa-icon/512", brand), sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],
   };
   return new Response(JSON.stringify(manifest), {

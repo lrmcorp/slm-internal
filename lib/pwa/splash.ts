@@ -1,3 +1,5 @@
+import { iconUrl } from "@/lib/appBrand";
+
 /** Ukuran layar iPhone (titik CSS × skala) untuk splash screen layar utama, potret. */
 export const IPHONE_SPLASH_SCREENS = [
   { w: 440, h: 956, r: 3 }, // 16 Pro Max
@@ -17,7 +19,7 @@ export const splashKey = (s: { w: number; h: number; r: number }) => `${s.w * s.
 
 export function iphoneStartupImages() {
   return IPHONE_SPLASH_SCREENS.map((s) => ({
-    url: `/pwa-splash/${splashKey(s)}`,
+    url: iconUrl(`/pwa-splash/${splashKey(s)}`),
     media: `(device-width: ${s.w}px) and (device-height: ${s.h}px) and (-webkit-device-pixel-ratio: ${s.r}) and (orientation: portrait)`,
   }));
 }

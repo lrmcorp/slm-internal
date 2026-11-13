@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { brandHex, getAppBrand } from "@/lib/appBrand";
+import { brandHex, getAppBrand, iconUrl } from "@/lib/appBrand";
 import { iphoneStartupImages } from "@/lib/pwa/splash";
 import { BrandProvider } from "@/components/brand/BrandProvider";
 import { TopLoadingBar } from "@/components/ui/TopLoadingBar";
@@ -15,7 +15,8 @@ export function generateMetadata(): Metadata {
   return {
     title: brand.title,
     description: `Aplikasi operasional internal ${brand.companyName}`,
-    icons: { icon: "/brand-icon.svg", shortcut: "/brand-icon.svg", apple: "/pwa-icon/180" },
+    // Alamat berversi supaya Cloudflare/browser tidak menahan ikon lama setelah logo diganti.
+    icons: { icon: iconUrl("/brand-icon.svg", brand), shortcut: iconUrl("/brand-icon.svg", brand), apple: iconUrl("/pwa-icon/180", brand) },
     // Dipasang di iPhone lewat Safari > Bagikan > Tambah ke Layar Utama: terbuka layar penuh tanpa App Store.
     manifest: "/manifest.webmanifest",
     appleWebApp: { capable: true, title: brand.name, statusBarStyle: "default", startupImage: iphoneStartupImages() }
