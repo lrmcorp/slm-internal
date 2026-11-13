@@ -48,10 +48,8 @@ describe("DEEP ADVERSARIAL & NO-AI-SLOP VERIFICATION: CCTV DASHBOARD & REPORTS",
       const hasEmoji = (text: string) => /[\uD83C-\uDBFF\uDC00-\uDFFF]/.test(text) || /[\u2600-\u27BF]/.test(text);
       expect(hasEmoji(html)).toBe(false);
 
-      // Verify clean SVG icons are used instead
-      expect(html).toContain("<svg");
-      expect(html).toContain("stroke=\"currentColor\"");
-      expect(html).toContain("viewBox=\"0 0 24 24\"");
+      // Tampilan ringkas: status memakai titik warna dan teks, bukan emoji atau ikon dekoratif.
+      expect(html).toContain("kamera online");
     });
 
     it("verifies empty state of CctvDashboardWidget contains zero raw emojis and has clean typography", () => {
@@ -68,8 +66,8 @@ describe("DEEP ADVERSARIAL & NO-AI-SLOP VERIFICATION: CCTV DASHBOARD & REPORTS",
       const hasEmoji = (text: string) => /[\uD83C-\uDBFF\uDC00-\uDFFF]/.test(text) || /[\u2600-\u27BF]/.test(text);
       expect(hasEmoji(html)).toBe(false);
       expect(html).toContain("Belum ada paket yang dipacking hari ini");
-      expect(html).toContain("Kamera CCTV standby memantau meja packing gudang");
-      expect(html).toContain("<svg");
+      // Tampilan ringkas: tanpa paragraf penjelasan panjang di bawah status kosong.
+      expect(html).toMatch(/kamera online|Belum ada kamera/);
     });
 
     it("ensures navigation icons are cohesive and contain zero colorful emojis", () => {
@@ -105,7 +103,7 @@ describe("DEEP ADVERSARIAL & NO-AI-SLOP VERIFICATION: CCTV DASHBOARD & REPORTS",
 
       const html = renderToStaticMarkup(<CctvDashboardWidget summary={corruptSummary} />);
       expect(html).toBeDefined();
-      expect(html).toContain("Pengawasan Meja Packing CCTV");
+      expect(html).toContain("CCTV Meja Packing");
       expect(html).toContain("0"); // totalPacked fallback to 0
       expect(html).toContain("Belum ada paket yang dipacking hari ini");
     });

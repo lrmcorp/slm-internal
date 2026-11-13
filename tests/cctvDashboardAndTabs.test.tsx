@@ -26,11 +26,10 @@ describe("CCTV Dashboard Widget & Multi-Tab Report Integration", () => {
         />
       );
 
-      expect(html).toContain("Pengawasan Meja Packing CCTV");
-      expect(html).toContain("Hari Ini");
+      expect(html).toContain("CCTV Meja Packing");
+      expect(html).toMatch(/kamera online|Belum ada kamera/);
       expect(html).toContain("Belum ada paket yang dipacking hari ini");
-      expect(html).toContain("Standby");
-      expect(html).toContain("Nihil anomali");
+      expect(html).not.toContain("Perlu ditinjau");
     });
 
     it("renders active KPI cards and recent packed packages feed with photo preview", () => {

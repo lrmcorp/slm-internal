@@ -113,8 +113,8 @@ export function CctvDashboardWidget({
   const stats = [
     { label: "Dipacking", value: totalPacked, tone: "text-brand-700" },
     { label: "Deteksi", value: totalDetections, tone: "text-slate-900" },
-    { label: "Anomali", value: totalAnomalies, tone: totalAnomalies > 0 ? "text-rose-600" : "text-slate-900" },
-  ];
+    { label: "Anomali", value: totalAnomalies, tone: totalAnomalies > 0 ? "text-rose-600" : "text-slate-900", note: totalAnomalies > 0 ? "Perlu ditinjau" : undefined },
+  ] as { label: string; value: number; tone: string; note?: string }[];
 
   return (
     <section className="aj-surface mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:p-5">
@@ -142,7 +142,10 @@ export function CctvDashboardWidget({
         {stats.map((stat) => (
           <div key={stat.label} className="px-3 py-2.5">
             <dt className="truncate text-[11px] font-semibold text-slate-500">{stat.label}</dt>
-            <dd className={`text-xl font-black tabular-nums ${stat.tone}`}>{stat.value}</dd>
+            <dd className={`text-xl font-black tabular-nums ${stat.tone}`}>
+              {stat.value}
+              {stat.note && <span className="ml-1.5 text-[11px] font-semibold text-rose-600">{stat.note}</span>}
+            </dd>
           </div>
         ))}
       </dl>
@@ -202,7 +205,11 @@ export function CctvDashboardWidget({
                       }
                     />
                   ) : (
-                    <div className="h-11 w-11 shrink-0 rounded-lg border border-dashed border-slate-200 bg-white" aria-hidden />
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-dashed border-slate-200 bg-white text-slate-300" aria-hidden>
+                      <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                      </svg>
+                    </div>
                   )}
                   <div className="min-w-0 flex-1">
                     {sale ? (
@@ -212,7 +219,7 @@ export function CctvDashboardWidget({
                     ) : (
                       <p className="truncate font-mono text-xs font-bold text-slate-800">{item.invoiceNumber || "—"}</p>
                     )}
-                    <p className="truncate text-[11px] text-slate-600">{sale?.customerName || item.customerName || "Customer umum"}</p>
+                    <p className="truncate text-[11px] text-slate-600">{sale?.customerName || item.customerName || "Customer Umum"}</p>
                     <p className="truncate text-[10px] text-slate-400">{item.cameraName || "Meja 1"} · {time}</p>
                   </div>
                 </div>

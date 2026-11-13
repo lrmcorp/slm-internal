@@ -157,11 +157,12 @@ describe("CCTV Live Streaming Player & Dashboard Integration", () => {
         />
       );
 
-      expect(html).toContain("Pengawasan Meja Packing CCTV");
-      expect(html).toContain("Sembunyikan Pantauan");
-      expect(html).toContain("Grid 3 Kamera");
-      expect(html).toContain("Selesai Packing");
-      expect(html).toContain("Total Deteksi Meja");
+      expect(html).toContain("CCTV Meja Packing");
+      // Live player tertutup sampai tombol Tonton live ditekan (dashboard tidak panjang di HP).
+      expect(html).toContain("Tonton live");
+      expect(html).not.toContain("Grid 3 Kamera");
+      expect(html).toContain("Dipacking");
+      expect(html).toContain("Deteksi");
       expect(html).toContain("Belum ada paket yang dipacking hari ini");
     });
   });
