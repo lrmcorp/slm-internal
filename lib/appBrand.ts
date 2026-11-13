@@ -21,17 +21,26 @@ export type AppBrand = {
  * Preset identitas per instance. Aktif bila APP_BRAND_PRESET diisi, atau nama/inisial brand sama dengan kunci preset.
  * Nilai env APP_BRAND_* tetap menang atas preset.
  */
-const PRESETS: Record<string, { accent: string; companyName: string; logo: { mark: string; full: string } }> = {
-  // SLMJ (slmj.lrmslm.com): logo PT Serba Lancar Mekarindo, biru navy #002A6D sesuai logo.
-  slmj: { accent: "navy", companyName: "PT Serba Lancar Mekarindo", logo: { mark: "/brand/slmj/mark.png", full: "/brand/slmj/logo.png" } }
+const PRESETS: Record<string, { accent: string; companyName: string; logo: { mark: string; full: string }; aliases: string[] }> = {
+  // SLMJ (slmj.lrmslm.com, dulu lcr): logo PT Serba Lancar Mekarindo, biru navy #002A6D sesuai logo.
+  slmj: {
+    accent: "navy", companyName: "PT Serba Lancar Mekarindo", logo: { mark: "/brand/slmj/mark.png", full: "/brand/slmj/logo.png" },
+    aliases: ["slmj", "lcr", "serba lancar mekarindo", "pt serba lancar mekarindo"]
+  }
 };
+
+/** Kunci preset dari APP_BRAND_PRESET, atau dari nama/inisial/judul brand (tanpa titik, huruf kecil). */
+function findPreset(values: string[]) {
+  const normal = values.map((v) => v.toLowerCase().replace(/\./g, "").replace(/\s+/g, " ").trim()).filter(Boolean);
+  return Object.keys(PRESETS).find((key) => normal.some((v) => v === key || PRESETS[key].aliases.includes(v)));
+}
 
 const read = (key: string) => (typeof process !== "undefined" ? (process.env[key] || "").trim() : "");
 
 export function getAppBrand(): AppBrand {
   const name = read("APP_BRAND_NAME") || read("NEXT_PUBLIC_APP_NAME") || "SLM";
   const initials = read("APP_BRAND_INITIALS") || "SLM";
-  const presetKey = [read("APP_BRAND_PRESET"), name, initials].map((v) => v.toLowerCase()).find((v) => v in PRESETS);
+  const presetKey = findPreset([read("APP_BRAND_PRESET"), name, initials, read("APP_BRAND_TITLE")]);
   const preset = presetKey ? PRESETS[presetKey] : null;
   return {
     name,

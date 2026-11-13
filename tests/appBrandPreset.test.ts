@@ -22,3 +22,14 @@ describe("preset brand per instance", () => {
     expect(getAppBrand()).toMatchObject({ accent: null, logo: null, iconSlug: "slm" });
   });
 });
+
+describe("preset SLMJ dari env lama instance lcr", () => {
+  afterEach(() => vi.unstubAllEnvs());
+  it("inisial LCR / nama Serba Lancar Mekarindo juga mengaktifkan logo SLMJ", async () => {
+    vi.stubEnv("APP_BRAND_NAME", "Serba Lancar Mekarindo");
+    vi.stubEnv("APP_BRAND_INITIALS", "LCR");
+    vi.stubEnv("APP_BRAND_TITLE", "PT. Serba Lancar Mekarindo");
+    const { getAppBrand } = await import("@/lib/appBrand");
+    expect(getAppBrand()).toMatchObject({ accent: "navy", iconSlug: "slmj", logo: { full: "/brand/slmj/logo.png" } });
+  });
+});
