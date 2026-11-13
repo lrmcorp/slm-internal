@@ -7,8 +7,8 @@ import { can } from "@/lib/auth/roles";
 import { getCurrentUser } from "@/lib/auth/session";
 import type { SalesRecordFilters } from "@/lib/sales/store";
 import { listSalesRecordsPageForUser } from "@/lib/sales/access";
-import { formatJakartaDateTime } from "@/lib/date/jakarta";
-import { TransactionCancelButton } from "@/components/transactions/TransactionCancelButton";
+import { SalesHistoryList } from "@/components/transactions/SalesHistoryList";
+import { productNamesBySku } from "@/lib/inventory/catalog";
 
 export const dynamic = "force-dynamic";
 
@@ -29,14 +29,6 @@ function pageHref(params: SearchParams, page: number) {
   }
   next.set("page", String(page));
   return `/penjualan/draft?${next.toString()}`;
-}
-
-function rupiah(value: number) {
-  return new Intl.NumberFormat("id-ID", {
-    style: "currency",
-    currency: "IDR",
-    maximumFractionDigits: 0,
-  }).format(value);
 }
 
 export default async function DraftPenjualanPage({ searchParams }: { searchParams?: Promise<SearchParams> }) {
@@ -61,6 +53,8 @@ export default async function DraftPenjualanPage({ searchParams }: { searchParam
     filters,
   });
 
+  const canViewTransactionNumber = role === "OWNER";
+  const productNames = await productNamesBySku(drafts.flatMap((sale) => sale.items.map((item) => item.productRef)));
   const totalPages = meta.totalPages;
   const activeFilters = [
     valueOf(params, "from") ? `Dari ${valueOf(params, "from")}` : null,
@@ -133,169 +127,13 @@ export default async function DraftPenjualanPage({ searchParams }: { searchParam
           </span>
         </div>
 
-        {/* Mobile View */}
-        <div className="divide-y divide-slate-100 md:hidden">
-          {drafts.map((draft) => (
-            <article key={draft.id} className="p-4 space-y-3 bg-white">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <h3 className="font-bold text-slate-900">{draft.customerName}</h3>
-                  <p className="text-xs text-slate-500">
-                    {draft.transactionAt ? formatJakartaDateTime(draft.transactionAt) : draft.saleDate}
-                  </p>
-                </div>
-                <span className="rounded-md bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-800">
-                  Draft
-                </span>
-              </div>
-              <div className="flex justify-between items-baseline border-t border-slate-100 pt-2">
-                <span className="text-xs text-slate-500">{draft.items.length} jenis barang</span>
-                <span className="text-base font-bold text-brand-700">{rupiah(draft.total)}</span>
-              </div>
-              <div className="flex gap-2 pt-1">
-                <Link
-                  href={`/penjualan/${draft.id}/edit`}
-                  className="flex-1 rounded-md bg-brand-600 px-3 py-2 text-center text-xs font-bold text-white shadow-xs hover:bg-brand-700"
-                >
-                  Lanjutkan / Finalkan
-                </Link>
-                {/* Sama seperti riwayat: lihat invoice, simpan gambar/PDF (ditandai DRAFT). */}
-                <Link
-                  href={`/penjualan/${draft.id}/invoice`}
-                  className="rounded-md border border-slate-300 bg-white px-3 py-2 text-center text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50"
-                >
-                  Invoice / Gambar
-                </Link>
-                <Link
-                  href={`/print/sales/${draft.id}/continuous`}
-                  title="Cetak Nota Continuous Form (dot matrix)"
-                  className="rounded-md border border-brand-300 bg-brand-50 px-3 py-2 text-center text-xs font-bold text-brand-800 shadow-xs hover:bg-brand-100"
-                >
-                  Cetak
-                </Link>
-                {canManage && (
-                  <div className="w-24">
-                    <TransactionCancelButton
-                      id={draft.id}
-                      kind="sales"
-                      transactionLabel={`Draft ${draft.customerName}`}
-                      triggerLabel="Hapus"
-                      triggerClassName="w-full rounded-md border border-rose-300 bg-rose-50 px-2.5 py-2 text-center text-xs font-bold text-rose-700 hover:bg-rose-100"
-                    />
-                  </div>
-                )}
-              </div>
-            </article>
-          ))}
-          {drafts.length === 0 && (
-            <div className="py-12 text-center">
-              <p className="text-base font-semibold text-slate-700">Tidak ada draft penjualan</p>
-              <p className="mt-1 text-sm text-slate-500">Semua pesanan telah difinalisasi atau belum ada draft tersimpan.</p>
-              <Link
-                href="/penjualan/input"
-                className="mt-4 inline-flex rounded-lg bg-brand-600 px-4 py-2 text-xs font-bold text-white hover:bg-brand-700"
-              >
-                + Buat Penjualan Sekarang
-              </Link>
-            </div>
-          )}
-        </div>
-
-        {/* Desktop Table View */}
-        <div className="hidden overflow-x-auto md:block">
-          <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
-              <tr>
-                <th className="px-5 py-3.5">Tanggal Draft</th>
-                <th className="px-5 py-3.5">Customer</th>
-                <th className="px-5 py-3.5">Rincian Barang</th>
-                <th className="px-5 py-3.5">Tipe</th>
-                <th className="px-5 py-3.5 text-right">Total Estimasi</th>
-                <th className="px-5 py-3.5">Dibuat Oleh</th>
-                <th className="px-5 py-3.5 text-center w-52">Aksi</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-              {drafts.map((draft) => (
-                <tr key={draft.id} className="hover:bg-slate-50/80 transition-colors">
-                  <td className="px-5 py-4 text-slate-600 whitespace-nowrap">
-                    {draft.transactionAt ? formatJakartaDateTime(draft.transactionAt) : draft.saleDate}
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="font-bold text-slate-900">{draft.customerName}</div>
-                    <div className="text-xs text-slate-500">{draft.customerLocation || "Toko"}</div>
-                  </td>
-                  <td className="px-5 py-4 text-slate-700">
-                    <span className="font-semibold">{draft.items.length} item</span>
-                    <p className="text-xs text-slate-500 truncate max-w-xs" title={draft.items.map((i) => `${i.productRef} (${i.quantity})`).join(", ")}>
-                      {draft.items.map((i) => i.productRef).slice(0, 3).join(", ")}
-                      {draft.items.length > 3 ? "..." : ""}
-                    </p>
-                  </td>
-                  <td className="px-5 py-4">
-                    <span className="rounded bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-700">
-                      {draft.tipeCodeSnapshot || draft.tipeId || "W"}
-                    </span>
-                  </td>
-                  <td className="px-5 py-4 text-right font-bold text-slate-900 whitespace-nowrap">
-                    {rupiah(draft.total)}
-                  </td>
-                  <td className="px-5 py-4 text-xs text-slate-600">
-                    {draft.createdByNameSnapshot || "Kasir"}
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="flex items-center justify-center gap-2">
-                      <Link
-                        href={`/penjualan/${draft.id}/edit`}
-                        className="rounded-md bg-brand-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-brand-700 whitespace-nowrap"
-                      >
-                        Lanjutkan / Finalkan →
-                      </Link>
-                      <Link
-                        href={`/penjualan/${draft.id}/invoice`}
-                        className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-xs hover:bg-slate-50 whitespace-nowrap"
-                      >
-                        Invoice / Gambar
-                      </Link>
-                      <Link
-                        href={`/print/sales/${draft.id}/continuous`}
-                        title="Cetak Nota Continuous Form (dot matrix)"
-                        className="rounded-md border border-brand-300 bg-brand-50 px-3 py-1.5 text-xs font-bold text-brand-800 shadow-xs hover:bg-brand-100 whitespace-nowrap"
-                      >
-                        Cetak
-                      </Link>
-                      {canManage && (
-                        <div className="w-20">
-                          <TransactionCancelButton
-                            id={draft.id}
-                            kind="sales"
-                            transactionLabel={`Draft ${draft.customerName}`}
-                            triggerLabel="Hapus"
-                            triggerClassName="w-full rounded-md border border-rose-300 bg-rose-50 px-2 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-100 shadow-xs cursor-pointer"
-                          />
-                        </div>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {drafts.length === 0 && (
-                <tr>
-                  <td colSpan={7} className="py-12 text-center text-slate-500">
-                    <p className="text-base font-semibold text-slate-700">Tidak ada draft penjualan tersimpan</p>
-                    <p className="mt-1 text-sm text-slate-500">Gunakan tombol &quot;Simpan Draft&quot; di form penjualan untuk mencatat pesanan sementara.</p>
-                    <Link
-                      href="/penjualan/input"
-                      className="mt-4 inline-flex rounded-lg bg-brand-600 px-4 py-2 text-xs font-bold text-white hover:bg-brand-700"
-                    >
-                      + Input Penjualan Baru
-                    </Link>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+        {/* Sama persis dengan Riwayat Penjualan; untuk draft tombol Edit menjadi Lanjutkan. */}
+        <SalesHistoryList sales={drafts} canManage={canManage} canViewTransactionNumber={canViewTransactionNumber} productNames={productNames} canContinueDraft={can(role, "penjualan.create")} />
+        {drafts.length === 0 && (
+          <div className="px-5 py-10 text-center text-sm text-slate-500">
+            Belum ada draft. <Link href="/penjualan/input" className="font-semibold text-brand-700 underline">Input penjualan baru</Link>
+          </div>
+        )}
 
         {totalPages > 1 && (
           <div className="flex items-center justify-between border-t border-slate-200 px-5 py-4 text-sm">

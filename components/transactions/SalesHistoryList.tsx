@@ -21,6 +21,8 @@ type Props = {
   stockShortage?: Record<string, Record<string, number>>;
   /** Total per hari dari seluruh nota yang cocok dengan filter (bukan hanya halaman ini). */
   dayTotals?: Record<string, { count: number; total: number }>;
+  /** Halaman Draft: pembuat penjualan boleh melanjutkan draft walau tanpa hak kelola penjualan. */
+  canContinueDraft?: boolean;
 };
 
 /** "TF BCA - Hery", "Cash + TF BCA" untuk Split, atau nama metode saja. */
@@ -458,6 +460,7 @@ export function SalesHistoryList({
   showDayTotals = false,
   dayTotals,
   stockShortage = {},
+  canContinueDraft = false,
 }: Props) {
   const [expandedSaleId, setExpandedSaleId] = useState<string | null>(null);
   const columnCount = canViewTransactionNumber ? 9 : 8;
@@ -548,13 +551,13 @@ export function SalesHistoryList({
                     WhatsApp
                   </a>
                 )}
-                {canManage && sale.approvalStatus !== "cancelled" && (
+                {(canManage || (canContinueDraft && sale.approvalStatus === "draft")) && sale.approvalStatus !== "cancelled" && (
                   <>
-                    {/* Transaksi MJ hanya bisa dibatalkan di SLM; isinya diubah dari MJ. */}
+                    {/* Transaksi MJ hanya bisa dibatalkan di SLM; isinya diubah dari MJ. Draft: Lanjutkan menggantikan Edit. */}
                     {sale.source !== "MJ" && <Link className="grid h-9 min-w-0 flex-1 place-items-center rounded-md border border-slate-300 bg-white text-xs font-bold text-slate-700" href={`/penjualan/${sale.id}/edit`}>
-                      Edit
+                      {sale.approvalStatus === "draft" ? "Lanjutkan" : "Edit"}
                     </Link>}
-                    <div className="flex-1">
+                    {canManage && <div className="flex-1">
                       <TransactionCancelButton
                         id={sale.id}
                         kind="sales"
@@ -562,7 +565,7 @@ export function SalesHistoryList({
                         triggerLabel="Batal"
                         triggerClassName="h-9 w-full rounded-md border border-rose-300 bg-rose-50 px-2 text-xs font-bold text-rose-700 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
                       />
-                    </div>
+                    </div>}
                   </>
                 )}
               </div>
@@ -602,7 +605,7 @@ export function SalesHistoryList({
               const isMj =
                 sale.source === "MJ" ||
                 sale.createdByUserId === "integration:mj";
-              const editable = canManage && sale.source !== "MJ" && sale.approvalStatus !== "cancelled";
+              const editable = (canManage || (canContinueDraft && sale.approvalStatus === "draft")) && sale.source !== "MJ" && sale.approvalStatus !== "cancelled";
               // Transaksi MJ boleh dibatalkan dari SLM (ikut dibatalkan di MJ), tapi isinya hanya diubah dari MJ.
               const cancellable = canManage && sale.approvalStatus !== "cancelled";
               const delivery = unifiedDeliveryStatus(sale);
@@ -646,7 +649,7 @@ export function SalesHistoryList({
                         )}
                         {editable && (
                           <Link className={rowLink} href={`/penjualan/${sale.id}/edit`}>
-                            Edit
+                            {sale.approvalStatus === "draft" ? "Lanjutkan" : "Edit"}
                           </Link>
                         )}
                         {cancellable && (
