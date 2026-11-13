@@ -42,7 +42,9 @@ Alamat web lain: `./gradlew assembleRelease -PslmUrl=https://alamat-lain`.
 **Kunci rilis ANKJY (sejak 10 Nov 2026, versi 1.0):** terpisah dari kunci SLM, letakkan di `android/keystore/ankjy/` (`ankjy-release.jks` dan `keystore.properties`). Simpan cadangannya di VPS `/root/android-keystore/ankjy/`. Tanpa kunci ini, update ANKJY berikutnya tidak bisa dipasang di atas versi 1.0.
 Naikkan `versionCode`/`versionName` di `app/build.gradle` setiap rilis baru. Domain lama yang dialihkan ke domain baru ditulis di `oldHosts` per brand supaya tetap terbuka di dalam aplikasi.
 
-Riwayat: ANKJY 1.1 (13 Nov 2026) membuka ankjy.lrmslm.com; SLM 2.1 membuka slm.lrmslm.com (dibuat di VPS dengan kunci v2).
+Riwayat: ANKJY 1.1 (13 Nov 2026) membuka ankjy.lrmslm.com; SLM 2.1 (13 Nov 2026) membuka slm.lrmslm.com.
+
+**Kunci rilis SLM v3 (sejak 13 Nov 2026, versi 2.1):** kunci baru, terpisah dari kunci v2 di VPS. Letakkan di `android/keystore/slm/` (`slm-release.jks` dan `keystore.properties`) dan simpan cadangannya di VPS `/root/android-keystore/slm/`. HP yang memasang SLM 2.0 harus menghapus aplikasi lama dulu (sekali saja); rilis berikutnya wajib memakai kunci v3 ini supaya bisa dipasang sebagai update.
 
 **Kunci rilis v2 (sejak 8 Nov 2026, versi 2.0):** disimpan di VPS `/root/android-keystore/` (hanya root). Build ulang di VPS: `/root/build-apk.sh` (container JDK 17 + Android SDK, Gradle dari mirror Tencent dengan checksum resmi). Versi 1.0 memakai kunci lama developer, jadi HP yang masih memasang versi 1.0 harus menghapus aplikasi lama dulu.
 
