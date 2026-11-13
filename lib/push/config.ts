@@ -4,9 +4,9 @@
  * Kunci dibuat sekali: npx web-push generate-vapid-keys
  * PUSH_ENABLED=false mematikan notifikasi walau kunci VAPID terisi.
  * VAPID_SUBJECT wajib berupa mailto: atau https: yang bukan localhost; layanan push Apple (iPhone)
- * menolak semua notifikasi bila alamat kontak ini tidak valid. Bila kosong/tidak valid dipakai https://slm.lrmint.xyz.
+ * menolak semua notifikasi bila alamat kontak ini tidak valid. Bila kosong/tidak valid dipakai https://slm.lrmslm.com.
  */
-export const DEFAULT_VAPID_SUBJECT = "https://slm.lrmint.xyz";
+export const DEFAULT_VAPID_SUBJECT = "https://slm.lrmslm.com";
 
 export function validVapidSubject(value?: string) {
   const subject = value?.trim() ?? "";

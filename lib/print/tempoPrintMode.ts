@@ -2,11 +2,11 @@ import { requestHost } from "@/lib/features";
 
 /**
  * Penjualan Tempo dicetak sebagai invoice penjualan biasa (bukan "Nota Tempo") khusus ANKJY.
- * Aktif bila aplikasi dibuka dari domain ANKJY (bawaan ankjy.net dan www.ankjy.net; ubah lewat
+ * Aktif bila aplikasi dibuka dari domain ANKJY (bawaan ankjy.net, www.ankjy.net, dan ankjy.lrmslm.com; ubah lewat
  * TEMPO_INVOICE_HOSTS, dipisah koma) atau PRINT_TEMPO_AS_INVOICE=true. PRINT_TEMPO_AS_INVOICE=false mematikannya.
  * Domain lain (SLM, MJ) tetap mencetak Nota Tempo.
  */
-export const DEFAULT_TEMPO_INVOICE_HOSTS = ["ankjy.net", "www.ankjy.net"];
+export const DEFAULT_TEMPO_INVOICE_HOSTS = ["ankjy.net", "www.ankjy.net", "ankjy.lrmslm.com"];
 
 type Env = Record<string, string | undefined>;
 

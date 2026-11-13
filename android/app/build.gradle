@@ -5,7 +5,7 @@ plugins {
 // Satu kode untuk beberapa instance. Pilih dengan -Pbrand=slm (bawaan) atau -Pbrand=ankjy.
 // Tiap brand punya applicationId sendiri, jadi aplikasi SLM dan ANKJY bisa terpasang bersamaan.
 def brands = [
-    slm  : [appId: "id.playgo.slm",   url: "https://slm.lrmint.xyz", versionCode: 2, versionName: "2.0"],
+    slm  : [appId: "id.playgo.slm",   url: "https://slm.lrmslm.com", versionCode: 3, versionName: "2.1"],
     ankjy: [appId: "id.playgo.ankjy", url: "https://ankjy.net",      versionCode: 1, versionName: "1.0"],
 ]
 def brand = (project.findProperty("brand") ?: "slm").toString()

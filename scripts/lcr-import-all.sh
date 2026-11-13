@@ -3,11 +3,11 @@
 #   bash scripts/lcr-import-all.sh
 # 1) matikan notifikasi & DO di env lcr, 2) jalankan ulang container lcr, 3) pastikan lcr sudah versi
 # terbaru, 4) cek data, 5) setelah Anda setuju, simpan. Username & password owner lcr ditanyakan di layar.
-# Tujuan selalu https://lcr.lrmint.xyz. Semua nota dibayar Cash. Opsional: LCR_CONTAINER, TIPE=<kode tipe>.
+# Tujuan selalu https://slmj.lrmslm.com. Semua nota dibayar Cash. Opsional: LCR_CONTAINER, TIPE=<kode tipe>.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-URL="https://lcr.lrmint.xyz"
+URL="https://slmj.lrmslm.com"
 say() { printf '\n== %s\n' "$*"; }
 die() { printf '\nBERHENTI: %s\n' "$*" >&2; exit 1; }
 

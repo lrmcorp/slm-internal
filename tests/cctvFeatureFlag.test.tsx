@@ -6,14 +6,14 @@ const hrefs = (cctv?: boolean) => visibleNavSections("OWNER", cctv === undefined
 
 describe("CCTV hanya untuk domain SLM", () => {
   it("hanya aktif di domain SLM", () => {
-    expect(cctvEnabled({}, "slm.lrmint.xyz")).toBe(true);
-    expect(cctvEnabled({}, "SLM.lrmint.xyz:443")).toBe(true);
-    expect(cctvEnabled({}, "lcr.lrmint.xyz")).toBe(false);
-    expect(cctvEnabled({ CCTV_ENABLED: "true" }, "ankjy.lrmint.xyz")).toBe(false);
-    expect(cctvEnabled({ CCTV_ENABLED: "false" }, "slm.lrmint.xyz")).toBe(false);
-    expect(cctvEnabled({ CCTV_ENABLED: " FALSE " }, "slm.lrmint.xyz")).toBe(false);
+    expect(cctvEnabled({}, "slm.lrmslm.com")).toBe(true);
+    expect(cctvEnabled({}, "SLM.lrmslm.com:443")).toBe(true);
+    expect(cctvEnabled({}, "slmj.lrmslm.com")).toBe(false);
+    expect(cctvEnabled({ CCTV_ENABLED: "true" }, "ankjy.lrmslm.com")).toBe(false);
+    expect(cctvEnabled({ CCTV_ENABLED: "false" }, "slm.lrmslm.com")).toBe(false);
+    expect(cctvEnabled({ CCTV_ENABLED: " FALSE " }, "slm.lrmslm.com")).toBe(false);
     expect(cctvEnabled({ CCTV_ALLOWED_HOSTS: "a.test, b.test" }, "b.test")).toBe(true);
-    expect(cctvEnabled({ CCTV_ALLOWED_HOSTS: "a.test" }, "slm.lrmint.xyz")).toBe(false);
+    expect(cctvEnabled({ CCTV_ALLOWED_HOSTS: "a.test" }, "slm.lrmslm.com")).toBe(false);
   });
 
   it("tanpa request (skrip, job) hanya aktif bila CCTV_ENABLED=true", () => {

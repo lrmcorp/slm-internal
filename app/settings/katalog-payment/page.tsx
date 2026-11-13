@@ -14,7 +14,7 @@ export default async function KatalogPaymentSettingsPage() {
     <AppShell>
       <div className="mb-7">
         <h2 className="aj-page-title text-3xl font-bold">Rekening Katalog Online</h2>
-        <p className="mt-2 text-sm text-slate-600">Rekening tujuan transfer untuk pesanan dari mjkatalog.xyz.</p>
+        <p className="mt-2 text-sm text-slate-600">Rekening tujuan transfer untuk pesanan dari katalog.lrmslm.com.</p>
       </div>
       <KatalogPaymentForm initial={setting} />
     </AppShell>

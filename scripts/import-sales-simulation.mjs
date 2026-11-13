@@ -7,7 +7,7 @@
  * tanpa hari Minggu). Jam diacak 09:00–15:35. Harga jual dari file; semua nota dibayar Cash.
  *
  * Pakai (default hanya cek, tidak menyimpan apa pun):
- *   IMPORT_USER=owner IMPORT_PASSWORD=... node scripts/import-sales-simulation.mjs --url https://lcr.lrmint.xyz
+ *   IMPORT_USER=owner IMPORT_PASSWORD=... node scripts/import-sales-simulation.mjs --url https://slmj.lrmslm.com
  *   ... --commit            simpan sungguhan
  *   ... --tipe <id|kode>    tipe pembukuan (bawaan: tipe pertama yang bukan AJ)
  *   ... --limit 5           hanya N nota pertama (uji coba)
@@ -29,7 +29,7 @@ const opt = (name, fallback) => {
 };
 
 const here = path.dirname(fileURLToPath(import.meta.url));
-const BASE = (opt("url", process.env.IMPORT_URL) || "https://lcr.lrmint.xyz").replace(/\/+$/, "");
+const BASE = (opt("url", process.env.IMPORT_URL) || "https://slmj.lrmslm.com").replace(/\/+$/, "");
 const FILE = opt("file", path.join(here, "data", "simulasi-penjualan-aj-v12-jul-des-2026.json.gz"));
 const COMMIT = flag("commit");
 const LIMIT = Number(opt("limit", "0")) || 0;
@@ -37,8 +37,8 @@ const TIPE = opt("tipe", "");
 const USER = process.env.IMPORT_USER || "";
 const PASSWORD = process.env.IMPORT_PASSWORD || "";
 
-// Data simulasi ini hanya untuk lcr.lrmint.xyz; domain lain ditolak supaya SLM/MJ/ANKJY tidak ikut terisi.
-const ALLOWED_HOST = "lcr.lrmint.xyz";
+// Data simulasi ini hanya untuk slmj.lrmslm.com; domain lain ditolak supaya SLM/MJ/ANKJY tidak ikut terisi.
+const ALLOWED_HOST = "slmj.lrmslm.com";
 const targetHost = (() => { try { return new URL(BASE).hostname.toLowerCase(); } catch { return ""; } })();
 if (BASE && targetHost !== ALLOWED_HOST && !(flag("test-host") && targetHost === "localhost")) {
   console.error(`Skrip ini hanya untuk https://${ALLOWED_HOST} (diminta: ${BASE}).`);

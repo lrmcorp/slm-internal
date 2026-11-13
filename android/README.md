@@ -4,12 +4,12 @@ Satu kode untuk beberapa instance. Pilih brand saat build dengan `-Pbrand=...`:
 
 | Brand | applicationId | Nama | Alamat | APK |
 |---|---|---|---|---|
-| `slm` (bawaan) | `id.playgo.slm` | SLM | https://slm.lrmint.xyz | `public/downloads/slm-android.apk` |
+| `slm` (bawaan) | `id.playgo.slm` | SLM | https://slm.lrmslm.com | `public/downloads/slm-android.apk` |
 | `ankjy` | `id.playgo.ankjy` | ANKJY | https://ankjy.net | `public/downloads/ankjy-android.apk` |
 
 Nama dan ikon tiap brand ada di `app/src/brand/<brand>/res`; versi dan alamat di `app/build.gradle`.
 
-APK ini membuka web SLM (`https://slm.lrmint.xyz`) di dalam aplikasi, jadi semua fitur dan hak akses sama dengan versi web dan otomatis ikut setiap update server. Tidak perlu build ulang APK ketika web berubah.
+APK ini membuka web SLM (`https://slm.lrmslm.com`) di dalam aplikasi, jadi semua fitur dan hak akses sama dengan versi web dan otomatis ikut setiap update server. Tidak perlu build ulang APK ketika web berubah.
 
 Yang ditangani khusus di Android:
 - Tombol **Cetak** (`window.print()`) → dialog print Android (printer Wi-Fi / PDF).
@@ -20,7 +20,7 @@ Yang ditangani khusus di Android:
 - Login tetap tersimpan; tombol Kembali HP = kembali ke halaman sebelumnya.
 
 ## Pasang di HP
-1. Buka `https://slm.lrmint.xyz/downloads/slm-android.apk` di HP Android (atau tombol "Unduh aplikasi Android SLM" di halaman login).
+1. Buka `https://slm.lrmslm.com/downloads/slm-android.apk` di HP Android (atau tombol "Unduh aplikasi Android SLM" di halaman login).
 2. Izinkan "Pasang dari sumber ini" bila diminta, lalu pasang.
 3. Untuk cetak thermal, pasang juga aplikasi **RawBT** dari Play Store.
 
