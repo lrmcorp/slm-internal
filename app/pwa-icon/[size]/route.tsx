@@ -5,7 +5,7 @@ import { brandHex, getAppBrand } from "@/lib/appBrand";
 
 export const dynamic = "force-dynamic";
 
-const SIZES = new Set([180, 192, 512]);
+const SIZES = new Set([180, 192, 512, 1024]);
 
 /** Logo khusus layar utama per instance: public/pwa/<nama-brand>-<ukuran>.png (mis. slm-180.png). */
 async function customIcon(brandName: string, size: number) {
@@ -19,7 +19,9 @@ export async function GET(_request: Request, { params }: { params: Promise<{ siz
   const size = Number((await params).size);
   if (!SIZES.has(size)) return new Response("Not found", { status: 404 });
   const brand = getAppBrand();
-  const custom = await customIcon(brand.iconSlug || brand.name, size);
+  const slug = brand.iconSlug || brand.name;
+  // 1024 dipakai iPhone (ikon tajam di layar 3x); instance tanpa file 1024 memakai logo 512.
+  const custom = (await customIcon(slug, size)) ?? (size === 1024 ? await customIcon(slug, 512) : null);
   if (custom) {
     return new Response(new Uint8Array(custom), { headers: { "content-type": "image/png", "cache-control": "public, max-age=3600" } });
   }

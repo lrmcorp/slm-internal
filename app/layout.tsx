@@ -16,7 +16,7 @@ export function generateMetadata(): Metadata {
     title: brand.title,
     description: `Aplikasi operasional internal ${brand.companyName}`,
     // Alamat berversi supaya Cloudflare/browser tidak menahan ikon lama setelah logo diganti.
-    icons: { icon: iconUrl("/brand-icon.svg", brand), shortcut: iconUrl("/brand-icon.svg", brand), apple: iconUrl("/pwa-icon/180", brand) },
+    icons: { icon: iconUrl("/brand-icon.svg", brand), shortcut: iconUrl("/brand-icon.svg", brand), apple: [{ url: iconUrl("/pwa-icon/1024", brand), sizes: "1024x1024" }] },
     // Dipasang di iPhone lewat Safari > Bagikan > Tambah ke Layar Utama: terbuka layar penuh tanpa App Store.
     manifest: "/manifest.webmanifest",
     appleWebApp: { capable: true, title: brand.name, statusBarStyle: "default", startupImage: iphoneStartupImages() }
