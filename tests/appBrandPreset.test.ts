@@ -8,7 +8,7 @@ describe("preset brand per instance", () => {
     const { getAppBrand, brandHex } = await import("@/lib/appBrand");
     const brand = getAppBrand();
     expect(brand).toMatchObject({ accent: "navy", companyName: "PT Serba Lancar Mekarindo", iconSlug: "slmj" });
-    expect(brand.logo?.full).toBe("/brand/slmj/logo.png");
+    expect(brand.logo?.full).toMatch(/^\/brand\/slmj\/logo\.png\?v=/);
     expect(brandHex(brand)).toBe("#002a6d");
   });
 
@@ -30,7 +30,7 @@ describe("preset SLM", () => {
     vi.stubEnv("APP_BRAND_NAME", "SLM");
     const { getAppBrand, brandHex } = await import("@/lib/appBrand");
     const brand = getAppBrand();
-    expect(brand).toMatchObject({ accent: "olive", iconSlug: "slm", logo: { mark: "/brand/slm/mark.png" } });
+    expect(brand).toMatchObject({ accent: "olive", iconSlug: "slm", logo: { mark: expect.stringMatching(/^\/brand\/slm\/mark\.png\?v=/) } });
     expect(brandHex(brand)).toBe("#404731");
   });
 });
@@ -42,6 +42,6 @@ describe("preset SLMJ dari env lama instance lcr", () => {
     vi.stubEnv("APP_BRAND_INITIALS", "LCR");
     vi.stubEnv("APP_BRAND_TITLE", "PT. Serba Lancar Mekarindo");
     const { getAppBrand } = await import("@/lib/appBrand");
-    expect(getAppBrand()).toMatchObject({ accent: "navy", iconSlug: "slmj", logo: { full: "/brand/slmj/logo.png" } });
+    expect(getAppBrand()).toMatchObject({ accent: "navy", iconSlug: "slmj", logo: { full: expect.stringMatching(/^\/brand\/slmj\/logo\.png\?v=/) } });
   });
 });

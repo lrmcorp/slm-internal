@@ -59,7 +59,8 @@ export function getAppBrand(): AppBrand {
     title: read("APP_BRAND_TITLE") || `${name} Internal App`,
     companyName: read("APP_COMPANY_NAME") || preset?.companyName || "Aneka Jaya / SLM",
     accent: read("APP_BRAND_ACCENT") || preset?.accent || null,
-    logo: preset?.logo ?? null,
+    // Versi di alamat logo supaya Cloudflare/browser langsung memakai logo baru.
+    logo: preset?.logo ? { mark: `${preset.logo.mark}?v=${ICON_VERSION}`, full: `${preset.logo.full}?v=${ICON_VERSION}` } : null,
     iconSlug: presetKey || name.trim().toLowerCase().replace(/[^a-z0-9-]/g, ""),
     cctvEnabled: cctvEnabled(),
     deliveryOrdersEnabled: deliveryOrdersEnabled()
@@ -70,7 +71,7 @@ export function getAppBrand(): AppBrand {
  * Versi ikon (favicon, ikon layar utama, splash). Naikkan setiap logo/ikon berubah: alamat ikon ikut berubah
  * sehingga cache Cloudflare dan browser langsung memakai ikon baru.
  */
-export const ICON_VERSION = "2026-11-13";
+export const ICON_VERSION = "2026-11-13b";
 
 /** Alamat ikon dengan versi + instance, mis. /pwa-icon/180?v=2026-11-13-slm. */
 export function iconUrl(path: string, brand: Pick<AppBrand, "iconSlug"> = getAppBrand()) {
