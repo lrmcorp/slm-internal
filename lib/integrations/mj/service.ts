@@ -11,6 +11,8 @@ import type { SalesCancellationResult } from "@/lib/api/salesCancellations";
 import { createDeliveryOrderForSale } from "@/lib/deliveryOrders/store";
 import { postSalesCogsJournal, postSalesInvoiceJournal, reverseSalesJournals } from "@/lib/sales/postingHooks";
 import { postTempoPaymentJournal, reverseTempoPaymentJournal } from "@/lib/tempo/postingHooks";
+import { cancelSaleStockLocal } from "@/lib/inventory/service";
+import type { Role } from "@/lib/auth/roles";
 
 const includeInvoice = { items: { orderBy: { sortOrder: "asc" as const } }, integrationAttempts: { orderBy: { startedAt: "asc" as const } } };
 type InvoiceRow = Prisma.SalesRecordGetPayload<{ include: typeof includeInvoice }>;
@@ -762,6 +764,59 @@ export async function cancelMjInvoice(row: InvoiceRow, reason: string, principal
 
   const updated = await findMjInvoice(row.externalReference!);
   return { status: "cancelled" as const, invoice: await invoiceSnapshotWithTempo(updated) };
+}
+
+/** Penanda di riwayat cancel: pembatalan dimulai dari SLM (bukan dari MJ), supaya MJ tahu harus ikut membatalkan. */
+export const SLM_CANCEL_CLIENT_CODE = "slm";
+
+/**
+ * Batalkan transaksi MJ dari SLM: stok yang dilepas MJ dikembalikan, lalu invoice, tempo, dan jurnal dibatalkan
+ * lewat jalur yang sama dengan pembatalan dari MJ. MJ mengikuti lewat GET /invoices/cancellations.
+ */
+export async function cancelMjInvoiceFromSlm(saleId: string, reason: string, actor: { id: string; name: string; role: Role }) {
+  const row = await prisma.salesRecord.findUnique({ where: { id: saleId }, include: includeInvoice });
+  if (!row || row.source !== "MJ" || !row.externalReference) throw new Error("Transaksi MJ tidak ditemukan.");
+  if (row.approvalStatus === "cancelled") throw new Error("Transaksi sudah dibatalkan.");
+  const cleanReason = reason.trim();
+
+  // Mode record_only: stok dilepas MJ langsung di inventory SLM. Mode AJ: stok dibalik oleh ERP di cancelMjInvoice.
+  if (processingMode(row) === "record_only" && row.stockReleaseReference && row.stockReleaseStatus !== "reversed") {
+    await cancelSaleStockLocal({ reference: row.stockReleaseReference, reason: `Dibatalkan dari SLM: ${cleanReason}` }, { id: actor.id, name: actor.name });
+    await prisma.salesRecord.update({ where: { id: row.id }, data: { stockReleaseStatus: "reversed" } });
+  }
+
+  const principal: MjIntegrationPrincipal = { clientId: actor.id, clientCode: SLM_CANCEL_CLIENT_CODE, environment: "slm", tokenId: "" };
+  const result = await cancelMjInvoice({ ...row, stockReleaseStatus: "reversed" }, cleanReason, principal);
+  await prisma.auditLog.create({
+    data: {
+      id: crypto.randomUUID(), entityType: "sales", entityId: row.id, action: "cancel",
+      beforeValue: json({ approvalStatus: row.approvalStatus, externalReference: row.externalReference }),
+      afterValue: json({ approvalStatus: "cancelled", cancelledFrom: "SLM" }),
+      userId: actor.id, userNameSnapshot: actor.name, userRoleSnapshot: actor.role,
+      reason: `Transaksi MJ ${row.transactionNumber ?? row.externalReference} dibatalkan dari SLM: ${cleanReason}`
+    }
+  });
+  return result;
+}
+
+/** Daftar transaksi MJ yang dibatalkan sejak `since`, untuk diikuti MJ. Termasuk yang dibatalkan dari MJ sendiri. */
+export async function listMjCancellations(since: Date, limit = 500) {
+  const rows = await prisma.integrationStageAttempt.findMany({
+    where: { stage: "cancel", status: "succeeded", completedAt: { gte: since }, salesRecord: { source: "MJ", approvalStatus: "cancelled" } },
+    include: { salesRecord: { select: { externalReference: true, transactionNumber: true } } },
+    orderBy: { completedAt: "asc" },
+    take: limit
+  });
+  return rows.map((r) => {
+    const response = (r.response && typeof r.response === "object" ? r.response : {}) as Record<string, unknown>;
+    return {
+      external_reference: r.salesRecord.externalReference,
+      transaction_number: r.salesRecord.transactionNumber,
+      cancelled_at: (r.completedAt ?? r.startedAt).toISOString(),
+      reason: typeof response.reason === "string" ? response.reason : null,
+      cancelled_from: response.client_code === SLM_CANCEL_CLIENT_CODE ? "SLM" : "MJ"
+    };
+  });
 }
 
 export async function recordMjPrintEvent(

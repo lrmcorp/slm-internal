@@ -548,11 +548,12 @@ export function SalesHistoryList({
                     WhatsApp
                   </a>
                 )}
-                {canManage && sale.source !== "MJ" && sale.approvalStatus !== "cancelled" && (
+                {canManage && sale.approvalStatus !== "cancelled" && (
                   <>
-                    <Link className="grid h-9 min-w-0 flex-1 place-items-center rounded-md border border-slate-300 bg-white text-xs font-bold text-slate-700" href={`/penjualan/${sale.id}/edit`}>
+                    {/* Transaksi MJ hanya bisa dibatalkan di SLM; isinya diubah dari MJ. */}
+                    {sale.source !== "MJ" && <Link className="grid h-9 min-w-0 flex-1 place-items-center rounded-md border border-slate-300 bg-white text-xs font-bold text-slate-700" href={`/penjualan/${sale.id}/edit`}>
                       Edit
-                    </Link>
+                    </Link>}
                     <div className="flex-1">
                       <TransactionCancelButton
                         id={sale.id}
@@ -602,6 +603,8 @@ export function SalesHistoryList({
                 sale.source === "MJ" ||
                 sale.createdByUserId === "integration:mj";
               const editable = canManage && sale.source !== "MJ" && sale.approvalStatus !== "cancelled";
+              // Transaksi MJ boleh dibatalkan dari SLM (ikut dibatalkan di MJ), tapi isinya hanya diubah dari MJ.
+              const cancellable = canManage && sale.approvalStatus !== "cancelled";
               const delivery = unifiedDeliveryStatus(sale);
               const stockProblem = sale.stockReleaseStatus === "pending" || sale.stockReleaseStatus === "failed";
               return (
@@ -646,7 +649,7 @@ export function SalesHistoryList({
                             Edit
                           </Link>
                         )}
-                        {editable && (
+                        {cancellable && (
                           <TransactionCancelButton
                             id={sale.id}
                             kind="sales"

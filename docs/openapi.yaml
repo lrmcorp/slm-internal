@@ -1089,6 +1089,23 @@ paths:
         - { in: path, name: external_reference, required: true, schema: { type: string } }
       requestBody: { required: true, content: { application/json: { schema: { $ref: "#/components/schemas/MjTempoPaymentInput" } } } }
       responses: { "201": { description: Pembayaran dibuat. }, "200": { description: Duplicate sama sudah diproses. }, "400": { description: PAYMENT_EXCEEDS_REMAINING atau validasi. }, "409": { description: PAYMENT_REFERENCE_CONFLICT atau INVOICE_LOCKED. }, "502": { description: AJ_UPSTREAM_ERROR. }, "504": { description: AJ_TIMEOUT. } }
+  /api/integrations/mj/invoices/cancellations:
+    get:
+      summary: Transaksi MJ yang dibatalkan sejak `since` (dari MJ maupun dari SLM). MJ memakainya untuk ikut membatalkan transaksi yang dibatalkan di SLM.
+      parameters:
+        - name: since
+          in: query
+          required: false
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: "data: [{ external_reference, transaction_number, cancelled_at, reason, cancelled_from: SLM|MJ }]"
+        "400":
+          description: since bukan tanggal ISO.
+        "401":
+          description: Token MJ tidak valid.
   /api/integrations/mj/invoices/{external_reference}/cancel:
     post:
       summary: Cancel invoice MJ sesuai processing mode.

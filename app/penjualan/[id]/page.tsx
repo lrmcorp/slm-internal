@@ -239,8 +239,9 @@ export default async function SalesDetailPage({ params }: { params: Promise<{ id
               </div>
             )}
           </div>
-          {canManage && sale.source !== "MJ" && (
+          {canManage && (
             <div className="mt-5 pt-3 border-t border-slate-100">
+              {sale.source === "MJ" && sale.approvalStatus !== "cancelled" && <p className="mb-2 text-xs text-slate-600">Transaksi dari MJ. Membatalkan di sini juga mengembalikan stok dan membatalkan transaksinya di MJ.</p>}
               <TransactionCancelButton
                 id={sale.id}
                 kind="sales"
