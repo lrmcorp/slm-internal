@@ -90,11 +90,8 @@ export function CctvDashboardWidget({
   summary: CctvDashboardSummaryData;
   cameraStreams?: CctvCameraStream[];
 }) {
-  const [showLiveStream, setShowLiveStream] = useState<boolean>(true);
-
-  const isCctvOnline =
-    summary?.liveSystem?.status === "online" ||
-    Boolean(summary?.liveSystem?.cameras?.some((c) => c.status === "online"));
+  // Live player tertutup dulu: kartu video besar membuat dashboard panjang di HP.
+  const [showLiveStream, setShowLiveStream] = useState<boolean>(false);
 
   const totalPacked = summary?.today?.totalPacked ?? 0;
   const totalDetections = summary?.today?.totalDetections ?? 0;
@@ -106,236 +103,124 @@ export function CctvDashboardWidget({
     summary?.cameraStreams ||
     getConfiguredCameraStreams(summary?.liveSystem?.cameras as any);
 
-  return (
-    <section className="aj-surface rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition hover:border-slate-300 mt-6">
-      {/* Header Widget */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-100 pb-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-50 text-brand-700 border border-brand-100 shrink-0">
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold text-slate-900 tracking-tight">
-                Pengawasan Meja Packing CCTV
-              </h3>
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-2.5 py-0.5 text-[11px] font-bold text-brand-700 border border-brand-200">
-                <span className="h-1.5 w-1.5 rounded-full bg-brand-600 animate-pulse" />
-                Hari Ini
-              </span>
-            </div>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Monitoring AI Vision verifikasi paket fisik dan aktivitas meja packing gudang
-            </p>
-          </div>
-        </div>
+  // Status per kamera: dari sistem CCTV bila ada, kalau tidak dari daftar stream.
+  const cameras = (summary?.liveSystem?.cameras?.length
+    ? summary.liveSystem.cameras.map((c) => ({ id: String(c.id ?? c.name), name: c.name, online: c.status === "online" }))
+    : streams.map((c) => ({ id: String(c.id), name: c.name, online: c.isOnline })));
+  const onlineCount = cameras.filter((c) => c.online).length;
+  const allOffline = cameras.length > 0 && onlineCount === 0;
 
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Tombol Toggle Live Player */}
+  const stats = [
+    { label: "Dipacking", value: totalPacked, tone: "text-brand-700" },
+    { label: "Deteksi", value: totalDetections, tone: "text-slate-900" },
+    { label: "Anomali", value: totalAnomalies, tone: totalAnomalies > 0 ? "text-rose-600" : "text-slate-900" },
+  ];
+
+  return (
+    <section className="aj-surface mt-6 rounded-2xl border border-slate-200 bg-white p-4 shadow-xs sm:p-5">
+      {/* Judul, status kamera, dan tautan dalam satu baris */}
+      <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+        <div className="flex min-w-0 items-center gap-2">
+          <h3 className="text-base font-bold tracking-tight text-slate-900">CCTV Meja Packing</h3>
+          <span
+            className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-bold ${
+              allOffline ? "border-amber-200 bg-amber-50 text-amber-800" : "border-brand-200 bg-brand-50 text-brand-800"
+            }`}
+          >
+            <span className={`h-1.5 w-1.5 rounded-full ${allOffline ? "bg-amber-500" : "bg-brand-600"}`} />
+            {cameras.length ? `${onlineCount}/${cameras.length} kamera online` : "Belum ada kamera"}
+          </span>
+        </div>
+        <div className="flex items-center gap-3 text-xs font-bold">
+          <Link href="/cctv-monitoring" className="inline-flex min-h-9 items-center text-slate-600 underline-offset-4 hover:underline">Monitoring</Link>
+          <Link href="/reports/cctv" className="inline-flex min-h-9 items-center text-brand-700 underline-offset-4 hover:underline">Laporan CCTV →</Link>
+        </div>
+      </div>
+
+      {/* Angka hari ini: satu baris ringkas */}
+      <dl className="mt-3 grid grid-cols-3 divide-x divide-slate-200 rounded-xl border border-slate-200 bg-slate-50/70">
+        {stats.map((stat) => (
+          <div key={stat.label} className="px-3 py-2.5">
+            <dt className="truncate text-[11px] font-semibold text-slate-500">{stat.label}</dt>
+            <dd className={`text-xl font-black tabular-nums ${stat.tone}`}>{stat.value}</dd>
+          </div>
+        ))}
+      </dl>
+
+      {/* Kamera: satu baris per kamera; live player dibuka bila perlu */}
+      {cameras.length > 0 && (
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {cameras.map((camera) => (
+            <span key={camera.id} className="inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-slate-200 px-2.5 text-xs font-semibold text-slate-700">
+              <span className={`h-2 w-2 rounded-full ${camera.online ? "bg-brand-500" : "bg-slate-300"}`} />
+              {camera.name}
+              <span className={camera.online ? "text-brand-700" : "text-slate-400"}>{camera.online ? "Online" : "Offline"}</span>
+            </span>
+          ))}
           <button
             type="button"
             onClick={() => setShowLiveStream((prev) => !prev)}
-            className={`inline-flex items-center gap-1.5 rounded-xl border px-3.5 py-1.5 text-xs font-bold transition-all shadow-2xs ${
-              showLiveStream
-                ? "border-brand-200 bg-brand-50 text-brand-800 hover:bg-brand-100"
-                : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
-            }`}
+            aria-expanded={showLiveStream}
+            className="ml-auto inline-flex min-h-9 items-center gap-1.5 rounded-lg bg-brand-600 px-3 text-xs font-bold text-white hover:bg-brand-700"
           >
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-            </svg>
-            <span>{showLiveStream ? "Sembunyikan Pantauan" : "Tampilkan Pantauan Kamera"}</span>
+            {showLiveStream ? "Tutup live" : "Tonton live"}
           </button>
-
-          <Link
-            href="/cctv-monitoring"
-            className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 transition-colors shadow-2xs"
-          >
-            <span>Monitoring CCTV</span>
-            <svg className="w-3.5 h-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </Link>
-          <Link
-            href="/reports/cctv"
-            className="inline-flex items-center gap-1.5 rounded-xl bg-brand-600 px-3.5 py-1.5 text-xs font-bold text-white hover:bg-brand-700 shadow-xs transition-colors"
-          >
-            <span>Laporan CCTV</span>
-            <svg className="w-3.5 h-3.5 text-brand-200" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-            </svg>
-          </Link>
-        </div>
-      </div>
-
-      {/* Konten Widget: Tata Letak Multi-Kamera Grid dan Metrik */}
-      {showLiveStream && (
-        <div className="mt-4 flex flex-col gap-2.5">
-          <CctvLivePlayer cameras={streams} autoPlay={true} />
-          <div className="flex items-center justify-between px-1 text-[11px] text-slate-500">
-            <span className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-brand-500" />
-              Pantauan CCTV Meja Packing aktif secara real-time untuk peran Super Admin
-            </span>
-            <span>Jeda otomatis hemat bandwidth saat di luar layar</span>
-          </div>
         </div>
       )}
 
-      {/* Grid 4 Kartu KPI Ringkasan */}
-      <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <div className="rounded-xl bg-slate-50/80 p-3.5 border border-slate-200/70 transition hover:bg-slate-50">
-          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-            Selesai Packing
-          </p>
-          <p className="mt-1 text-2xl font-black text-brand-700 sm:text-3xl">
-            {totalPacked}
-          </p>
-          <p className="text-[11px] text-brand-600 mt-1 font-semibold flex items-center gap-1">
-            <svg className="w-3.5 h-3.5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
-            </svg>
-            <span>Paket terverifikasi</span>
-          </p>
+      {showLiveStream && (
+        <div className="mt-3">
+          <CctvLivePlayer cameras={streams} autoPlay={true} />
         </div>
+      )}
 
-        <div className="rounded-xl bg-slate-50/80 p-3.5 border border-slate-200/70 transition hover:bg-slate-50">
-          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-            Total Deteksi Meja
-          </p>
-          <p className="mt-1 text-2xl font-black text-slate-900 sm:text-3xl">
-            {totalDetections}
-          </p>
-          <p className="text-[11px] text-slate-500 mt-1 font-medium">
-            Pemindaian AI Vision
-          </p>
-        </div>
-
-        <div className="rounded-xl bg-slate-50/80 p-3.5 border border-slate-200/70 transition hover:bg-slate-50">
-          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-            Anomali / Review
-          </p>
-          <p className={`mt-1 text-2xl font-black sm:text-3xl ${totalAnomalies > 0 ? "text-rose-600" : "text-slate-900"}`}>
-            {totalAnomalies}
-          </p>
-          <p className={`text-[11px] mt-1 font-semibold ${totalAnomalies > 0 ? "text-rose-600" : "text-slate-400"}`}>
-            {totalAnomalies > 0 ? "Perlu ditinjau kasir/gudang" : "Nihil anomali"}
-          </p>
-        </div>
-
-        <div className="rounded-xl bg-slate-50/80 p-3.5 border border-slate-200/70 transition hover:bg-slate-50">
-          <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-            Kamera AI Vision
-          </p>
-          <div className="mt-1.5 flex items-center gap-2">
-            <span className={`h-2.5 w-2.5 rounded-full shrink-0 ${isCctvOnline ? "bg-brand-500" : "bg-slate-400"}`} />
-            <p className="text-sm font-bold text-slate-800">
-              {isCctvOnline ? "Online" : "Standby"}
-            </p>
-          </div>
-          <p className="text-[11px] text-slate-400 mt-1">
-            {summary?.liveSystem?.cameras?.length ? `${summary.liveSystem.cameras.length} kamera aktif` : "VPS Meja Packing"}
-          </p>
-        </div>
-      </div>
-
-      {/* Feed 5 Paket Terakhir */}
-      <div className="mt-5 pt-4 border-t border-slate-100">
-        <div className="flex items-center justify-between mb-3">
-          <h4 className="text-xs font-bold uppercase tracking-wider text-slate-500">
-            Paket Terbaru Selesai Packing (Real-Time)
-          </h4>
-          <span className="text-[11px] text-slate-400 font-medium">
-            5 transaksi terakhir
-          </span>
+      {/* Paket terakhir: geser ke samping di HP, 5 kolom di layar lebar */}
+      <div className="mt-4 border-t border-slate-100 pt-3">
+        <div className="mb-2 flex items-baseline justify-between">
+          <h4 className="text-xs font-bold text-slate-600">Paket terakhir dipacking</h4>
+          {recentPacked.length > 0 && <span className="text-[11px] text-slate-400">{recentPacked.length} terakhir</span>}
         </div>
 
         {recentPacked.length > 0 ? (
-          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0 lg:grid lg:grid-cols-5 lg:overflow-visible">
             {recentPacked.map((item) => {
               const photo = item.screenshotPhotoUrl || item.evidenceUrl;
               const sale = item.salesRecord;
+              const time = formatJakartaDateTime(item.packingCompletedAt || item.createdAt).slice(-8);
 
               return (
-                <div
-                  key={item.id}
-                  className="rounded-xl border border-slate-200 bg-slate-50/60 p-2.5 flex flex-col justify-between hover:bg-slate-100/70 transition-colors shadow-2xs"
-                >
-                  <div className="flex items-start gap-2.5">
-                    {photo ? (
-                      <CctvImageModal
-                        imageUrl={photo}
-                        title={`Paket: #${item.invoiceNumber || "CCTV"}`}
-                        subtitle={`${item.cameraName || "Meja Packing"} • ${formatJakartaDateTime(item.createdAt)}`}
-                        trigger={
-                          <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-200 shadow-2xs cursor-pointer group relative">
-                            {/* eslint-disable-next-line @next/next/no-img-element */}
-                            <CctvThumbnail
-                              src={photo}
-                              alt="Bukti Foto"
-                              className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                              fallbackSize="h-12 w-12"
-                              iconSize="w-5 h-5"
-                            />
-                            <div className="absolute inset-0 bg-slate-950/30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white">
-                              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v6m3-3H7" />
-                              </svg>
-                            </div>
-                          </div>
-                        }
-                      />
+                <div key={item.id} className="flex w-56 shrink-0 snap-start items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/60 p-2 lg:w-auto">
+                  {photo ? (
+                    <CctvImageModal
+                      imageUrl={photo}
+                      title={`Paket: #${item.invoiceNumber || "CCTV"}`}
+                      subtitle={`${item.cameraName || "Meja Packing"} • ${formatJakartaDateTime(item.createdAt)}`}
+                      trigger={
+                        <div className="h-11 w-11 shrink-0 cursor-pointer overflow-hidden rounded-lg border border-slate-200 bg-slate-200">
+                          <CctvThumbnail src={photo} alt="Bukti foto" className="h-full w-full object-cover" fallbackSize="h-11 w-11" iconSize="w-5 h-5" />
+                        </div>
+                      }
+                    />
+                  ) : (
+                    <div className="h-11 w-11 shrink-0 rounded-lg border border-dashed border-slate-200 bg-white" aria-hidden />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    {sale ? (
+                      <Link href={`/penjualan/${sale.id}`} className="block truncate font-mono text-xs font-bold text-brand-700 hover:underline">
+                        {sale.transactionNumber || item.invoiceNumber || sale.id}
+                      </Link>
                     ) : (
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-lg border border-dashed border-slate-200 bg-white text-slate-300">
-                        <svg className="w-5 h-5 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                        </svg>
-                      </div>
+                      <p className="truncate font-mono text-xs font-bold text-slate-800">{item.invoiceNumber || "—"}</p>
                     )}
-
-                    <div className="min-w-0 flex-1">
-                      {sale ? (
-                        <Link
-                          href={`/penjualan/${sale.id}`}
-                          className="block truncate font-mono text-xs font-bold text-brand-700 hover:underline"
-                        >
-                          {sale.transactionNumber || item.invoiceNumber || sale.id}
-                        </Link>
-                      ) : (
-                        <p className="truncate font-mono text-xs font-bold text-slate-800">
-                          {item.invoiceNumber || "—"}
-                        </p>
-                      )}
-                      <p className="truncate text-[11px] font-medium text-slate-600 mt-0.5">
-                        {sale?.customerName || item.customerName || "Customer Umum"}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-2.5 pt-1.5 border-t border-slate-200/60 flex items-center justify-between text-[10px] text-slate-400">
-                    <span className="truncate max-w-[90px] font-medium" title={item.cameraName || "Meja Packing"}>
-                      {item.cameraName || "Meja 1"}
-                    </span>
-                    <span className="font-mono text-slate-500">
-                      {item.packingCompletedAt
-                        ? formatJakartaDateTime(item.packingCompletedAt).slice(-8)
-                        : formatJakartaDateTime(item.createdAt).slice(-8)}
-                    </span>
+                    <p className="truncate text-[11px] text-slate-600">{sale?.customerName || item.customerName || "Customer umum"}</p>
+                    <p className="truncate text-[10px] text-slate-400">{item.cameraName || "Meja 1"} · {time}</p>
                   </div>
                 </div>
               );
             })}
           </div>
         ) : (
-          <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-6 text-center text-xs text-slate-400 flex flex-col items-center justify-center">
-            <svg className="w-8 h-8 text-slate-300 mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-            </svg>
-            <p className="font-medium text-slate-500">Belum ada paket yang dipacking hari ini.</p>
-            <p className="text-[11px] text-slate-400 mt-0.5">Kamera CCTV standby memantau meja packing gudang.</p>
-          </div>
+          <p className="text-xs text-slate-500">Belum ada paket yang dipacking hari ini.</p>
         )}
       </div>
     </section>
