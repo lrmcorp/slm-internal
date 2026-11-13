@@ -449,7 +449,9 @@ export function formatSaleDotMatrix(
             )}${column("TOTAL", 22, "right")}`,
           ];
 
-    const isTempo = sale.paymentMethod === "Tempo" && !options.tempoAsInvoice;
+    // Draft dicetak sebagai penawaran (QUOTATION), juga bila bayarnya Tempo; nota final tidak berubah.
+    const isQuotation = sale.approvalStatus === "draft";
+    const isTempo = !isQuotation && sale.paymentMethod === "Tempo" && !options.tempoAsInvoice;
     const formattedDueDate = sale.dueDate
       ? (/^\d{2}\/\d{2}\/\d{4}$/.test(sale.dueDate.trim())
           ? sale.dueDate.trim()
@@ -472,7 +474,7 @@ export function formatSaleDotMatrix(
           ),
         ]
       : infoHeader(
-          "INVOICE PENJUALAN",
+          isQuotation ? "QUOTATION" : "INVOICE PENJUALAN",
           dateTimeLabel,
           "",
           [

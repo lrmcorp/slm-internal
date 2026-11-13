@@ -71,6 +71,8 @@ function formatRupiah(value: number, includeFraction = false) {
   return includeFraction ? `Rp${formatted}.00` : `Rp${formatted}`;
 }
 
+const approvalStatusIsDraft = (status?: string) => status === "draft";
+
 export function TransactionInvoiceView({
   kind,
   id,
@@ -97,10 +99,10 @@ export function TransactionInvoiceView({
   const [exportError, setExportError] = useState<string | null>(null);
 
   const isSales = kind === "sales";
-  const isTempoSale = isSales && !tempoAsInvoice && (isTempo || payment.method === "Tempo");
+  const isTempoSale = isSales && !approvalStatusIsDraft(approvalStatus) && !tempoAsInvoice && (isTempo || payment.method === "Tempo");
   // Draft belum final: gambar/PDF diberi tanda DRAFT supaya tidak dikira invoice resmi.
   const isDraft = isSales && approvalStatus === "draft";
-  const title = isTempoSale ? "Nota Tempo" : isSales ? "INVOICE" : "BUKTI PENGELUARAN";
+  const title = isDraft ? "QUOTATION" : isTempoSale ? "Nota Tempo" : isSales ? "INVOICE" : "BUKTI PENGELUARAN";
   const listUrl = isSales ? "/penjualan" : "/pengeluaran";
   const inputUrl = isSales ? "/penjualan/input" : "/pengeluaran/input";
   const detailUrl = isSales ? `/penjualan/${id}` : `/pengeluaran/${id}`;
@@ -138,7 +140,7 @@ export function TransactionInvoiceView({
         /[^a-zA-Z0-9_-]/g,
         "_",
       );
-      const filePrefix = `${isDraft ? "DRAFT_" : ""}${isTempoSale ? "Nota_Tempo" : title}`;
+      const filePrefix = isTempoSale ? "Nota_Tempo" : title;
       link.download = `${filePrefix}-${safeNumber}-${safeEntity}.png`;
       link.href = dataUrl;
       document.body.appendChild(link);

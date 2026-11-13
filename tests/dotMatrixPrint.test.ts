@@ -34,6 +34,22 @@ describe("dot matrix print formatter", () => {
     }))
   });
 
+  it("draft dicetak sebagai QUOTATION (juga bila Tempo); nota final tetap INVOICE PENJUALAN", () => {
+    const base = {
+      id: "S-QUO-1", saleDate: "2026-11-13", customerName: "Campur", paymentMethod: "Cash", total: 85000, dueDate: "2026-11-20",
+      items: [{ productRef: "U0163-4BW", quantity: 2, unitPrice: 42500, discount: 0 }]
+    };
+    const draft = formatSaleDotMatrix({ ...base, approvalStatus: "draft" } as any);
+    expect(draft).toContain("QUOTATION");
+    expect(draft).not.toContain("INVOICE PENJUALAN");
+    const draftTempo = formatSaleDotMatrix({ ...base, approvalStatus: "draft", paymentMethod: "Tempo" } as any);
+    expect(draftTempo).toContain("QUOTATION");
+    expect(draftTempo).not.toContain("Nota Tempo");
+    const final = formatSaleDotMatrix({ ...base, approvalStatus: "approved" } as any);
+    expect(final).toContain("INVOICE PENJUALAN");
+    expect(final).not.toContain("QUOTATION");
+  });
+
   it("uses 44 columns for the active small dot matrix standard", () => {
     expect(DOT_MATRIX_WIDTH).toBe(44);
   });
