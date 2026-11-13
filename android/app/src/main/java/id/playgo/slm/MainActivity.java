@@ -263,7 +263,13 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean isOwnHost(Uri uri) {
         String host = uri.getHost();
-        return host != null && baseHost != null && (host.equals(baseHost) || host.endsWith("." + baseHost));
+        if (host == null) return false;
+        if (baseHost != null && (host.equals(baseHost) || host.endsWith("." + baseHost))) return true;
+        // Domain lama yang dialihkan ke domain baru tetap dimuat di dalam aplikasi.
+        for (String old : BuildConfig.OLD_HOSTS.split(",")) {
+            if (!old.isEmpty() && host.equalsIgnoreCase(old.trim())) return true;
+        }
+        return false;
     }
 
     /** true = sudah ditangani di luar WebView (aplikasi lain); false = muat di WebView. */

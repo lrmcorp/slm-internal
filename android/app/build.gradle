@@ -5,8 +5,9 @@ plugins {
 // Satu kode untuk beberapa instance. Pilih dengan -Pbrand=slm (bawaan) atau -Pbrand=ankjy.
 // Tiap brand punya applicationId sendiri, jadi aplikasi SLM dan ANKJY bisa terpasang bersamaan.
 def brands = [
-    slm  : [appId: "id.playgo.slm",   url: "https://slm.lrmslm.com", versionCode: 3, versionName: "2.1"],
-    ankjy: [appId: "id.playgo.ankjy", url: "https://ankjy.net",      versionCode: 1, versionName: "1.0"],
+    // oldHosts: domain lama yang dialihkan ke domain baru; tetap dibuka di dalam aplikasi, bukan di browser.
+    slm  : [appId: "id.playgo.slm",   url: "https://slm.lrmslm.com",   versionCode: 3, versionName: "2.1", oldHosts: "slm.lrmint.xyz"],
+    ankjy: [appId: "id.playgo.ankjy", url: "https://ankjy.lrmslm.com", versionCode: 2, versionName: "1.1", oldHosts: "ankjy.net,www.ankjy.net"],
 ]
 def brand = (project.findProperty("brand") ?: "slm").toString()
 if (!brands.containsKey(brand)) throw new GradleException("Brand tidak dikenal: ${brand}. Pilihan: ${brands.keySet()}")
@@ -29,6 +30,7 @@ android {
         versionCode brandConfig.versionCode
         versionName brandConfig.versionName
         buildConfigField "String", "SLM_URL", "\"${project.findProperty("slmUrl") ?: brandConfig.url}\""
+        buildConfigField "String", "OLD_HOSTS", "\"${brandConfig.oldHosts ?: ""}\""
     }
 
     // Nama aplikasi dan ikon per brand ada di src/brand/<brand>/res.
