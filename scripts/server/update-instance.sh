@@ -71,7 +71,7 @@ echo "Image $NAME: $IMAGE, dibuat $(docker image inspect -f '{{.Created}}' "$IMA
 if [ -d /opt/slm/.git ]; then
   echo "Kode SLM di /opt/slm: $(git -C /opt/slm log -1 --format='%h %s (%cr)')"
 fi
-echo "Image dibangun oleh auto-deploy SLM. Kalau slm.lrmslm.com sudah menampilkan fitur terbaru, image ini sudah baru."
+echo "Image dibangun oleh auto-deploy SLM. Kalau mkr.lrmslm.com sudah menampilkan fitur terbaru, image ini sudah baru."
 
 say "4/5 Migrasi database lalu jalankan ulang $NAME"
 (cd "$WD" && "${COMPOSE[@]}" run --rm --no-deps -T "$SERVICE" npm run db:migrate:deploy) || die "Migrasi gagal; aplikasi $NAME yang lama tetap berjalan. Backup ada di /var/backups/slm."

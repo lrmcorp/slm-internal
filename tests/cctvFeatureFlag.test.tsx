@@ -7,6 +7,7 @@ const hrefs = (cctv?: boolean) => visibleNavSections("OWNER", cctv === undefined
 describe("CCTV hanya untuk domain SLM", () => {
   it("hanya aktif di domain SLM", () => {
     expect(cctvEnabled({}, "slm.lrmslm.com")).toBe(true);
+    expect(cctvEnabled({}, "mkr.lrmslm.com")).toBe(true);
     expect(cctvEnabled({}, "SLM.lrmslm.com:443")).toBe(true);
     expect(cctvEnabled({}, "slmj.lrmslm.com")).toBe(false);
     expect(cctvEnabled({ CCTV_ENABLED: "true" }, "ankjy.lrmslm.com")).toBe(false);

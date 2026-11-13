@@ -22,7 +22,7 @@ export type AppBrand = {
  * Nilai env APP_BRAND_* tetap menang atas preset.
  */
 const PRESETS: Record<string, { accent: string; companyName?: string; logo: { mark: string; full: string }; aliases: string[] }> = {
-  // SLM (slm.lrmslm.com): logo mark hijau zaitun #404731.
+  // SLM (mkr.lrmslm.com, dulu slm.lrmslm.com): logo mark hijau zaitun #404731.
   slm: { accent: "olive", logo: { mark: "/brand/slm/mark.png", full: "/brand/slm/mark.png" }, aliases: ["slm"] },
   // SLMJ (slmj.lrmslm.com, dulu lcr): logo PT Serba Lancar Mekarindo, biru navy #002A6D sesuai logo.
   slmj: {

@@ -1,11 +1,11 @@
 /**
  * Fitur per instance. Satu image dipakai SLM, SLMJ, ANKJY, dan instance lain.
  *
- * CCTV hanya untuk domain SLM (bawaan slm.lrmslm.com; ubah lewat CCTV_ALLOWED_HOSTS, dipisah koma).
+ * CCTV hanya untuk domain SLM (bawaan mkr.lrmslm.com dan domain lama slm.lrmslm.com; ubah lewat CCTV_ALLOWED_HOSTS, dipisah koma).
  * Domain lain tidak melihat menu, widget, halaman, maupun stream CCTV walau env-nya disalin dari SLM.
  *   CCTV_ENABLED=false  matikan CCTV juga di domain SLM.
  */
-export const DEFAULT_CCTV_HOSTS = ["slm.lrmslm.com"];
+export const DEFAULT_CCTV_HOSTS = ["mkr.lrmslm.com", "slm.lrmslm.com"];
 
 type Env = Record<string, string | undefined>;
 
