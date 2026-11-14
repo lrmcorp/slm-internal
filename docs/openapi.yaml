@@ -2404,6 +2404,22 @@ paths:
           description: Data tidak valid atau periode sudah ditutup.
         "403":
           description: Tidak punya akses.
+  /api/sales/mj-quantity-correction:
+    post:
+      summary: Koreksi jumlah barang invoice MJ (khusus Owner). Tanpa apply true hanya pratinjau. Saat diterapkan stok dilepas ulang sebagai revisi, jurnal penjualan dibalik lalu diposting ulang, HPP dan DO ikut jumlah baru.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Pratinjau atau hasil koreksi.
+        "400":
+          description: Data tidak valid atau invoice tidak bisa dikoreksi.
+        "403":
+          description: Khusus Owner.
   /api/cash-bank/{id}:
     put:
       summary: Ubah mutasi kas & bank. Jurnal yang sama disusun ulang dari isian baru (nomor tetap); tercatat di Audit Trail. Ditolak bila sudah dibatalkan atau periodenya tutup buku.
