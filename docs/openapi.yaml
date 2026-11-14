@@ -2404,6 +2404,28 @@ paths:
           description: Data tidak valid atau periode sudah ditutup.
         "403":
           description: Tidak punya akses.
+  /api/delivery-orders/{id}/reset:
+    post:
+      summary: Kembalikan DO ke Belum Diproses (khusus Super Admin). Alasan wajib dan tercatat di Audit Trail; foto bukti dan resi tetap disimpan.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: DO dikembalikan ke Belum Diproses.
+        "400":
+          description: Alasan kosong, DO tidak ditemukan, atau memang belum diproses.
+        "403":
+          description: Khusus Super Admin.
   /api/sales/mj-quantity-correction:
     post:
       summary: Koreksi jumlah barang invoice MJ (khusus Owner). Tanpa apply true hanya pratinjau. Saat diterapkan stok dilepas ulang sebagai revisi, jurnal penjualan dibalik lalu diposting ulang, HPP dan DO ikut jumlah baru.

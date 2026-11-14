@@ -67,11 +67,49 @@ export function DeliveryOrderDetailView({
   const [officerToRemove, setOfficerToRemove] = useState<{ id: string; name: string } | null>(null);
   const [isRemovingOfficer, setIsRemovingOfficer] = useState(false);
   const [isShipConfirmOpen, setIsShipConfirmOpen] = useState(false);
+  const [isResetOpen, setIsResetOpen] = useState(false);
+  const [resetReason, setResetReason] = useState("");
+  const [isResetting, setIsResetting] = useState(false);
   const [photoError, setPhotoError] = useState(false);
   const photoSectionRef = useRef<HTMLDivElement>(null);
 
   const isOwner = currentUserRole === "OWNER";
   const canInvite = canAssign || (isPackingOfficer ?? isPackingRole(currentUserRole));
+
+  const isProcessed = detail.status !== "belum_selesai" || detail.packingStatus === "sudah" || detail.shippingStatus === "sudah";
+
+  const handleReset = async () => {
+    setIsResetting(true);
+    try {
+      const res = await fetch(`/api/delivery-orders/${detail.id}/reset`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: resetReason })
+      });
+      const data = await res.json();
+      if (data.success) {
+        setDetail((prev) => ({
+          ...prev,
+          status: "belum_selesai",
+          packingStatus: "belum",
+          shippingStatus: "belum",
+          packedByNameSnapshot: undefined,
+          items: prev.items.map((item) => ({ ...item, isShipped: false }))
+        }));
+        setSelectedItemIds([]);
+        setIsResetOpen(false);
+        setResetReason("");
+        showToast("DO dikembalikan ke Belum Diproses.", "success");
+        router.refresh();
+      } else {
+        showToast(data.message || "Gagal mengembalikan status DO.", "error");
+      }
+    } catch {
+      showToast("Terjadi kesalahan koneksi saat mengembalikan status DO.", "error");
+    } finally {
+      setIsResetting(false);
+    }
+  };
 
   const handleSyncItems = async () => {
     setIsSyncing(true);
@@ -446,6 +484,15 @@ export function DeliveryOrderDetailView({
           >
             Kirim: {detail.shippingStatus === "sudah" ? "Sudah" : "Belum"}
           </span>
+          {isOwner && isProcessed && (
+            <button
+              type="button"
+              onClick={() => setIsResetOpen(true)}
+              className="inline-flex items-center px-3 py-1 rounded-lg text-xs font-semibold border border-rose-200 bg-white text-rose-700 hover:bg-rose-50 transition-colors shadow-sm"
+            >
+              Kembalikan ke Belum Diproses
+            </button>
+          )}
         </div>
       </div>
 
@@ -870,6 +917,37 @@ export function DeliveryOrderDetailView({
         onConfirm={confirmRemoveOfficer}
         onCancel={() => {
           if (!isRemovingOfficer) setOfficerToRemove(null);
+        }}
+      />
+
+      <ConfirmationModal
+        isOpen={isResetOpen}
+        title="Kembalikan ke Belum Diproses?"
+        message={
+          <div className="space-y-3">
+            <p>
+              Status packing dan kirim DO ini kembali menjadi Belum, dan tanda barang terkirim dihapus. Foto bukti dan nomor resi
+              tetap tersimpan. Stok dan invoice tidak berubah.
+            </p>
+            <label className="block text-xs font-semibold text-slate-600">
+              Alasan (wajib, tercatat di Audit Trail)
+              <textarea
+                value={resetReason}
+                onChange={(event) => setResetReason(event.target.value)}
+                rows={2}
+                maxLength={300}
+                className="mt-1 w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm font-normal text-slate-900"
+              />
+            </label>
+          </div>
+        }
+        confirmText="Ya, Kembalikan"
+        variant="danger"
+        isLoading={isResetting}
+        confirmDisabled={!resetReason.trim()}
+        onConfirm={handleReset}
+        onCancel={() => {
+          if (!isResetting) setIsResetOpen(false);
         }}
       />
 

@@ -949,6 +949,51 @@ export async function completeDeliveryOrderShipping(
   });
 }
 
+/**
+ * Kembalikan DO ke "Belum Diproses" (khusus Super Admin): status packing & kirim kembali Belum dan tanda
+ * barang terkirim dihapus. Foto bukti dan nomor resi tetap disimpan sebagai riwayat.
+ */
+export async function resetDeliveryOrderToUnprocessed(id: string, reason: string, actor: CurrentUser) {
+  if (actor.role !== "OWNER") throw new Error("Hanya Super Admin yang dapat mengembalikan DO ke Belum Diproses.");
+  const cleanReason = reason.trim();
+  if (!cleanReason) throw new Error("Alasan wajib diisi.");
+  return prisma.$transaction(async (tx) => {
+    const doRow = await tx.deliveryOrder.findFirst({ where: { OR: [{ id }, { salesRecordId: id }] } });
+    if (!doRow) throw new Error("Delivery Order tidak ditemukan.");
+    await assertSaleNotCancelled(tx, doRow.salesRecordId);
+    if (doRow.status === "belum_selesai" && doRow.packingStatus === "belum" && doRow.shippingStatus === "belum") {
+      throw new Error("Delivery Order ini memang belum diproses.");
+    }
+
+    await tx.deliveryOrderItem.updateMany({ where: { deliveryOrderId: doRow.id }, data: { isShipped: false, shippedQuantity: 0, shippedAt: null } });
+    const updated = await tx.deliveryOrder.update({
+      where: { id: doRow.id },
+      data: {
+        status: "belum_selesai", packingStatus: "belum", shippingStatus: "belum",
+        packedByUserId: null, packedByNameSnapshot: null, packedAt: null,
+        shippedByUserId: null, shippedByNameSnapshot: null, shippedAt: null
+      },
+      include: { items: DO_ITEMS_IN_SALE_ORDER }
+    });
+    await tx.salesRecord.update({
+      where: { id: doRow.salesRecordId },
+      data: { doStatus: "belum_selesai", doPackingStatus: "belum", doShippingStatus: "belum" }
+    });
+    await recordAudit({
+      entityType: "delivery_order",
+      entityId: doRow.id,
+      action: "update",
+      beforeValue: {
+        status: doRow.status, packingStatus: doRow.packingStatus, shippingStatus: doRow.shippingStatus,
+        packedBy: doRow.packedByNameSnapshot, packedAt: doRow.packedAt, shippedBy: doRow.shippedByNameSnapshot, shippedAt: doRow.shippedAt
+      },
+      afterValue: { status: "belum_selesai", packingStatus: "belum", shippingStatus: "belum" },
+      reason: `DO ${doRow.doNumber} dikembalikan ke Belum Diproses oleh ${actor.name}: ${cleanReason}`
+    });
+    return updated;
+  });
+}
+
 export async function updateDeliveryOrderReceiptPhotos(
   deliveryOrderId: string,
   receiptPhotoUrl: string,
