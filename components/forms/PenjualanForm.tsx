@@ -162,6 +162,13 @@ const normalizeCode = (value?: string | null) =>
     .trim()
     .toLowerCase();
 
+const PRODUCT_SEARCH_PAGE_SIZE = 100;
+const PRODUCT_SEARCH_MAX_PAGES = 20;
+/** Batas baris yang digambar di daftar pilihan; sisanya muncul saat ketikan lebih spesifik. */
+const PRODUCT_OPTIONS_SHOWN = 300;
+/** Urutan kode yang wajar: AJMJ-2 sebelum AJMJ-10. */
+const CODE_ORDER = new Intl.Collator("id", { numeric: true, sensitivity: "base" });
+
 function extractProductRows(result: unknown): Product[] {
   const data = (result as { data?: unknown } | null)?.data;
   if (Array.isArray(data)) return data as Product[];
@@ -764,18 +771,25 @@ export function PenjualanForm({
     const requestId = ++productSearchRequestRef.current;
     productSearchControllerRef.current = controller;
     try {
-      const response = await fetch(
-        `/api/products?page=1&pageSize=100&keyword=${encodeURIComponent(value)}`,
-        { cache: "no-store", signal: controller.signal },
-      );
-      const result = await response.json().catch(() => null);
-      if (
-        controller.signal.aborted ||
-        requestId !== productSearchRequestRef.current
-      )
-        return;
-      if (!response.ok || !result?.success) return;
-      const rows = extractProductRows(result);
+      // Ambil semua halaman hasil pencarian (mis. semua kode AJMJ), bukan hanya halaman pertama.
+      const rows: Product[] = [];
+      for (let page = 1; page <= PRODUCT_SEARCH_MAX_PAGES; page++) {
+        const response = await fetch(
+          `/api/products?page=${page}&pageSize=${PRODUCT_SEARCH_PAGE_SIZE}&keyword=${encodeURIComponent(value)}`,
+          { cache: "no-store", signal: controller.signal },
+        );
+        const result = await response.json().catch(() => null);
+        if (
+          controller.signal.aborted ||
+          requestId !== productSearchRequestRef.current
+        )
+          return;
+        if (!response.ok || !result?.success) break;
+        rows.push(...extractProductRows(result));
+        const totalPages = Number(result?.data?.meta?.totalPages) || 1;
+        if (page >= totalPages) break;
+      }
+      if (rows.length === 0) return;
       setProducts((current) => mergeErpProductResults(current, rows));
       setProductState({ status: "ready" });
       await refreshStocksForProducts();
@@ -2470,8 +2484,7 @@ function ProductSearchSelect({
     // Urutan: ada stok di toko, lalu hanya di gudang, lalu tidak ada stok.
     return rows
       .map((option, index) => ({ option, index, rank: availabilityRank(option) }))
-      .sort((a, b) => a.rank - b.rank || a.index - b.index)
-      .slice(0, 12)
+      .sort((a, b) => a.rank - b.rank || CODE_ORDER.compare(a.option.product.code, b.option.product.code) || a.index - b.index)
       .map((row) => row.option);
   }, [options, query]);
 
@@ -2485,6 +2498,12 @@ function ProductSearchSelect({
       cancelled = true;
     };
   }, [open, selected, value]);
+
+  // Pilihan yang aktif lewat panah keyboard tetap terlihat di daftar yang bisa digulir.
+  useEffect(() => {
+    if (!open) return;
+    document.getElementById(`${name}-option-${activeIndex}`)?.scrollIntoView({ block: "nearest" });
+  }, [activeIndex, name, open]);
 
   const choose = (option: ProductOption) => {
     setQuery(optionLabel(option));
@@ -2519,7 +2538,7 @@ function ProductSearchSelect({
             event.preventDefault();
             setOpen(true);
             setActiveIndex((current) =>
-              Math.min(current + 1, Math.max(0, filtered.length - 1)),
+              Math.min(current + 1, Math.max(0, Math.min(filtered.length, PRODUCT_OPTIONS_SHOWN) - 1)),
             );
           }
           if (event.key === "ArrowUp") {
@@ -2539,13 +2558,20 @@ function ProductSearchSelect({
           role="listbox"
           className="absolute z-[100] mt-1 max-h-72 w-full overflow-y-auto rounded-xl border border-neutral-200 bg-white p-1 text-sm shadow-xl"
         >
-          {filtered.map((option, index) => (
+          {filtered.length > 0 && (
+            <p className="px-3 pb-1 pt-1 text-xs font-semibold text-slate-500">
+              {filtered.length} barang cocok
+              {filtered.length > PRODUCT_OPTIONS_SHOWN ? ` · menampilkan ${PRODUCT_OPTIONS_SHOWN} pertama, ketik lebih spesifik` : ""}
+            </p>
+          )}
+          {filtered.slice(0, PRODUCT_OPTIONS_SHOWN).map((option, index) => (
             <Fragment key={option.product.id || option.product.code}>
             {(index === 0 || availabilityRank(filtered[index - 1]) !== availabilityRank(option)) && (
               <p className="px-3 pb-0.5 pt-2 text-[11px] font-semibold uppercase tracking-wide text-slate-500">{AVAILABILITY_LABEL[availabilityRank(option)]}</p>
             )}
             <button
               type="button"
+              id={`${name}-option-${index}`}
               role="option"
               aria-selected={
                 normalizeCode(option.product.code) === normalizeCode(value)
