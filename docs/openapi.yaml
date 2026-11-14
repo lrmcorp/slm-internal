@@ -1106,6 +1106,28 @@ paths:
           description: since bukan tanggal ISO.
         "401":
           description: Token MJ tidak valid.
+  /api/integrations/mj/invoices/{external_reference}/revise:
+    post:
+      summary: Revisi invoice MJ record_only setelah transaksinya diedit di MJ. Barang, total, customer, dan pembayaran mengikuti payload; jurnal penjualan dibalik lalu diposting ulang, HPP ikut rilis stok revisi, DO disinkronkan dengan barang terkirim tetap. Payload sama dikirim ulang = unchanged.
+      parameters:
+        - name: external_reference
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Invoice direvisi atau tidak berubah.
+        "400":
+          description: Payload tidak valid.
+        "409":
+          description: Invoice dibatalkan, bukan record_only, punya retur, atau perubahan Tempo tidak didukung.
   /api/integrations/mj/invoices/{external_reference}/cancel:
     post:
       summary: Cancel invoice MJ sesuai processing mode.

@@ -106,6 +106,43 @@ function initialTempoPaymentStage(input: MjInvoiceInput) {
   return "not_required";
 }
 
+/** Baris invoice SLM dari item payload MJ (dipakai saat membuat dan merevisi invoice). */
+export function invoiceItemRow(item: MjInvoiceInput["items"][number], index: number) {
+  if ("product_reference" in item && typeof item.product_reference === "string") {
+    const prodRef = String(item.product_reference);
+    const prodName = typeof item.product_name === "string" ? item.product_name : prodRef;
+    const extProdId = "external_product_id" in item && item.external_product_id ? String(item.external_product_id) : null;
+    const wId = "warehouse_id" in item && item.warehouse_id ? String(item.warehouse_id) : null;
+    const wName = "warehouse_name" in item && typeof item.warehouse_name === "string" ? item.warehouse_name : null;
+    const rId = "rack_id" in item && item.rack_id ? String(item.rack_id) : null;
+    const rName = "rack_name" in item && typeof item.rack_name === "string" ? item.rack_name : null;
+    const unit = "unit" in item && typeof item.unit === "string" ? item.unit : null;
+    return {
+      id: crypto.randomUUID(), productRef: prodRef, productId: extProdId,
+      manualProduct: json({ sku: prodRef, name: prodName }),
+      warehouseId: wId, warehouseNameSnapshot: wName,
+      rackId: rId, rackNameSnapshot: rName, unitSnapshot: unit,
+      quantity: item.quantity, unitPrice: item.unit_price, discount: item.discount, sortOrder: index
+    };
+  }
+  const sku = "sku" in item && typeof item.sku === "string" ? item.sku : String(item.external_product_id);
+  const extId = String(item.external_product_id);
+  const prodName = "product_name" in item && typeof item.product_name === "string" ? item.product_name : sku;
+  const wId = String(item.warehouse_id || "1");
+  const wName = "warehouse_name" in item && typeof item.warehouse_name === "string" ? item.warehouse_name : "Gudang Utama";
+  const rId = "rack_id" in item && item.rack_id ? String(item.rack_id) : null;
+  const rName = "rack_name" in item && typeof item.rack_name === "string" ? item.rack_name : null;
+  const unit = "unit" in item && typeof item.unit === "string" ? item.unit : "Pcs";
+  return {
+    id: crypto.randomUUID(), productRef: sku, productId: extId,
+    manualProduct: json({ sku, name: prodName }),
+    warehouseId: wId, warehouseNameSnapshot: wName,
+    rackId: rId, rackNameSnapshot: rName,
+    unitSnapshot: unit,
+    quantity: item.quantity, unitPrice: item.unit_price, discount: item.discount, sortOrder: index
+  };
+}
+
 async function createLocalInvoice(input: MjInvoiceInput, principal: MjIntegrationPrincipal, payloadHash: string) {
   const { tipe, accountSnapshot } = await resolveMasterData(input);
   const stage = initialStageState(input);
@@ -145,41 +182,7 @@ async function createLocalInvoice(input: MjInvoiceInput, principal: MjIntegratio
         customerSyncStatus: stage.customer, accountSnapshot: accountSnapshot ? json(accountSnapshot) : undefined,
         integrationMetadata: json({ payload: input, client_code: principal.clientCode, environment: principal.environment }),
         createdByUserId: "integration:mj", createdByNameSnapshot: "Integration MJ", createdByRoleSnapshot: "OWNER", createdAt: new Date(),
-        items: { create: input.items.map((item, index) => {
-          if ("product_reference" in item && typeof item.product_reference === "string") {
-            const prodRef = String(item.product_reference);
-            const prodName = typeof item.product_name === "string" ? item.product_name : prodRef;
-            const extProdId = "external_product_id" in item && item.external_product_id ? String(item.external_product_id) : null;
-            const wId = "warehouse_id" in item && item.warehouse_id ? String(item.warehouse_id) : null;
-            const wName = "warehouse_name" in item && typeof item.warehouse_name === "string" ? item.warehouse_name : null;
-            const rId = "rack_id" in item && item.rack_id ? String(item.rack_id) : null;
-            const rName = "rack_name" in item && typeof item.rack_name === "string" ? item.rack_name : null;
-            const unit = "unit" in item && typeof item.unit === "string" ? item.unit : null;
-            return {
-              id: crypto.randomUUID(), productRef: prodRef, productId: extProdId,
-              manualProduct: json({ sku: prodRef, name: prodName }),
-              warehouseId: wId, warehouseNameSnapshot: wName,
-              rackId: rId, rackNameSnapshot: rName, unitSnapshot: unit,
-              quantity: item.quantity, unitPrice: item.unit_price, discount: item.discount, sortOrder: index
-            };
-          }
-          const sku = "sku" in item && typeof item.sku === "string" ? item.sku : String(item.external_product_id);
-          const extId = String(item.external_product_id);
-          const prodName = "product_name" in item && typeof item.product_name === "string" ? item.product_name : sku;
-          const wId = String(item.warehouse_id || "1");
-          const wName = "warehouse_name" in item && typeof item.warehouse_name === "string" ? item.warehouse_name : "Gudang Utama";
-          const rId = "rack_id" in item && item.rack_id ? String(item.rack_id) : null;
-          const rName = "rack_name" in item && typeof item.rack_name === "string" ? item.rack_name : null;
-          const unit = "unit" in item && typeof item.unit === "string" ? item.unit : "Pcs";
-          return {
-            id: crypto.randomUUID(), productRef: sku, productId: extId,
-            manualProduct: json({ sku, name: prodName }),
-            warehouseId: wId, warehouseNameSnapshot: wName,
-            rackId: rId, rackNameSnapshot: rName,
-            unitSnapshot: unit,
-            quantity: item.quantity, unitPrice: item.unit_price, discount: item.discount, sortOrder: index
-          };
-        }) }
+        items: { create: input.items.map(invoiceItemRow) }
       } });
       await createDeliveryOrderForSale(id, tx);
       if (input.payment.method === "Tempo") {
@@ -898,4 +901,104 @@ export async function recordMjPrintEvent(
     printed_by: printedBy,
     invoice: await invoiceSnapshotWithTempo(updated)
   };
+}
+
+/**
+ * Revisi invoice MJ (record_only) setelah transaksinya diedit di MJ: barang, total, customer, pembayaran ikut
+ * isi terbaru. Jurnal penjualan dibalik lalu diposting ulang, HPP mengikuti rilis stok revisi dari MJ, dan DO
+ * disinkronkan dengan tetap menjaga barang yang sudah dikirim. Payload yang sama dikirim ulang = tidak berubah.
+ */
+export async function reviseMjInvoice(externalReference: string, input: MjInvoiceInput) {
+  if (input.external_reference !== externalReference) throw new MjIntegrationError("VALIDATION_FAILED", "external_reference di URL dan payload berbeda.", 400);
+  if (input.processing_mode !== "record_only") throw new MjIntegrationError("VALIDATION_FAILED", "Revisi hanya untuk invoice record_only.", 400);
+  const row = await findMjInvoice(externalReference);
+  if (processingMode(row) !== "record_only") throw new MjIntegrationError("VALIDATION_FAILED", "Invoice ini diproses lewat AJ dan tidak bisa direvisi dari MJ.", 409, invoiceSnapshot(row));
+  if (row.approvalStatus === "cancelled") throw new MjIntegrationError("VALIDATION_FAILED", "Invoice sudah dibatalkan dan tidak bisa direvisi.", 409, invoiceSnapshot(row));
+  const hash = immutablePayloadHash(input);
+  if (row.integrationPayloadHash === hash) return { status: "unchanged" as const, invoice: invoiceSnapshot(row) };
+  const postedReturns = await prisma.salesReturn.count({ where: { salesRecordId: row.id, status: "POSTED" } });
+  if (postedReturns > 0) throw new MjIntegrationError("VALIDATION_FAILED", "Invoice sudah punya retur yang diposting di SLM; batalkan returnya dulu atau buat transaksi baru.", 409);
+
+  const tempo = await prisma.tempoReceivable.findUnique({ where: { salesId: row.id }, include: { payments: true } });
+  const laterPayments = tempo?.payments.filter((p) => !p.externalPaymentReference?.endsWith(":INITIAL")) ?? [];
+  const initialPayment = tempo?.payments.find((p) => p.externalPaymentReference?.endsWith(":INITIAL"));
+  const isTempo = input.payment.method === "Tempo";
+  if ((row.paymentMethod === "Tempo") !== isTempo) throw new MjIntegrationError("VALIDATION_FAILED", "Metode bayar Tempo tidak bisa diganti lewat edit; batalkan lalu buat transaksi baru.", 409);
+  if (isTempo) {
+    if (laterPayments.length > 0) throw new MjIntegrationError("VALIDATION_FAILED", "Piutang Tempo ini sudah ada pembayaran cicilan; edit tidak bisa dikirim ke SLM.", 409);
+    if (Number(initialPayment?.amountPaid ?? 0) !== input.payment.paid_amount) throw new MjIntegrationError("VALIDATION_FAILED", "DP Tempo tidak bisa diubah lewat edit; batalkan lalu buat transaksi baru.", 409);
+  }
+
+  const { tipe, accountSnapshot } = await resolveMasterData(input);
+  const actor = { id: "integration:mj", name: "Integration MJ", role: "OWNER" as Role };
+  const reason = `Revisi invoice MJ ${row.transactionNumber ?? externalReference}`;
+
+  // Jurnal lama dibalik; kunci sumbernya dipindah supaya jurnal baru bisa diposting.
+  if (row.journalEntryId) {
+    const journal = await prisma.journalEntry.findUnique({ where: { id: row.journalEntryId }, select: { status: true, reversedByJournalId: true } });
+    if (journal && journal.status !== "REVERSED" && !journal.reversedByJournalId) {
+      const { reverseJournalEntry } = await import("@/lib/accounting/journalStore");
+      await reverseJournalEntry(row.journalEntryId, actor, reason);
+    }
+    await prisma.journalEntry.update({ where: { id: row.journalEntryId }, data: { sourceId: `${row.id}:revisi-${Date.now()}` } });
+  }
+
+  const metadata = row.integrationMetadata && typeof row.integrationMetadata === "object" ? row.integrationMetadata as Record<string, unknown> : {};
+  const revisions = Array.isArray(metadata.revisions) ? metadata.revisions : [];
+  const customerName = input.customer.mode === "manual" ? input.customer.name : input.customer.name || `Customer ${input.customer.customer_id}`;
+  const { snapshotDeliveryOrderShippedItems, syncDeliveryOrderForSale } = await import("@/lib/deliveryOrders/store");
+  let previousShipped: Awaited<ReturnType<typeof snapshotDeliveryOrderShippedItems>> = [];
+  await prisma.$transaction(async (tx) => {
+    previousShipped = await snapshotDeliveryOrderShippedItems(tx, row.id);
+    await tx.salesRecordItem.deleteMany({ where: { salesRecordId: row.id } });
+    await tx.salesRecord.update({
+      where: { id: row.id },
+      data: {
+        saleDate: new Date(`${input.invoice_date}T00:00:00.000Z`),
+        ...(input.transaction_at ? { transactionAt: new Date(input.transaction_at) } : {}),
+        tipeId: tipe.id, tipeCodeSnapshot: tipe.code, tipeNameSnapshot: tipe.name,
+        customerName,
+        customerLocation: input.customer.mode === "manual" ? input.customer.address ?? null : row.customerLocation,
+        externalCustomerId: input.customer.mode === "manual" ? input.customer.external_id : row.externalCustomerId,
+        paymentMethod: input.payment.method,
+        dueDate: input.payment.due_date ? new Date(`${input.payment.due_date}T00:00:00.000Z`) : null,
+        rekeningId: input.payment.account?.mode === "slm" ? input.payment.account.rekening_id || null : null,
+        rekeningNameSnapshot: accountSnapshot ? String((accountSnapshot as Record<string, unknown>).name || "") : null,
+        accountSnapshot: accountSnapshot ? json(accountSnapshot) : Prisma.DbNull,
+        notes: input.notes ?? null,
+        total: input.total,
+        journalEntryId: null,
+        ...(input.stock_release_reference ? { stockReleaseReference: input.stock_release_reference } : {}),
+        integrationPayloadHash: hash,
+        integrationMetadata: json({ ...metadata, payload: input, revisions: [...revisions, { at: new Date().toISOString(), previous_total: Number(row.total), total: input.total }] }),
+        items: { create: input.items.map(invoiceItemRow) }
+      }
+    });
+    if (tempo) {
+      const paid = Number(tempo.paidAmount);
+      const remaining = Math.max(0, input.total - paid);
+      await tx.tempoReceivable.update({
+        where: { id: tempo.id },
+        data: {
+          customerName, originalAmount: input.total, remainingAmount: remaining,
+          ...(input.payment.due_date ? { dueDate: new Date(`${input.payment.due_date}T00:00:00.000Z`) } : {}),
+          status: remaining === 0 ? "paid" : paid > 0 ? "partial_paid" : "open", updatedAt: new Date()
+        }
+      });
+    }
+    await tx.auditLog.create({
+      data: {
+        id: crypto.randomUUID(), entityType: "sales", entityId: row.id, action: "update",
+        beforeValue: json({ total: Number(row.total), items: row.items.map((i) => ({ sku: i.productRef, quantity: Number(i.quantity), unitPrice: Number(i.unitPrice) })) }),
+        afterValue: json({ total: input.total, items: input.items.map((i) => ({ sku: "sku" in i ? i.sku : undefined, quantity: i.quantity, unitPrice: i.unit_price })) }),
+        userId: actor.id, userNameSnapshot: actor.name, userRoleSnapshot: actor.role, reason: `${reason} (diedit di MJ)`
+      }
+    });
+  });
+
+  await postSalesInvoiceJournal(row.id);
+  await postSalesCogsJournal(row.id);
+  await syncDeliveryOrderForSale(row.id, undefined, { previousShipped }).catch((error) => console.error("[DO] Gagal sinkron DO setelah revisi MJ:", error));
+  const updated = await prisma.salesRecord.findUniqueOrThrow({ where: { id: row.id }, include: includeInvoice });
+  return { status: "revised" as const, invoice: invoiceSnapshot(updated) };
 }
