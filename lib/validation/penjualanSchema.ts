@@ -65,6 +65,18 @@ export const penjualanSchema = z.object({
     discountType: z.enum(["amount", "percent"]).optional()
   })).min(1, "Minimal satu barang diperlukan")
 }).superRefine((data, ctx) => {
+  // Satu kode barang cukup satu baris; tambahan jumlah diisi di qty baris yang sudah ada.
+  const firstRowByCode = new Map<string, number>();
+  data.items.forEach((item, index) => {
+    const code = (item.productRef || "").trim().toUpperCase();
+    if (!code) return;
+    const first = firstRowByCode.get(code);
+    if (first === undefined) {
+      firstRowByCode.set(code, index);
+      return;
+    }
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: `Kode ${item.productRef.trim()} sudah ada di baris ${first + 1}. Tambahkan qty di baris itu.`, path: ["items", index, "productRef"] });
+  });
   if (data.deliveryDate && Number.isNaN(Date.parse(data.deliveryDate))) {
     ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Tanggal kirim tidak valid", path: ["deliveryDate"] });
   }

@@ -290,6 +290,7 @@ export function PenjualanForm({
     watch,
     setValue,
     getValues,
+    setError,
     formState: { errors, isSubmitting },
   } = useForm<PenjualanInput>({
     resolver: zodResolver(penjualanSchema) as Resolver<PenjualanInput>,
@@ -1781,6 +1782,20 @@ export function PenjualanForm({
                             disabled={productState.status !== "ready"}
                             options={productOptions}
                             onSelect={(option) => {
+                              const code = option.product.code.trim().toUpperCase();
+                              const existingRow = (getValues("items") || []).findIndex(
+                                (item, row) => row !== index && (item?.productRef || "").trim().toUpperCase() === code,
+                              );
+                              if (existingRow >= 0) {
+                                setError(`items.${index}.productRef`, {
+                                  type: "manual",
+                                  message: `${option.product.code} sudah ada di baris ${existingRow + 1}. Tambahkan qty di baris itu.`,
+                                });
+                                document
+                                  .getElementById(`sale-item-${existingRow}`)
+                                  ?.scrollIntoView({ behavior: "smooth", block: "center" });
+                                return;
+                              }
                               setValue(
                                 `items.${index}.productInputMode`,
                                 "erp",
