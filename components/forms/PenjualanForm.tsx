@@ -22,7 +22,7 @@ import { Select } from "@/components/ui/Select";
 import { Textarea } from "@/components/ui/Textarea";
 import { Toast } from "@/components/ui/Toast";
 import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState, useDeferredValue } from "react";
 import type { Product } from "@/lib/types/product";
 import type { StockItem } from "@/lib/types/stock";
 import type { Sale } from "@/lib/types/sales";
@@ -166,6 +166,8 @@ const PRODUCT_SEARCH_PAGE_SIZE = 100;
 const PRODUCT_SEARCH_MAX_PAGES = 20;
 /** Batas baris yang digambar di daftar pilihan; sisanya muncul saat ketikan lebih spesifik. */
 const PRODUCT_OPTIONS_SHOWN = 300;
+/** Daftar barang dan pencarian ke server baru jalan setelah huruf ke-3, supaya mengetik tetap ringan. */
+const PRODUCT_SEARCH_MIN_CHARS = 3;
 /** Urutan kode yang wajar: AJMJ-2 sebelum AJMJ-10. */
 const CODE_ORDER = new Intl.Collator("id", { numeric: true, sensitivity: "base" });
 
@@ -765,7 +767,7 @@ export function PenjualanForm({
 
   const searchProducts = useCallback(async (keyword: string) => {
     const value = keyword.trim();
-    if (value.length < 2) return;
+    if (value.length < PRODUCT_SEARCH_MIN_CHARS) return;
     productSearchControllerRef.current?.abort();
     const controller = new AbortController();
     const requestId = ++productSearchRequestRef.current;
@@ -870,7 +872,7 @@ export function PenjualanForm({
   }, [localCatalog, hasManualItems, referenceState.status, refreshProductReferences]);
 
   useEffect(() => {
-    if (productQuery.trim().length < 2) return;
+    if (productQuery.trim().length < PRODUCT_SEARCH_MIN_CHARS) return;
     const timer = window.setTimeout(
       () => void searchProducts(productQuery),
       350,
@@ -2472,8 +2474,12 @@ function ProductSearchSelect({
   const [query, setQuery] = useState(selected ? optionLabel(selected) : value);
   const [open, setOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
+  // Penyaringan memakai nilai tertunda: huruf yang diketik tampil dulu, daftar menyusul.
+  const deferredQuery = useDeferredValue(query);
+  const queryReady = query.trim().length >= PRODUCT_SEARCH_MIN_CHARS;
   const filtered = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
+    const normalized = deferredQuery.trim().toLowerCase();
+    if (normalized.length < PRODUCT_SEARCH_MIN_CHARS) return [];
     const rows = normalized
       ? options.filter((option) =>
         `${option.product.code} ${option.product.name}`
@@ -2486,7 +2492,7 @@ function ProductSearchSelect({
       .map((option, index) => ({ option, index, rank: availabilityRank(option) }))
       .sort((a, b) => a.rank - b.rank || CODE_ORDER.compare(a.option.product.code, b.option.product.code) || a.index - b.index)
       .map((row) => row.option);
-  }, [options, query]);
+  }, [options, deferredQuery]);
 
   useEffect(() => {
     if (open) return;
@@ -2558,7 +2564,12 @@ function ProductSearchSelect({
           role="listbox"
           className="absolute z-[100] mt-1 max-h-72 w-full overflow-y-auto rounded-xl border border-neutral-200 bg-white p-1 text-sm shadow-xl"
         >
-          {filtered.length > 0 && (
+          {!queryReady && (
+            <p className="px-3 py-4 text-center text-sm text-slate-500">
+              Ketik minimal {PRODUCT_SEARCH_MIN_CHARS} huruf kode atau nama barang.
+            </p>
+          )}
+          {queryReady && filtered.length > 0 && (
             <p className="px-3 pb-1 pt-1 text-xs font-semibold text-slate-500">
               {filtered.length} barang cocok
               {filtered.length > PRODUCT_OPTIONS_SHOWN ? ` · menampilkan ${PRODUCT_OPTIONS_SHOWN} pertama, ketik lebih spesifik` : ""}
@@ -2591,7 +2602,7 @@ function ProductSearchSelect({
             </button>
             </Fragment>
           ))}
-          {filtered.length === 0 && (
+          {queryReady && filtered.length === 0 && deferredQuery === query && (
             <p className="px-3 py-4 text-center text-sm text-slate-500">
               Barang ERP tidak ditemukan.
             </p>
