@@ -2448,6 +2448,22 @@ paths:
           description: Alasan kosong, DO tidak ditemukan, atau memang belum diproses.
         "403":
           description: Khusus Super Admin.
+  /api/inventory/unit-conversion:
+    post:
+      summary: Ubah satuan barang Gross menjadi Lusin (khusus Owner). Stok, riwayat pergerakan, lapisan biaya, dan dokumen stok dikali jumlah lusin per gross; harga dan biaya dibagi angka yang sama. Tanpa apply true hanya pratinjau.
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Pratinjau atau hasil konversi.
+        "400":
+          description: Data tidak valid atau barang bukan satuan Gross.
+        "403":
+          description: Khusus Owner.
   /api/sales/mj-quantity-correction:
     post:
       summary: Koreksi jumlah barang invoice MJ (khusus Owner). Tanpa apply true hanya pratinjau. Saat diterapkan stok dilepas ulang sebagai revisi, jurnal penjualan dibalik lalu diposting ulang, HPP dan DO ikut jumlah baru.
