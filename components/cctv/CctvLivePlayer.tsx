@@ -35,6 +35,7 @@ export function CameraCell({
   const retryCountRef = useRef<number>(0);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startStreamRef = useRef<(() => void) | null>(null);
+  const [posterTick, setPosterTick] = useState<number>(0);
 
   const cleanupStream = useCallback(() => {
     if (retryTimerRef.current) {
@@ -79,6 +80,11 @@ export function CameraCell({
 
     const videoEl = videoRef.current;
     if (!videoEl) return;
+    // Autoplay tanpa sentuhan hanya diizinkan untuk video bisu; Safari memeriksa atribut muted, bukan hanya properti.
+    videoEl.muted = true;
+    videoEl.defaultMuted = true;
+    videoEl.setAttribute("muted", "");
+    videoEl.setAttribute("playsinline", "");
 
     try {
       if (streamType === "hls" || streamUrl.includes(".m3u8")) {
@@ -154,6 +160,14 @@ export function CameraCell({
   useEffect(() => {
     startStreamRef.current = startStream;
   }, [startStream]);
+
+  // Selama live menyambung, foto sementara diperbarui tiap 3 detik supaya gambar tetap bergerak.
+  const waitingForLive = isPlaying && connectionStatus === "connecting" && Boolean(camera.posterUrl);
+  useEffect(() => {
+    if (!waitingForLive) return;
+    const timer = setInterval(() => setPosterTick((tick) => tick + 1), 3000);
+    return () => clearInterval(timer);
+  }, [waitingForLive]);
 
   useEffect(() => {
     if (isPlaying) {
@@ -352,15 +366,16 @@ export function CameraCell({
             }}
           />
         ) : (
+          // Video tidak disembunyikan (display:none): Safari menahan pemutaran video tersembunyi.
+          // Selama menyambung, video tertutup foto sementara di atasnya.
           <video
             ref={videoRef}
-            className={`h-full w-full object-contain ${
-              isPlaying && connectionStatus === "live" ? "block" : "hidden"
-            }`}
+            className="h-full w-full object-contain"
             playsInline
             muted={isMuted}
             autoPlay={autoPlay}
             preload="auto"
+            onPlaying={() => setConnectionStatus("live")}
           />
         )}
 
@@ -368,7 +383,7 @@ export function CameraCell({
         {isPlaying && connectionStatus === "connecting" && camera.posterUrl && camera.streamType === "hls" ? (
           <div className="absolute inset-0 bg-slate-950">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={camera.posterUrl} alt={`Foto terakhir ${camera.name}`} className="h-full w-full object-contain" />
+            <img src={`${camera.posterUrl}${camera.posterUrl?.includes("?") ? "&" : "?"}t=${posterTick}`} alt={`Foto terakhir ${camera.name}`} className="h-full w-full object-contain" />
             <span className="absolute left-2 top-2 inline-flex items-center gap-1.5 rounded-md bg-black/65 px-2 py-1 text-[11px] font-semibold text-white">
               <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
               Menyambungkan live…
