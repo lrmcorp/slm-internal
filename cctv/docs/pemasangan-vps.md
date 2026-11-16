@@ -9,8 +9,8 @@ Kode CCTV sekarang ada di repo `lrmcorp/slm-internal`, folder `cctv/`. Di VPS, k
 | Container | Isi | Batas bawaan |
 |---|---|---|
 | `cctvslm-web-1` | Dashboard dan API Laravel (`artisan serve`, 4 pekerja), port `127.0.0.1:8095` | 256 MB, 0,5 CPU |
-| `cctvslm-worker-1` | Antrian (`queue:work`) dan penjadwal (`schedule:work`) dalam satu container | 256 MB, 0,5 CPU |
-| `cctvslm-vision-1` | Satu proses untuk ketiga kamera (satu thread per kamera) | 448 MB, 1 CPU |
+| `cctvslm-worker-1` | Antrian (`queue:work`) dan penjadwal (`schedule:work`) dalam satu container | 192 MB, 0,5 CPU |
+| `cctvslm-vision-1` | Satu proses untuk ketiga kamera (satu thread per kamera) | 192 MB, 1 CPU |
 
 ### Prasyarat
 

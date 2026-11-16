@@ -67,8 +67,8 @@ services:
     command: ["sh", "/app/docker/worker.sh"]
     depends_on:
       - web
-    mem_limit: ${CCTV_WORKER_MEM_LIMIT:-256m}
-    memswap_limit: ${CCTV_WORKER_MEM_LIMIT:-256m}
+    mem_limit: ${CCTV_WORKER_MEM_LIMIT:-192m}
+    memswap_limit: ${CCTV_WORKER_MEM_LIMIT:-192m}
     cpus: ${CCTV_WORKER_CPUS:-0.50}
 
   # Satu proses untuk semua kamera (satu thread per kamera); kamera putus tidak mematikan yang lain.
@@ -120,8 +120,8 @@ services:
       - cctv_storage:/app/storage
     depends_on:
       - web
-    mem_limit: ${CCTV_VISION_MEM_LIMIT:-448m}
-    memswap_limit: ${CCTV_VISION_MEM_LIMIT:-448m}
+    mem_limit: ${CCTV_VISION_MEM_LIMIT:-192m}
+    memswap_limit: ${CCTV_VISION_MEM_LIMIT:-192m}
     cpus: ${CCTV_VISION_CPUS:-1.00}
 
 # Nama volume tetap sama dengan stack lama (cctvslm_cctv_*), jadi data dan bukti lama ikut terbawa.
