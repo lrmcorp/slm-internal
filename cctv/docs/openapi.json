@@ -1,0 +1,1752 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "CCTV SLM API",
+    "version": "0.3.1",
+    "description": "API aplikasi CCTV SLM: autentikasi, kamera, invoice dan packing, kejadian, presence, bukti privat, serta aturan push/email/WhatsApp. Kontrak endpoint ERP keluar dijelaskan dalam docs/integrasi-erp-slm.md."
+  },
+  "servers": [
+    {
+      "url": "https://cctvslm.playgo.id"
+    }
+  ],
+  "paths": {
+    "/api/login": {
+      "post": {
+        "summary": "Masuk; token berlaku 30 hari",
+        "operationId": "post__api_login",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Berhasil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Session"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "403": {
+            "description": "Perlu admin"
+          },
+          "422": {
+            "description": "Validasi gagal"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Login"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/logout": {
+      "post": {
+        "summary": "Cabut token saat ini",
+        "operationId": "post__api_logout",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Berhasil"
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "403": {
+            "description": "Perlu admin"
+          },
+          "422": {
+            "description": "Validasi gagal"
+          }
+        }
+      }
+    },
+    "/api/devices": {
+      "post": {
+        "summary": "Daftarkan token push perangkat",
+        "operationId": "post__api_devices",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil"
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "403": {
+            "description": "Perlu admin"
+          },
+          "422": {
+            "description": "Validasi gagal"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Device"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cameras": {
+      "get": {
+        "summary": "Daftar kamera",
+        "operationId": "get__api_cameras",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Camera"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "403": {
+            "description": "Perlu admin"
+          },
+          "422": {
+            "description": "Validasi gagal"
+          }
+        }
+      },
+      "post": {
+        "summary": "Admin membuat kamera",
+        "operationId": "post__api_cameras",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Berhasil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Camera"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "403": {
+            "description": "Perlu admin"
+          },
+          "422": {
+            "description": "Validasi gagal"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CameraCreate"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cameras/{camera}/live/{file}": {
+      "get": {
+        "summary": "HLS privat: stream.m3u8 atau segment<angka>.ts; Authorization juga pada segmen",
+        "operationId": "get__api_cameras_camera_live_file",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil",
+            "content": {
+              "application/vnd.apple.mpegurl": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "video/mp2t": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "403": {
+            "description": "Perlu admin"
+          },
+          "422": {
+            "description": "Validasi gagal"
+          },
+          "503": {
+            "description": "Frame kamera terlalu lama; stream tidak dianggap live."
+          }
+        },
+        "parameters": [
+          {
+            "name": "camera",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "file",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/cameras/{camera}/live-frame": {
+      "get": {
+        "summary": "JPEG terbaru, bukan video penuh",
+        "operationId": "get__api_cameras_camera_live_frame",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "JPEG privat; periksa X-Frame-Time",
+            "content": {
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            },
+            "headers": {
+              "X-Frame-Time": {
+                "schema": {
+                  "type": "string",
+                  "format": "date-time"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "403": {
+            "description": "Perlu admin"
+          },
+          "422": {
+            "description": "Validasi gagal"
+          }
+        },
+        "parameters": [
+          {
+            "name": "camera",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
+    "/api/cameras/{camera}/reference": {
+      "post": {
+        "summary": "Admin mengunggah frame referensi",
+        "operationId": "post__api_cameras_camera_reference",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Camera"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "403": {
+            "description": "Perlu admin"
+          },
+          "422": {
+            "description": "Validasi gagal"
+          }
+        },
+        "parameters": [
+          {
+            "name": "camera",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/FileUpload"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cameras/{camera}/zones": {
+      "put": {
+        "summary": "Admin menyimpan zona; persetujuan lama dihapus",
+        "operationId": "put__api_cameras_camera_zones",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Camera"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "403": {
+            "description": "Perlu admin"
+          },
+          "422": {
+            "description": "Validasi gagal"
+          }
+        },
+        "parameters": [
+          {
+            "name": "camera",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Zones"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cameras/{camera}/zones/approve": {
+      "post": {
+        "summary": "Admin menyetujui zona yang diperiksa",
+        "operationId": "post__api_cameras_camera_zones_approve",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Camera"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "403": {
+            "description": "Perlu admin"
+          },
+          "422": {
+            "description": "Validasi gagal"
+          }
+        },
+        "parameters": [
+          {
+            "name": "camera",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
+    "/api/cameras/{camera}/presence-settings": {
+      "put": {
+        "summary": "Atur batas tidak terlihat",
+        "operationId": "put__api_cameras_camera_presence_settings",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Camera"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "403": {
+            "description": "Perlu admin"
+          },
+          "422": {
+            "description": "Validasi gagal"
+          }
+        },
+        "parameters": [
+          {
+            "name": "camera",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PresenceSettings"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/reports/presence": {
+      "get": {
+        "summary": "Laporan track anonim; bukan orang unik",
+        "operationId": "get__api_reports_presence",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "403": {
+            "description": "Perlu admin"
+          },
+          "422": {
+            "description": "Validasi gagal"
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "camera_id",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "classification",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/presence/{track}/classification": {
+      "post": {
+        "summary": "Admin mengklasifikasikan track",
+        "operationId": "post__api_presence_track_classification",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil"
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "403": {
+            "description": "Perlu admin"
+          },
+          "422": {
+            "description": "Validasi gagal"
+          }
+        },
+        "parameters": [
+          {
+            "name": "track",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Classification"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/labels": {
+      "get": {
+        "summary": "Daftar invoice",
+        "operationId": "get__api_labels",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "403": {
+            "description": "Perlu admin"
+          },
+          "422": {
+            "description": "Validasi gagal"
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
+    "/api/labels/{label}": {
+      "get": {
+        "summary": "Detail invoice",
+        "operationId": "get__api_labels_label",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil"
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "403": {
+            "description": "Perlu admin"
+          },
+          "422": {
+            "description": "Validasi gagal"
+          }
+        },
+        "parameters": [
+          {
+            "name": "label",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
+    "/api/labels/{label}/review": {
+      "post": {
+        "summary": "Periksa/koreksi label sebelum cocok SLM",
+        "operationId": "post__api_labels_label_review",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil"
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "403": {
+            "description": "Perlu admin"
+          },
+          "422": {
+            "description": "Validasi gagal"
+          }
+        },
+        "parameters": [
+          {
+            "name": "label",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LabelReview"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/incidents": {
+      "get": {
+        "summary": "Daftar dugaan dan gangguan",
+        "operationId": "get__api_incidents",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "403": {
+            "description": "Perlu admin"
+          },
+          "422": {
+            "description": "Validasi gagal"
+          }
+        },
+        "parameters": [
+          {
+            "name": "page",
+            "in": "query",
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "status",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/incidents/{incident}": {
+      "get": {
+        "summary": "Detail kejadian",
+        "operationId": "get__api_incidents_incident",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil"
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "403": {
+            "description": "Perlu admin"
+          },
+          "422": {
+            "description": "Validasi gagal"
+          }
+        },
+        "parameters": [
+          {
+            "name": "incident",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
+    "/api/incidents/{incident}/review": {
+      "post": {
+        "summary": "Keputusan manusia",
+        "operationId": "post__api_incidents_incident_review",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil"
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "403": {
+            "description": "Perlu admin"
+          },
+          "422": {
+            "description": "Validasi gagal"
+          }
+        },
+        "parameters": [
+          {
+            "name": "incident",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Review"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notification-rules": {
+      "get": {
+        "summary": "Aturan penerima saat ini",
+        "operationId": "get__api_notification_rules",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "403": {
+            "description": "Perlu admin"
+          },
+          "422": {
+            "description": "Validasi gagal"
+          }
+        }
+      },
+      "put": {
+        "summary": "Atur penerima dan jenis kejadian",
+        "operationId": "put__api_notification_rules",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil"
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "403": {
+            "description": "Perlu admin"
+          },
+          "422": {
+            "description": "Validasi gagal"
+          }
+        },
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Rule"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/evidence/{kind}/{id}": {
+      "get": {
+        "summary": "Bukti privat; kind incident-clip, incident-snapshot, label-snapshot, camera-reference",
+        "operationId": "get__api_evidence_kind_id",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "403": {
+            "description": "Perlu admin"
+          },
+          "422": {
+            "description": "Validasi gagal"
+          }
+        },
+        "parameters": [
+          {
+            "name": "kind",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
+    "/api/ingest/cameras/{camera}/config": {
+      "get": {
+        "summary": "Ingest khusus pekerja server: config",
+        "operationId": "get__api_ingest_cameras_camera_config",
+        "security": [
+          {
+            "ingestToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil"
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "403": {
+            "description": "Perlu admin"
+          },
+          "422": {
+            "description": "Validasi gagal"
+          }
+        },
+        "parameters": [
+          {
+            "name": "camera",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ]
+      }
+    },
+    "/api/ingest/cameras/{camera}/heartbeat": {
+      "post": {
+        "summary": "Ingest khusus pekerja server: heartbeat",
+        "operationId": "post__api_ingest_cameras_camera_heartbeat",
+        "security": [
+          {
+            "ingestToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil"
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "403": {
+            "description": "Perlu admin"
+          },
+          "422": {
+            "description": "Validasi gagal"
+          }
+        },
+        "parameters": [
+          {
+            "name": "camera",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Heartbeat"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ingest/cameras/{camera}/observations": {
+      "post": {
+        "summary": "Ingest khusus pekerja server: observations",
+        "operationId": "post__api_ingest_cameras_camera_observations",
+        "security": [
+          {
+            "ingestToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil"
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "403": {
+            "description": "Perlu admin"
+          },
+          "422": {
+            "description": "Validasi gagal"
+          }
+        },
+        "parameters": [
+          {
+            "name": "camera",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Observation"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ingest/cameras/{camera}/labels": {
+      "post": {
+        "summary": "Ingest khusus pekerja server: labels",
+        "operationId": "post__api_ingest_cameras_camera_labels",
+        "security": [
+          {
+            "ingestToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil"
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "403": {
+            "description": "Perlu admin"
+          },
+          "422": {
+            "description": "Validasi gagal"
+          }
+        },
+        "parameters": [
+          {
+            "name": "camera",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/LabelIngest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ingest/cameras/{camera}/incidents": {
+      "post": {
+        "summary": "Ingest khusus pekerja server: incidents",
+        "operationId": "post__api_ingest_cameras_camera_incidents",
+        "security": [
+          {
+            "ingestToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil"
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "403": {
+            "description": "Perlu admin"
+          },
+          "422": {
+            "description": "Validasi gagal"
+          }
+        },
+        "parameters": [
+          {
+            "name": "camera",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/IncidentIngest"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ingest/cameras/{camera}/incidents/{sourceEventId}/clip": {
+      "post": {
+        "summary": "Ingest khusus pekerja server: incidents/{sourceEventId}/clip",
+        "operationId": "post__api_ingest_cameras_camera_incidents_sourceEventId_clip",
+        "security": [
+          {
+            "ingestToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Berhasil"
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "403": {
+            "description": "Perlu admin"
+          },
+          "422": {
+            "description": "Validasi gagal"
+          }
+        },
+        "parameters": [
+          {
+            "name": "camera",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          },
+          {
+            "name": "sourceEventId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Clip"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/labels/{label}/packing-complete": {
+      "post": {
+        "summary": "Konfirmasi packing selesai setelah invoice diperiksa; idempoten",
+        "operationId": "confirmPackingComplete",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "label",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Objek label dengan waktu dan pemeriksa packing"
+          },
+          "401": {
+            "description": "Token tidak valid"
+          },
+          "422": {
+            "description": "Invoice belum dikonfirmasi"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      },
+      "ingestToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-CCTV-Ingest-Token"
+      }
+    },
+    "schemas": {
+      "Login": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email"
+          },
+          "password": {
+            "type": "string",
+            "format": "password"
+          }
+        },
+        "required": [
+          "email",
+          "password"
+        ]
+      },
+      "Session": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "user": {
+            "type": "object",
+            "properties": {
+              "id": {
+                "type": "integer"
+              },
+              "name": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              }
+            }
+          }
+        }
+      },
+      "Device": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "platform": {
+            "type": "string",
+            "enum": [
+              "android",
+              "ios"
+            ]
+          }
+        },
+        "required": [
+          "token",
+          "platform"
+        ]
+      },
+      "PresenceSettings": {
+        "type": "object",
+        "properties": {
+          "absence_seconds": {
+            "type": "integer",
+            "minimum": 60,
+            "maximum": 86400
+          },
+          "presence_alerts_enabled": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "absence_seconds",
+          "presence_alerts_enabled"
+        ]
+      },
+      "Classification": {
+        "type": "object",
+        "properties": {
+          "classification": {
+            "type": "string",
+            "enum": [
+              "unclassified",
+              "customer",
+              "staff",
+              "visitor"
+            ]
+          }
+        },
+        "required": [
+          "classification"
+        ]
+      },
+      "Rule": {
+        "type": "object",
+        "properties": {
+          "incident_type": {
+            "type": "string",
+            "enum": [
+              "anomaly",
+              "person_absent",
+              "camera_offline",
+              "worker_offline"
+            ]
+          },
+          "channel": {
+            "type": "string",
+            "enum": [
+              "push",
+              "whatsapp",
+              "email"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "whatsapp_number": {
+            "type": "string",
+            "pattern": "^\\+[1-9][0-9]{7,14}$"
+          },
+          "user_id": {
+            "type": "integer"
+          }
+        },
+        "required": [
+          "incident_type",
+          "channel",
+          "enabled"
+        ]
+      },
+      "Review": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "dismissed"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "maxLength": 2000
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "LabelReview": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "confirmed",
+              "rejected"
+            ]
+          },
+          "field_one": {
+            "type": "string"
+          },
+          "field_two": {
+            "type": "string"
+          },
+          "field_three": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "CameraCreate": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 100
+          },
+          "location": {
+            "type": "string"
+          },
+          "stream_env_key": {
+            "type": "string",
+            "pattern": "^CCTV_CAMERA_[0-9]+_URL$"
+          }
+        },
+        "required": [
+          "name",
+          "stream_env_key"
+        ]
+      },
+      "Zones": {
+        "type": "object",
+        "properties": {
+          "zones": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "store_boundary",
+                    "box_area",
+                    "packing_route",
+                    "danger_zone",
+                    "packing_area"
+                  ]
+                },
+                "points": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 30,
+                  "items": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "items": {
+                      "type": "number",
+                      "minimum": 0,
+                      "maximum": 1
+                    }
+                  }
+                }
+              },
+              "required": [
+                "type",
+                "points"
+              ]
+            }
+          }
+        },
+        "required": [
+          "zones"
+        ]
+      },
+      "Page": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "next_page_url": {
+            "type": "string",
+            "nullable": true
+          },
+          "current_page": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          }
+        }
+      },
+      "Camera": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string"
+          },
+          "frame_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "last_seen_at": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "detector_ready": {
+            "type": "boolean"
+          },
+          "presence_alerts_enabled": {
+            "type": "boolean"
+          },
+          "absence_seconds": {
+            "type": "integer"
+          }
+        }
+      },
+      "FileUpload": {
+        "type": "object",
+        "properties": {
+          "image": {
+            "type": "string",
+            "format": "binary"
+          }
+        },
+        "required": [
+          "image"
+        ]
+      },
+      "Observation": {
+        "type": "object",
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "maxLength": 64
+          },
+          "detector_ready": {
+            "type": "boolean"
+          },
+          "tracks": {
+            "type": "string",
+            "description": "JSON array of {id:string,box:[x1,y1,x2,y2]}; coordinates 0..1"
+          },
+          "snapshot": {
+            "type": "string",
+            "format": "binary"
+          },
+          "objects": {
+            "type": "string",
+            "description": "JSON array opsional track objek: [{id,box:[x1,y1,x2,y2]}], maksimal 50; tidak masuk laporan orang."
+          }
+        },
+        "required": [
+          "session_id",
+          "detector_ready",
+          "tracks",
+          "snapshot"
+        ]
+      },
+      "Heartbeat": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "online",
+              "offline",
+              "error"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "LabelIngest": {
+        "type": "object",
+        "properties": {
+          "field_one": {
+            "type": "string"
+          },
+          "field_two": {
+            "type": "string"
+          },
+          "field_three": {
+            "type": "string"
+          },
+          "raw_ocr": {
+            "type": "string"
+          },
+          "confidence": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          },
+          "observed_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "snapshot": {
+            "type": "string",
+            "format": "binary"
+          }
+        },
+        "required": [
+          "field_one",
+          "confidence",
+          "observed_at",
+          "snapshot"
+        ]
+      },
+      "IncidentIngest": {
+        "type": "object",
+        "properties": {
+          "source_event_id": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "anomaly"
+            ]
+          },
+          "occurred_at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "item_count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 3
+          },
+          "exited_boundary": {
+            "type": "boolean"
+          },
+          "passed_packing_route": {
+            "type": "boolean"
+          },
+          "snapshot": {
+            "type": "string",
+            "format": "binary"
+          },
+          "clip": {
+            "type": "string",
+            "format": "binary"
+          }
+        },
+        "required": [
+          "source_event_id",
+          "type",
+          "occurred_at",
+          "reason",
+          "item_count",
+          "exited_boundary",
+          "passed_packing_route",
+          "snapshot"
+        ]
+      },
+      "Clip": {
+        "type": "object",
+        "properties": {
+          "clip": {
+            "type": "string",
+            "format": "binary"
+          }
+        },
+        "required": [
+          "clip"
+        ]
+      }
+    }
+  }
+}

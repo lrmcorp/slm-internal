@@ -1,0 +1,4 @@
+__pycache__
+.venv
+spool
+.build-ca.crt

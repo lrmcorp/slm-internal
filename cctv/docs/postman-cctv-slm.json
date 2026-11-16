@@ -1,0 +1,358 @@
+{
+  "info": {
+    "name": "CCTV SLM API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{api_token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "https://cctvslm.playgo.id"
+    },
+    {
+      "key": "label_id",
+      "value": "17"
+    },
+    {
+      "key": "incident_id",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/login",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{email}}\",\n  \"password\": \"{{password}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "auth": {
+          "type": "noauth"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "if (pm.response.code === 200) { pm.environment.set(\"api_token\", pm.response.json().token); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Kamera",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/cameras",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Riwayat invoice",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/labels?page=1",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Detail invoice",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/labels/{{label_id}}",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Konfirmasi label",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/labels/{{label_id}}/review",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"confirmed\",\n  \"field_one\": \"061026-23\",\n  \"field_two\": \"TK HANSEL ASK\",\n  \"field_three\": \"MJ\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Packing selesai",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/labels/{{label_id}}/packing-complete",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Kejadian perlu diperiksa",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/incidents?status=needs_review",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Detail kejadian",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/incidents/{{incident_id}}",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Foto kejadian",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/evidence/incident-snapshot/{{incident_id}}",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Video kejadian",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/evidence/incident-clip/{{incident_id}}",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Laporan presence",
+      "request": {
+        "method": "GET",
+        "url": "{{base_url}}/api/reports/presence?page=1",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ]
+      }
+    },
+    {
+      "name": "Daftarkan perangkat",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/devices",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"token\": \"{{fcm_token}}\",\n  \"platform\": \"android\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Aturan email",
+      "request": {
+        "method": "PUT",
+        "url": "{{base_url}}/api/notification-rules",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"incident_type\": \"anomaly\",\n  \"channel\": \"email\",\n  \"enabled\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Aturan push",
+      "request": {
+        "method": "PUT",
+        "url": "{{base_url}}/api/notification-rules",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"incident_type\": \"anomaly\",\n  \"channel\": \"push\",\n  \"enabled\": true\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Aturan WhatsApp",
+      "request": {
+        "method": "PUT",
+        "url": "{{base_url}}/api/notification-rules",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"incident_type\": \"anomaly\",\n  \"channel\": \"whatsapp\",\n  \"enabled\": true,\n  \"whatsapp_number\": \"{{whatsapp_number}}\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "Logout",
+      "request": {
+        "method": "POST",
+        "url": "{{base_url}}/api/logout",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,141 @@
+x-logging: &default-logging
+  driver: "json-file"
+  options:
+    max-size: "10m"
+    max-file: "3"
+
+x-backend-env: &backend-env
+  APP_URL: ${APP_URL:-https://cctvslm.playgo.id}
+  CCTV_INGEST_TOKEN: ${CCTV_INGEST_TOKEN:?isi CCTV_INGEST_TOKEN di .env atau environment stack}
+  SLM_BASE_URL: ${SLM_BASE_URL:-https://slm.playgo.id}
+  SLM_LOOKUP_PATH: ${SLM_LOOKUP_PATH:-/api/cctv/labels/lookup}
+  SLM_SYNC_PATH: ${SLM_SYNC_PATH:-/api/cctv/labels/sync}
+  SLM_API_TOKEN: ${SLM_API_TOKEN:-}
+  SLM_SYNC_UPLOAD_PHOTO: ${SLM_SYNC_UPLOAD_PHOTO:-true}
+  CCTV_AUTO_SYNC_PACKING: ${CCTV_AUTO_SYNC_PACKING:-true}
+  CCTV_AI_PROVIDER: ${CCTV_AI_PROVIDER:-gemini}
+  CCTV_AI_MODEL: ${CCTV_AI_MODEL:-gemini-3.5-flash-lite}
+  CCTV_AI_API_KEY: ${CCTV_AI_API_KEY:-${GEMINI_API_KEY:-}}
+  CCTV_ADMIN_EMAIL: ${CCTV_ADMIN_EMAIL:-}
+  CCTV_ADMIN_PASSWORD: ${CCTV_ADMIN_PASSWORD:-}
+  SESSION_DRIVER: file
+  CACHE_STORE: file
+  LOG_STACK: daily
+  LOG_DAILY_DAYS: 7
+
+x-backend: &backend
+  logging: *default-logging
+  build:
+    context: ./backend
+  image: cctvslm-backend:latest
+  pull_policy: never
+  working_dir: /app
+  restart: unless-stopped
+  env_file:
+    - path: .env
+      required: false
+  environment: *backend-env
+  volumes:
+    - cctv_database:/app/database
+    - cctv_storage:/app/storage
+    - ./secrets:/run/secrets:ro
+
+x-vision-env: &vision-env
+  CCTV_API_BASE: http://web:8000
+  CCTV_INGEST_TOKEN: ${CCTV_INGEST_TOKEN:?isi CCTV_INGEST_TOKEN di .env atau environment stack}
+  CCTV_PROCESS_FPS: 3
+  CCTV_HLS_DIRECTORY: /app/storage/app/private/cctv/live-video
+  CCTV_LIVE_USE_SUBSTREAM: ${CCTV_LIVE_USE_SUBSTREAM:-true}
+  CCTV_LIVE_FPS: ${CCTV_LIVE_FPS:-6}
+  CCTV_LIVE_MAX_WIDTH: ${CCTV_LIVE_MAX_WIDTH:-960}
+  CCTV_DETECT_USE_SUBSTREAM: ${CCTV_DETECT_USE_SUBSTREAM:-false}
+  CCTV_AI_MODEL: ${CCTV_AI_MODEL:-gemini-3.5-flash-lite}
+  CCTV_AI_API_KEY: ${CCTV_AI_API_KEY:-${GEMINI_API_KEY:-}}
+
+x-vision: &vision
+  logging: *default-logging
+  build:
+    context: ./vision
+    args:
+      WITH_MODEL: ${CCTV_WITH_MODEL:-0}
+  image: cctvslm-vision:latest
+  pull_policy: never
+  working_dir: /app
+  command: python worker.py
+  restart: unless-stopped
+  env_file:
+    - path: .env
+      required: false
+
+services:
+  web:
+    <<: *backend
+    # Banyak pekerja agar satu permintaan lambat tidak memblokir dashboard dan ingest.
+    command: php artisan serve --host=0.0.0.0 --port=8000 --no-reload
+    environment:
+      <<: *backend-env
+      PHP_CLI_SERVER_WORKERS: ${PHP_CLI_SERVER_WORKERS:-8}
+    ports:
+      - "${CCTV_WEB_BIND:-127.0.0.1}:${CCTV_WEB_PORT:-8000}:8000"
+
+  queue:
+    <<: *backend
+    # alerts dibaca lebih dulu agar notifikasi tidak antre di belakang sinkronisasi ERP.
+    command: php artisan queue:work --queue=alerts,default --sleep=1 --tries=5 --timeout=90 --max-time=3600
+    depends_on:
+      - web
+
+  scheduler:
+    <<: *backend
+    command: php artisan schedule:work
+    depends_on:
+      - web
+
+  vision-cam14:
+    <<: *vision
+    environment:
+      <<: *vision-env
+      CCTV_CAMERA_ID: 1
+      CCTV_CAMERA_14_URL: ${CCTV_CAMERA_14_URL:-${CCTV_RTSP_14:-}}
+      CCTV_LABEL_ENABLED: "true"
+      CCTV_LABEL_MODE: qr
+    volumes:
+      - cctv_spool_1:/var/lib/cctv-spool/1
+      - cctv_storage:/app/storage
+    depends_on:
+      - web
+
+  vision-cam13:
+    <<: *vision
+    environment:
+      <<: *vision-env
+      CCTV_CAMERA_ID: 2
+      CCTV_CAMERA_13_URL: ${CCTV_CAMERA_13_URL:-${CCTV_RTSP_13:-}}
+      CCTV_LABEL_ENABLED: "false"
+    volumes:
+      - cctv_spool_2:/var/lib/cctv-spool/2
+      - cctv_storage:/app/storage
+    depends_on:
+      - web
+      - vision-cam14
+
+  vision-cam12:
+    <<: *vision
+    environment:
+      <<: *vision-env
+      CCTV_CAMERA_ID: 3
+      CCTV_CAMERA_12_URL: ${CCTV_CAMERA_12_URL:-${CCTV_RTSP_12:-}}
+      CCTV_LABEL_ENABLED: "false"
+    volumes:
+      - cctv_spool_3:/var/lib/cctv-spool/3
+      - cctv_storage:/app/storage
+    depends_on:
+      - web
+      - vision-cam14
+
+volumes:
+  cctv_database:
+  cctv_storage:
+  cctv_spool_1:
+  cctv_spool_2:
+  cctv_spool_3:

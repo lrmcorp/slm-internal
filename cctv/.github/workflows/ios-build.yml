@@ -1,0 +1,41 @@
+name: Check iPhone build
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  ios:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.0'
+          channel: stable
+          cache: true
+      - working-directory: mobile
+        env:
+          FIREBASE_API_KEY: ${{ vars.FIREBASE_API_KEY }}
+          FIREBASE_IOS_APP_ID: ${{ vars.FIREBASE_IOS_APP_ID }}
+          FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
+          FIREBASE_SENDER_ID: ${{ vars.FIREBASE_SENDER_ID }}
+        shell: bash
+        run: |
+          set +e
+          bash ../scripts/build-ios-ci.sh 2>&1 | tee /tmp/ios-build.log
+          result=${PIPESTATUS[0]}
+          set -e
+          if [[ "$result" != 0 ]]; then
+            python3 - <<'PYLOG'
+          import pathlib
+          text = pathlib.Path('/tmp/ios-build.log').read_text()[-12000:]
+          text = text.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+          print('::error title=iPhone build failed::' + text)
+          PYLOG
+            exit "$result"
+          fi
+      - uses: actions/upload-artifact@v4
+        with:
+          name: iphone-unsigned-build-not-installable
+          path: mobile/build/ios/iphoneos/Runner.app
+          retention-days: 7

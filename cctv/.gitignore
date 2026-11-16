@@ -1,0 +1,17 @@
+/.env
+*.env
+camera-*.env
+/vision/.build-ca.crt
+/vision/.venv/
+/vision/__pycache__/
+**/__pycache__/
+/vision/spool/
+/mobile/.dart_tool/
+/mobile/build/
+/secrets/
+/.pub-cache/
+/.gradle-cache/
+/.docker-config/
+
+# lingkungan Python lokal; jangan di-commit
+.venv/
