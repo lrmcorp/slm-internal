@@ -232,3 +232,14 @@ class SharedModelTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class ResolveHostTest(unittest.TestCase):
+    def test_host_name_becomes_ip_and_credentials_stay(self):
+        from live_video import with_resolved_host
+        with patch("live_video.socket.gethostbyname", return_value="100.118.114.23"):
+            self.assertEqual("rtsp://dvr:pw@100.118.114.23:8554/Streaming/Channels/1302",
+                             with_resolved_host("rtsp://dvr:pw@hype:8554/Streaming/Channels/1302"))
+        self.assertEqual("rtsp://u:p@100.118.114.23:8554/x", with_resolved_host("rtsp://u:p@100.118.114.23:8554/x"))
+        with patch("live_video.socket.gethostbyname", side_effect=OSError):
+            self.assertEqual("rtsp://example/x", with_resolved_host("rtsp://example/x"))

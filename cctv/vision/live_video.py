@@ -6,10 +6,13 @@ playlist/segmen diminta), supaya bandwidth dari DVR toko tidak terpakai 24 jam.
 from pathlib import Path
 import os
 import re
+import ipaddress
 import shutil
+import socket
 import subprocess
 import json
 import time
+from urllib.parse import urlsplit, urlunsplit
 
 
 def _ffmpeg_binary() -> str:
@@ -26,6 +29,32 @@ def _ffmpeg_binary() -> str:
 FFMPEG = _ffmpeg_binary()
 FFPROBE = shutil.which('ffprobe')
 _VIDEO_CODEC = re.compile(r'Stream #\S+.*?Video:\s*([A-Za-z0-9_]+)')
+
+
+def with_resolved_host(url: str) -> str:
+    """Ganti nama host dengan alamat IP sebelum diberikan ke ffmpeg.
+
+    ffmpeg statis (glibc) bisa crash saat mencari nama host sendiri; alamat IP aman.
+    Bila nama tidak bisa dicari, URL dikembalikan apa adanya.
+    """
+    try:
+        parts = urlsplit(url)
+        host = parts.hostname
+        if not host:
+            return url
+        try:
+            ipaddress.ip_address(host)
+            return url
+        except ValueError:
+            pass
+        address = socket.gethostbyname(host)
+        netloc = parts.netloc
+        userinfo, _, hostport = netloc.rpartition('@')
+        hostport = hostport.replace(host, address, 1)
+        return urlunsplit((parts.scheme, f'{userinfo}@{hostport}' if userinfo else hostport,
+                           parts.path, parts.query, parts.fragment))
+    except (OSError, ValueError):
+        return url
 
 
 def segment_seconds() -> str:
@@ -77,7 +106,7 @@ class LiveVideo:
             return streams[0].get('codec_name') if streams else None
         # Tanpa ffprobe: ffmpeg mencetak info stream ke stderr lalu keluar karena tidak ada output.
         probe = subprocess.run([FFMPEG, '-hide_banner', '-rtsp_transport', 'tcp', '-timeout', '5000000',
-                                '-i', candidate], stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=8)
+                                '-i', with_resolved_host(candidate)], stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, timeout=8)
         match = _VIDEO_CODEC.search(probe.stderr.decode(errors='replace'))
         return match.group(1) if match else None
 
@@ -114,7 +143,7 @@ class LiveVideo:
         self._clean_playlist()
         command = [FFMPEG, '-hide_banner', '-loglevel', 'error', '-y',
                    '-rtsp_transport', 'tcp', '-timeout', '10000000',
-                   '-i', self.selected_source, '-map', '0:v:0', '-an']
+                   '-i', with_resolved_host(self.selected_source), '-map', '0:v:0', '-an']
         if self.codec == 'h264':
             # Remux preserves DVR frame rate without decoding or AI throttling.
             command += ['-c:v', 'copy']
