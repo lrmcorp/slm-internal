@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { findRepeatDetection } from "@/lib/cctv/repeatDetection";
 import { prisma } from "@/lib/db/prisma";
 import { recordAudit } from "@/lib/audit/store";
 import { mkdir, writeFile } from "node:fs/promises";
@@ -283,8 +284,20 @@ export async function POST(request: Request) {
       });
     }
 
-    // Catat ke CctvDetectionLog
-    await prisma.cctvDetectionLog.create({
+    // Catat ke CctvDetectionLog. Label yang sama dalam 12 jam memperbarui catatan lama (tidak dihitung dobel).
+    const detectionEventType = event_type ? String(event_type) : "packing_completed";
+    const repeat = await findRepeatDetection({ eventType: detectionEventType, salesRecordId: sales.id });
+    if (repeat) {
+      await prisma.cctvDetectionLog.update({
+        where: { id: repeat.id },
+        data: {
+          cctvLabelId: cctv_label_id ? Number(cctv_label_id) : repeat.cctvLabelId,
+          evidenceUrl: evidence_url ? String(evidence_url) : repeat.evidenceUrl,
+          screenshotPhotoUrl: resolvedPhotoUrl || repeat.screenshotPhotoUrl,
+          ...(isPacked && !repeat.packingCompletedAt ? { packingStatus: "completed", packingCompletedAt: packedDate } : {}),
+        }
+      });
+    } else await prisma.cctvDetectionLog.create({
       data: {
         cctvLabelId: cctv_label_id ? Number(cctv_label_id) : null,
         invoiceNumber: cleanInvoice || null,

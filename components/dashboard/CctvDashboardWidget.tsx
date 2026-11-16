@@ -16,7 +16,9 @@ export interface CctvDashboardSummaryData {
     totalPacked: number;
     totalDetections: number;
     totalAnomalies: number;
+    totalInProgress?: number;
   };
+  recentInProgress?: CctvDashboardSummaryData["recentPacked"];
   recentPacked: Array<{
     id: string;
     invoiceNumber?: string | null;
@@ -96,7 +98,13 @@ export function CctvDashboardWidget({
   const totalPacked = summary?.today?.totalPacked ?? 0;
   const totalDetections = summary?.today?.totalDetections ?? 0;
   const totalAnomalies = summary?.today?.totalAnomalies ?? 0;
+  const totalInProgress = summary?.today?.totalInProgress ?? 0;
   const recentPacked = summary?.recentPacked ?? [];
+  // Label yang sudah tertangkap tapi belum selesai dipacking tampil lebih dulu, ditandai.
+  const recentItems = [
+    ...(summary?.recentInProgress ?? []).map((item) => ({ item, inProgress: true })),
+    ...recentPacked.map((item) => ({ item, inProgress: false })),
+  ];
 
   const streams =
     cameraStreams ||
@@ -112,6 +120,7 @@ export function CctvDashboardWidget({
 
   const stats = [
     { label: "Dipacking", value: totalPacked, tone: "text-brand-700" },
+    { label: "Sedang dipacking", value: totalInProgress, tone: totalInProgress > 0 ? "text-amber-700" : "text-slate-900" },
     { label: "Deteksi", value: totalDetections, tone: "text-slate-900" },
     { label: "Anomali", value: totalAnomalies, tone: totalAnomalies > 0 ? "text-rose-600" : "text-slate-900", note: totalAnomalies > 0 ? "Perlu ditinjau" : undefined },
   ] as { label: string; value: number; tone: string; note?: string }[];
@@ -138,10 +147,10 @@ export function CctvDashboardWidget({
       </div>
 
       {/* Angka hari ini: satu baris ringkas */}
-      <dl className="mt-3 grid grid-cols-3 divide-x divide-slate-200 rounded-xl border border-slate-200 bg-slate-50/70">
+      <dl className="mt-3 grid grid-cols-4 divide-x divide-slate-200 rounded-xl border border-slate-200 bg-slate-50/70">
         {stats.map((stat) => (
-          <div key={stat.label} className="px-3 py-2.5">
-            <dt className="truncate text-[11px] font-semibold text-slate-500">{stat.label}</dt>
+          <div key={stat.label} className="flex flex-col justify-between px-2.5 py-2.5 sm:px-3">
+            <dt className="text-[11px] font-semibold leading-tight text-slate-500">{stat.label}</dt>
             <dd className={`text-xl font-black tabular-nums ${stat.tone}`}>
               {stat.value}
               {stat.note && <span className="ml-1.5 text-[11px] font-semibold text-rose-600">{stat.note}</span>}
@@ -180,19 +189,19 @@ export function CctvDashboardWidget({
       {/* Paket terakhir: geser ke samping di HP, 5 kolom di layar lebar */}
       <div className="mt-4 border-t border-slate-100 pt-3">
         <div className="mb-2 flex items-baseline justify-between">
-          <h4 className="text-xs font-bold text-slate-600">Paket terakhir dipacking</h4>
-          {recentPacked.length > 0 && <span className="text-[11px] text-slate-400">{recentPacked.length} terakhir</span>}
+          <h4 className="text-xs font-bold text-slate-600">Paket terakhir</h4>
+          {recentItems.length > 0 && <span className="text-[11px] text-slate-400">{recentItems.length} terakhir</span>}
         </div>
 
-        {recentPacked.length > 0 ? (
+        {recentItems.length > 0 ? (
           <div className="-mx-4 flex snap-x gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0 lg:grid lg:grid-cols-5 lg:overflow-visible">
-            {recentPacked.map((item) => {
+            {recentItems.map(({ item, inProgress }) => {
               const photo = item.screenshotPhotoUrl || item.evidenceUrl;
               const sale = item.salesRecord;
               const time = formatJakartaDateTime(item.packingCompletedAt || item.createdAt).slice(-8);
 
               return (
-                <div key={item.id} className="flex w-56 shrink-0 snap-start items-center gap-2.5 rounded-xl border border-slate-200 bg-slate-50/60 p-2 lg:w-auto">
+                <div key={item.id} className={`flex w-56 shrink-0 snap-start items-center gap-2.5 rounded-xl border p-2 lg:w-auto ${inProgress ? "border-amber-200 bg-amber-50/60" : "border-slate-200 bg-slate-50/60"}`}>
                   {photo ? (
                     <CctvImageModal
                       imageUrl={photo}
@@ -220,7 +229,10 @@ export function CctvDashboardWidget({
                       <p className="truncate font-mono text-xs font-bold text-slate-800">{item.invoiceNumber || "—"}</p>
                     )}
                     <p className="truncate text-[11px] text-slate-600">{sale?.customerName || item.customerName || "Customer Umum"}</p>
-                    <p className="truncate text-[10px] text-slate-400">{item.cameraName || "Meja 1"} · {time}</p>
+                    <p className="truncate text-[10px] text-slate-400">
+                      {inProgress && <span className="mr-1 font-bold text-amber-700">Sedang dipacking ·</span>}
+                      {item.cameraName || "Meja 1"} · {time}
+                    </p>
                   </div>
                 </div>
               );

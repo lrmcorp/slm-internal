@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { findRepeatDetection } from "@/lib/cctv/repeatDetection";
 import { prisma } from "@/lib/db/prisma";
 import crypto from "node:crypto";
 import { CCTV_TOKEN, fetchSnapshotCaptureDate, matchesToken } from "@/lib/cctv/client";
@@ -218,8 +219,17 @@ export async function POST(request: Request) {
             data?.evidence_url ? String(data.evidence_url) :
             payload.evidence_url ? String(payload.evidence_url) : null;
 
-          // 4. Catat di tabel CctvDetectionLog (Dedicated Logging)
-          await prisma.cctvDetectionLog.create({
+          // 4. Catat di tabel CctvDetectionLog. Paket yang sama dalam 12 jam memperbarui catatan lama.
+          const repeat = await findRepeatDetection({ eventType: "packing_completed", salesRecordId: sales?.id, invoiceNumber: invoiceNumber || null });
+          if (repeat) {
+            await prisma.cctvDetectionLog.update({
+              where: { id: repeat.id },
+              data: {
+                evidenceUrl: resolvedEvidenceUrl || repeat.evidenceUrl,
+                screenshotPhotoUrl: resolvedEvidenceUrl || repeat.screenshotPhotoUrl,
+              },
+            });
+          } else await prisma.cctvDetectionLog.create({
             data: {
               cctvLabelId: data?.label_id ? Number(data.label_id) : null,
               invoiceNumber: invoiceNumber || null,

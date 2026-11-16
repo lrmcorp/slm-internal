@@ -451,7 +451,7 @@ export async function getCctvDashboardSummary() {
   const todayPackingCond = getPackingDateCondition(todayRange);
   const todayActivityCond = getActivityDateCondition(todayRange);
 
-  const [totalPackedToday, totalDetectionsToday, totalAnomaliesToday, recentPacked, liveSystem] =
+  const [totalPackedToday, totalDetectionsToday, totalAnomaliesToday, recentPacked, liveSystem, capturedToday] =
     await Promise.all([
       prisma.cctvDetectionLog.count({
         where: {
@@ -490,7 +490,48 @@ export async function getCctvDashboardSummary() {
         },
       }),
       getCctvSystemStatus().catch(() => null),
+      // Label sudah tertangkap kamera hari ini tetapi belum ada event packing selesai.
+      prisma.cctvDetectionLog.findMany({
+        where: { eventType: "invoice_captured", matchStatus: "matched", AND: [todayActivityCond] },
+        orderBy: [{ firstSeenAt: "desc" }, { createdAt: "desc" }],
+        take: 200,
+        include: {
+          salesRecord: {
+            select: { id: true, transactionNumber: true, customerName: true, total: true, doPackingStatus: true },
+          },
+        },
+      }).catch(() => []),
     ]);
+
+  const inProgressSeen = new Set<string>();
+  const inProgress = capturedToday.filter((item) => {
+    if (item.salesRecord?.doPackingStatus === "sudah") return false;
+    const key = item.salesRecordId || item.invoiceNumber || item.id;
+    if (inProgressSeen.has(key)) return false;
+    inProgressSeen.add(key);
+    return true;
+  });
+  const serializedInProgress = inProgress.slice(0, 5).map((item) => ({
+    id: item.id,
+    invoiceNumber: item.invoiceNumber,
+    customerName: item.customerName,
+    cameraName: item.cameraName,
+    screenshotPhotoUrl:
+      sanitizeCctvEvidenceUrl(item.screenshotPhotoUrl) ||
+      sanitizeCctvEvidenceUrl(item.evidenceUrl) ||
+      (item.cctvLabelId ? `/api/cctv/evidence?labelId=${item.cctvLabelId}` : null),
+    evidenceUrl: sanitizeCctvEvidenceUrl(item.evidenceUrl) || null,
+    createdAt: item.firstSeenAt || item.createdAt,
+    packingCompletedAt: null,
+    salesRecord: item.salesRecord
+      ? {
+          id: item.salesRecord.id,
+          transactionNumber: item.salesRecord.transactionNumber,
+          customerName: item.salesRecord.customerName,
+          total: item.salesRecord.total != null ? Number(item.salesRecord.total) : 0,
+        }
+      : null,
+  }));
 
   const serializedRecentPacked = recentPacked.map((item) => ({
     ...item,
@@ -517,8 +558,10 @@ export async function getCctvDashboardSummary() {
       totalPacked: totalPackedToday,
       totalDetections: totalDetectionsToday,
       totalAnomalies: totalAnomaliesToday,
+      totalInProgress: inProgress.length,
     },
     recentPacked: serializedRecentPacked,
+    recentInProgress: serializedInProgress,
     liveSystem,
   };
 }
