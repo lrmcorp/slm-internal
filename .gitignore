@@ -40,3 +40,6 @@ audit-output/
 .migrasi/
 .secrets-rotated
 .uploads-restored
+
+# Penanda deploy CCTV yang belum selesai (cctv/scripts/vps-auto-deploy.sh)
+/.cctv-deploy-pending

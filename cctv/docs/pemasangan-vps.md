@@ -68,9 +68,23 @@ Jalankan sebagai root. Langkah ini tidak menyentuh container SLM, MJ, ANKJY, SLM
    tar -czf /root/cctv-lama-$(date +%Y%m%d).tar.gz -C /opt cctv && mv /opt/cctv /opt/cctv.arsip
    ```
 
-### Pembaruan rutin
+### Pembaruan rutin (deploy otomatis dari VPS)
 
-Workflow GitHub **CCTV · Deploy ke VPS** jalan otomatis bila ada perubahan di `cctv/` pada `main` (variabel repo `CCTV_AUTO_DEPLOY=true` dan secret `CCTV_VPS_*`), atau manual. Secara manual di VPS:
+Pasang sekali timer systemd di VPS. Tiap 2 menit ia menarik `main` ke `/opt/slm` (fast-forward), dan **hanya bila ada perubahan di `cctv/`** stack CCTV dibangun ulang. Container SLM dan aplikasi lain tidak disentuh. Bila web CCTV belum sehat setelah build, deploy dicoba lagi di putaran berikutnya.
+
+```bash
+bash /opt/slm/cctv/scripts/install-vps-auto-deploy.sh
+```
+
+Lihat riwayat deploy:
+
+```bash
+journalctl -t cctv-auto-deploy -n 30 --no-pager
+```
+
+Hentikan sementara: `systemctl stop cctv-auto-deploy.timer`; nyalakan lagi: `systemctl start cctv-auto-deploy.timer`.
+
+Workflow GitHub **CCTV · Deploy ke VPS** tetap menjalankan tes di setiap perubahan `cctv/`; langkah deploy lewat SSH-nya hanya aktif bila variabel repo `CCTV_AUTO_DEPLOY=true` dan secret `CCTV_VPS_*` diisi. Deploy manual di VPS:
 
 ```bash
 cd /opt/slm && git pull --ff-only && cd cctv && docker compose up -d --build --remove-orphans
