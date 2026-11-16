@@ -1,34 +1,80 @@
 from __future__ import annotations
 
-"""Continuous camera reader. Camera and ingest secrets come only from the environment."""
+"""Pembaca kamera CCTV. Satu proses melayani semua kamera (satu thread per kamera).
+
+Rahasia kamera dan token ingest hanya dibaca dari environment, dan password RTSP tidak pernah
+ditulis ke log.
+"""
 
 from collections import deque
-from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 from pathlib import Path
 import json
 import logging
+import math
 import os
 import random
 import re
 import signal
 import tempfile
+import threading
 import time
 import uuid
 
 # Avoid decoder diagnostics echoing credential-bearing RTSP URLs.
 os.environ.setdefault('OPENCV_LOG_LEVEL', 'FATAL')
 os.environ.setdefault('OPENCV_FFMPEG_LOGLEVEL', '-8')
+# RTSP lewat TCP: UDP tidak bisa melewati penerus port di komputer toko dan Tailscale.
+os.environ.setdefault('OPENCV_FFMPEG_CAPTURE_OPTIONS', 'rtsp_transport;tcp')
 import cv2
-import pytesseract
 import requests
 
 from evidence_spool import EvidenceSpool
 from live_video import LiveVideo
 from logic import CODE, ZoneTracker, clip_playback_fps, normalize_store, parse_label, parse_qr_payload
+from runtime import DropOldestExecutor, redact
 
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+# Satu thread decode per proses: tiga kamera tidak berebut CPU dengan aplikasi lain di VPS.
+cv2.setNumThreads(1)
+cv2.ocl.setUseOpenCL(False)
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s [%(threadName)s] %(message)s")
 LOG = logging.getLogger("cctv")
+
+
+def env_flag(name: str, default: str = "false") -> bool:
+    return os.getenv(name, default).strip().lower() in ("1", "true", "yes", "on")
+
+
+def env_ids(name: str) -> list[int]:
+    return [int(part) for part in re.split(r"[,\s]+", os.getenv(name, "")) if part.strip().isdigit()]
+
+
+def downscale(frame, max_width: int):
+    """Perkecil sedini mungkin; frame resolusi penuh tidak disimpan lebih lama dari perlu."""
+    if max_width <= 0 or frame.shape[1] <= max_width:
+        return frame
+    scale = max_width / frame.shape[1]
+    return cv2.resize(frame, None, fx=scale, fy=scale, interpolation=cv2.INTER_AREA)
+
+
+_PYTESSERACT = None
+_PYTESSERACT_MISSING_LOGGED = False
+
+
+def _pytesseract():
+    """Tesseract hanya dimuat bila mode label 'auto' benar-benar butuh OCR teks."""
+    global _PYTESSERACT, _PYTESSERACT_MISSING_LOGGED
+    if _PYTESSERACT is None:
+        try:
+            import pytesseract
+            _PYTESSERACT = pytesseract
+        except ImportError:
+            if not _PYTESSERACT_MISSING_LOGGED:
+                LOG.warning("OCR teks tidak tersedia (image dibuat tanpa tesseract); hanya QR yang dibaca")
+                _PYTESSERACT_MISSING_LOGGED = True
+            return None
+    return _PYTESSERACT
 CLIP_SECONDS_BEFORE = 1.5
 CLIP_SECONDS_AFTER = 1.5
 
@@ -140,7 +186,7 @@ def ocr(frame) -> dict | None:
             if res:
                 parsed_candidates.append(res)
             else:
-                LOG.info("[AI QR - Model 1 OpenCV] QR Code terdeteksi tetapi bukan format invoice SLM: %s", v)
+                LOG.info("[AI QR - Model 1 OpenCV] QR Code terdeteksi tetapi bukan format invoice SLM: %s", v[:80])
     unique_invoices = {c["field_one"] for c in parsed_candidates}
     if len(unique_invoices) == 1:
         best = max(parsed_candidates, key=lambda c: (bool(c["field_two"]), bool(c["field_three"])))
@@ -165,6 +211,9 @@ def ocr(frame) -> dict | None:
                 return gemini_res
 
     if os.getenv("CCTV_LABEL_MODE", "auto") == "qr":
+        return None
+    pytesseract = _pytesseract()
+    if pytesseract is None:
         return None
     scale = min(1, 1400 / max(frame.shape[:2]))
     frame = cv2.resize(frame, None, fx=scale, fy=scale) if scale < 1 else frame
@@ -192,43 +241,79 @@ def ocr(frame) -> dict | None:
                default=None)
 
 
-class Worker:
+class Shared:
+    """Sumber daya yang dipakai bersama semua kamera dalam satu proses."""
+
     def __init__(self):
-        self.camera_id = int(os.environ["CCTV_CAMERA_ID"])
+        # Antrian berbatas: bila penuh, tugas terlama dibuang dan dicatat, frame tidak menumpuk di RAM.
+        self.ocr = DropOldestExecutor("ocr", workers=1, max_queue=int(os.getenv("CCTV_OCR_QUEUE", "2")))
+        self.upload = DropOldestExecutor("upload", workers=2, max_queue=int(os.getenv("CCTV_UPLOAD_QUEUE", "8")))
+        self.live = DropOldestExecutor("live", workers=1, max_queue=int(os.getenv("CCTV_LIVE_QUEUE", "6")))
+        self._model_lock = threading.Lock()
+        self._yolo = None
+
+    def load_model(self, model_path: str):
+        """Import ultralytics sekali per proses. Tiap kamera tetap punya objek model sendiri karena
+        pelacakan (track id) menyimpan keadaan per aliran video."""
+        with self._model_lock:
+            if self._yolo is None:
+                from ultralytics import YOLO  # optional until a calibrated model is supplied
+                self._yolo = YOLO
+            return self._yolo(model_path)
+
+    def shutdown(self):
+        for executor in (self.live, self.ocr, self.upload):
+            executor.shutdown(wait=True)
+
+
+class Worker:
+    def __init__(self, camera_id: int | None = None, shared: Shared | None = None,
+                 stop: threading.Event | None = None):
+        self.camera_id = int(camera_id if camera_id is not None else os.environ["CCTV_CAMERA_ID"])
+        self.shared = shared or Shared()
+        self.stop_event = stop or threading.Event()
         self.api = os.getenv("CCTV_API_BASE", "http://web:8000").rstrip("/")
         self.token = os.environ["CCTV_INGEST_TOKEN"]
         self.session = requests.Session()
         self.session.headers["X-CCTV-Ingest-Token"] = self.token
         stream_key = None
+        response = None
         for attempt in range(60):
+            if self.stop_event.is_set():
+                raise SystemExit(0)
             try:
                 response = self.session.get(f"{self.api}/api/ingest/cameras/{self.camera_id}/config", timeout=5)
                 if response.status_code == 200:
                     stream_key = response.json().get("stream_env_key")
                     break
-            except Exception as e:
+            except Exception:
                 if attempt % 5 == 0:
                     LOG.info("Menunggu backend CCTV (%s) siap... (percobaan %d/60)", self.api, attempt + 1)
-            time.sleep(2)
+            self.stop_event.wait(2)
         if not stream_key:
-            response.raise_for_status()
+            if response is not None:
+                response.raise_for_status()
+            raise RuntimeError(f"Konfigurasi kamera {self.camera_id} belum tersedia dari backend")
         self.stream_key = stream_key
-        self.source = os.environ.get(stream_key, "")
-        if not self.source:
-            alt_key = stream_key.replace("CCTV_CAMERA_", "CCTV_RTSP_").replace("_URL", "")
-            self.source = os.environ.get(alt_key, "")
+        self.source = self._source_from_env()
         if not self.source:
             LOG.warning("Variabel stream %s untuk kamera %d belum diset di environment", stream_key, self.camera_id)
         self.last_heartbeat = self.last_ocr = self.last_frame = 0.0
         self.process_fps = max(1, min(10, float(os.getenv("CCTV_PROCESS_FPS", "5"))))
+        self.label_enabled = self._label_enabled()
+        # Resolusi kerja: kamera label butuh piksel cukup untuk QR; kamera lain cukup kecil.
+        self.work_width = int(os.getenv("CCTV_LABEL_WORK_MAX_WIDTH", "1280") if self.label_enabled
+                              else os.getenv("CCTV_WORK_MAX_WIDTH", "640"))
+        self.observation_width = int(os.getenv("CCTV_OBSERVATION_MAX_WIDTH", "640"))
         self.last_label: dict[str, float] = {}
         self.zones = []
         self.approved = False
         self.tracker = ZoneTracker([])
-        self.ring = deque(maxlen=20)
+        self.ring = deque(maxlen=max(2, math.ceil(CLIP_SECONDS_BEFORE * self.process_fps) + 2))
         self.pending: list[dict] = []
-        self.ocr_executor = ThreadPoolExecutor(max_workers=1)
-        self.upload_executor = ThreadPoolExecutor(max_workers=2)
+        self.ocr_executor = self.shared.ocr
+        self.upload_executor = self.shared.upload
+        self.live_executor = self.shared.live
         self.spool = EvidenceSpool(str(Path(os.getenv("CCTV_EVIDENCE_SPOOL", "/var/lib/cctv-spool"))
                                        / str(self.camera_id)))
         self.spool_future = None
@@ -241,26 +326,50 @@ class Worker:
         self.last_observation = 0.0
         self.observation_interval = max(2.0, min(60.0, float(os.getenv("CCTV_OBSERVATION_INTERVAL", "5.0"))))
         self.observation_future = None
+        is_rtsp = self.source.startswith('rtsp://')
+        self.live_on_demand = env_flag("CCTV_LIVE_ON_DEMAND", "true")
+        self.live_idle_seconds = max(15.0, float(os.getenv("CCTV_LIVE_IDLE_SECONDS", "45")))
         self.live_video = (LiveVideo(os.environ['CCTV_HLS_DIRECTORY'], self.camera_id,
-                                     max(5, min(25, float(os.getenv('CCTV_LIVE_FPS', '15')))) if self.source.startswith('rtsp://') else self.process_fps,
-                                     source=os.getenv('CCTV_LIVE_SOURCE', self.source) if self.source.startswith('rtsp://') else None)
+                                     max(5, min(25, float(os.getenv('CCTV_LIVE_FPS', '15')))) if is_rtsp else self.process_fps,
+                                     source=os.getenv('CCTV_LIVE_SOURCE', self.source) if is_rtsp else None)
                            if os.getenv('CCTV_HLS_DIRECTORY') else None)
-        self.live_executor = ThreadPoolExecutor(max_workers=1)
         self.live_future = None
-        self.running = True
-        signal.signal(signal.SIGTERM, self._stop)
-        signal.signal(signal.SIGINT, self._stop)
+        self.reconnect_delay = 5.0
+        self.last_offline_log = 0.0
         self.item_classes = {s.strip() for s in os.getenv("CCTV_ITEM_CLASS_NAMES", "item").split(",")}
         model_path = os.getenv("CCTV_MODEL_PATH")
-        if model_path:
-            from ultralytics import YOLO  # optional until a calibrated model is supplied
-            self.model = YOLO(model_path)
-            LOG.info("Detector model loaded")
+        model_cameras = env_ids("CCTV_MODEL_CAMERA_IDS")
+        if model_path and (not model_cameras or self.camera_id in model_cameras):
+            self.model = self.shared.load_model(model_path)
+            LOG.info("Detector model loaded untuk kamera %d", self.camera_id)
         else:
-            LOG.warning("No parcel detector model configured; anomaly detection is inactive")
+            LOG.info("Kamera %d tanpa model deteksi paket; deteksi anomali tidak aktif", self.camera_id)
+
+    @property
+    def running(self) -> bool:
+        return not self.stop_event.is_set()
+
+    @running.setter
+    def running(self, value: bool):
+        if not value:
+            self.stop_event.set()
+
+    def _source_from_env(self) -> str:
+        source = os.environ.get(self.stream_key, "")
+        if not source:
+            alt_key = self.stream_key.replace("CCTV_CAMERA_", "CCTV_RTSP_").replace("_URL", "")
+            source = os.environ.get(alt_key, "")
+        return source
+
+    def _label_enabled(self) -> bool:
+        """Kamera pembaca label: CCTV_LABEL_CAMERA_IDS (mis. "1"); tanpa itu ikut CCTV_LABEL_ENABLED lama."""
+        label_ids = env_ids("CCTV_LABEL_CAMERA_IDS")
+        if label_ids:
+            return self.camera_id in label_ids
+        return env_flag("CCTV_LABEL_ENABLED", "true")
 
     def _stop(self, signum, frame):
-        self.running = False
+        self.stop_event.set()
 
     def post(self, endpoint, **kwargs):
         return self.session.post(f"{self.api}/api/ingest/cameras/{self.camera_id}/{endpoint}", timeout=15, **kwargs)
@@ -325,7 +434,8 @@ class Worker:
                 'tracks': json.dumps(tracks[:50]),
                 'objects': json.dumps([{'id': str(item['id']), 'box': item['box']}
                     for item in detections if item['class'] == 'item' and item['id'] is not None][:50]),
-            }, files={'snapshot': ('live.jpg', jpeg(image, os.getenv('CCTV_LIVE_JPEG_QUALITY', '65')), 'image/jpeg')})
+            }, files={'snapshot': ('live.jpg', jpeg(downscale(image, getattr(self, 'observation_width', 0)),
+                                                    os.getenv('CCTV_LIVE_JPEG_QUALITY', '65')), 'image/jpeg')})
             result.raise_for_status()
         except requests.RequestException as exc:
             LOG.warning('Observation upload failed: %s', type(exc).__name__)
@@ -464,54 +574,92 @@ class Worker:
                     LOG.exception("Incident evidence could not be saved on disk")
 
     def detect_source(self) -> str:
-        """Kamera tanpa pembacaan label boleh memakai sub-stream (…02) untuk deteksi: bandwidth dan CPU jauh lebih kecil.
-        Opt-in karena bukti foto/klip ikut beresolusi sub-stream; uji kualitas pada rekaman nyata dahulu."""
-        if os.getenv("CCTV_DETECT_USE_SUBSTREAM", "false").lower() == "true" \
-                and os.getenv("CCTV_LABEL_ENABLED", "true").lower() != "true":
+        """Sumber untuk deteksi. Kamera pembaca label selalu memakai main-stream (QR butuh resolusi).
+
+        Kamera lain memakai sub-stream (…02) bila CCTV_DETECT_USE_SUBSTREAM=true, atau pada mode
+        "auto" (bawaan) selama kamera itu tidak punya model deteksi paket: tanpa model, frame hanya
+        dipakai untuk foto pantauan, jadi resolusi penuh hanya membuang bandwidth dan CPU.
+        """
+        setting = os.getenv("CCTV_DETECT_USE_SUBSTREAM", "auto").strip().lower()
+        use_substream = setting == "true" or (setting == "auto" and self.model is None)
+        if use_substream and not self.label_enabled:
             return re.sub(r"(/Streaming/Channels/[0-9]+)01$", r"\g<1>02", self.source)
         return self.source
 
     def schedule_live(self):
-        # Probing/reconnecting RTSP must not delay QR or anomaly processing.
-        if self.live_video and self.live_video.source and (self.live_future is None or self.live_future.done()):
-            if self.live_future is not None:
-                try:
-                    self.live_future.result()
-                except Exception:
-                    LOG.warning('Live encoder unavailable; will retry')
+        """Live hanya jalan saat ada penonton (atau selalu bila CCTV_LIVE_ON_DEMAND=false).
+        Probing/reconnecting RTSP berjalan di antrian live, tidak menunda QR atau deteksi."""
+        if not (self.live_video and self.live_video.source):
+            return
+        if self.live_future is not None and not self.live_future.done():
+            return
+        if self.live_future is not None:
+            try:
+                self.live_future.result()
+            except Exception:
+                LOG.warning('Live encoder kamera %d belum tersedia; dicoba lagi', self.camera_id)
+            self.live_future = None
+        if self.live_on_demand and not self.live_video.viewer_active(self.live_idle_seconds):
+            if self.live_video.running():
+                self.live_future = self.live_executor.submit(self._stop_idle_live)
+            return
+        if not self.live_video.running():
             self.live_future = self.live_executor.submit(self.live_video.ensure_running)
 
+    def _stop_idle_live(self):
+        if self.live_video.stop_if_idle(self.live_idle_seconds):
+            LOG.info("Live kamera %d dihentikan: tidak ada penonton %ds", self.camera_id, int(self.live_idle_seconds))
+
+    def _open_capture(self):
+        source = self.detect_source()
+        params = [cv2.CAP_PROP_OPEN_TIMEOUT_MSEC, int(os.getenv("CCTV_OPEN_TIMEOUT_MS", "10000")),
+                  cv2.CAP_PROP_READ_TIMEOUT_MSEC, int(os.getenv("CCTV_READ_TIMEOUT_MS", "10000"))]
+        capture = cv2.VideoCapture(source, cv2.CAP_FFMPEG, params)
+        # Simpan paling banyak satu frame di buffer decoder: yang diproses selalu frame terbaru.
+        capture.set(cv2.CAP_PROP_BUFFERSIZE, 1)
+        return capture
+
+    def _camera_unreachable(self):
+        self.heartbeat("offline")
+        now = time.monotonic()
+        # Cukup satu baris log per 5 menit selama kamera putus; password tidak pernah dicetak.
+        if self.reconnect_delay <= 5 or now - self.last_offline_log >= 300:
+            LOG.warning("Kamera %d (%s) belum dapat diakses; dicoba lagi dalam %ds",
+                        self.camera_id, redact(self.source).split("@", 1)[-1], int(self.reconnect_delay))
+            self.last_offline_log = now
+        self.stop_event.wait(self.reconnect_delay * random.uniform(0.9, 1.1))
+        self.reconnect_delay = min(60.0, self.reconnect_delay * 2)
+
     def run(self):
-        os.environ.setdefault("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;tcp")
         process_period = 1 / self.process_fps
-        file_source = os.path.isfile(self.source)
         while self.running:
             self.schedule_spool_retry()
             self.schedule_live()
             if not self.source:
                 self.heartbeat("offline")
                 LOG.warning("Stream URL kamera %d belum tersedia; mengecek kembali dalam 5 detik...", self.camera_id)
-                time.sleep(5)
-                self.source = os.environ.get(self.stream_key, "")
-                if not self.source:
-                    alt_key = self.stream_key.replace("CCTV_CAMERA_", "CCTV_RTSP_").replace("_URL", "")
-                    self.source = os.environ.get(alt_key, "")
+                self.stop_event.wait(5)
+                self.source = self._source_from_env()
                 continue
-            capture = cv2.VideoCapture(self.detect_source(), cv2.CAP_FFMPEG)
+            file_source = os.path.isfile(self.source)
+            capture = self._open_capture()
             if not capture.isOpened():
-                self.heartbeat("offline")
-                LOG.warning("Camera stream kamera %d (%s) belum dapat diakses; mencoba kembali...", self.camera_id, str(self.source).split("@", 1)[-1])
-                time.sleep(5)
+                capture.release()
+                self._camera_unreachable()
                 continue
+            if self.reconnect_delay > 5:
+                LOG.info("Kamera %d tersambung lagi", self.camera_id)
+            self.reconnect_delay = 5.0
             self.ring.clear()
             # Anonymous IDs cannot be linked across reconnects.
             self.tracking_session = str(uuid.uuid4())
             self.tracker = ZoneTracker(self.zones)
             self.heartbeat("online")
+            self.last_heartbeat = time.monotonic()
             source_period = 1 / max(1, capture.get(cv2.CAP_PROP_FPS)) if file_source else 0
             while capture.isOpened() and self.running:
-                ok, frame = capture.read()
-                if not ok:
+                # grab() mengambil frame tanpa konversi warna; retrieve() hanya untuk frame yang diproses.
+                if not capture.grab():
                     break
                 if source_period:
                     time.sleep(source_period)
@@ -523,62 +671,109 @@ class Worker:
                 self.schedule_live()
                 if now - self.last_frame < process_period:
                     continue
+                ok, frame = capture.retrieve()
+                if not ok:
+                    break
                 self.last_frame = now
-                scale = min(1, 1280 / frame.shape[1])
-                if scale < 1:
-                    frame = cv2.resize(frame, None, fx=scale, fy=scale)
-                self.ring.append((now, frame.copy()))
-                while self.ring and now - self.ring[0][0] > CLIP_SECONDS_BEFORE:
-                    self.ring.popleft()
-                if self.ocr_future is not None and self.ocr_future.done():
-                    try:
-                        label = self.ocr_future.result()
-                        if label:
-                            self.send_label(self.ocr_frame, label)
-                    except Exception:
-                        LOG.exception("Label OCR failed")
-                    self.ocr_future = None
-                    self.ocr_frame = None
-                if (os.getenv("CCTV_LABEL_ENABLED", "true").lower() == "true"
-                        and now - self.last_ocr >= 2 and self.ocr_future is None):
-                    self.ocr_frame = frame.copy()
-                    self.ocr_future = self.ocr_executor.submit(ocr, self.ocr_frame)
-                    self.last_ocr = now
-                detections = self.detect(frame)
-                if self.live_video and not self.live_video.source and (self.live_future is None or self.live_future.done()):
-                    image, _ = self.draw_tracks(frame, detections)
-                    self.live_future = self.live_executor.submit(self.live_video.write, image)
-                if (now - self.last_observation >= self.observation_interval and
-                        (self.observation_future is None or self.observation_future.done())):
-                    self.observation_future = self.upload_executor.submit(self.send_observation, frame.copy(), detections)
-                    self.last_observation = now
-                event = self.tracker.update(detections, now) if self.approved else None
-                if event:
-                    pending = {"event": event, "occurred_at": datetime.now(timezone.utc).isoformat(),
-                               "snapshot": frame.copy(), "frames": list(self.ring),
-                               "last_frame_at": now, "until": now + CLIP_SECONDS_AFTER}
-                    pending["start_future"] = self.upload_executor.submit(self.start_incident, pending)
-                    self.pending.append(pending)
-                for item in self.pending[:]:
-                    if now > item["last_frame_at"] and now <= item["until"]:
-                        item["frames"].append((now, frame.copy()))
-                        item["last_frame_at"] = now
-                    if now >= item["until"]:
-                        self.upload_executor.submit(self.flush_incident, item)
-                        self.pending.remove(item)
+                frame = downscale(frame, self.work_width)
+                self.process_frame(frame, now)
             for item in self.pending[:]:
                 self.upload_executor.submit(self.flush_incident, item)
                 self.pending.remove(item)
             capture.release()
             if self.running:
                 self.heartbeat("offline")
-                time.sleep(3)
-        self.live_executor.shutdown(wait=True)
+                self.stop_event.wait(3)
         if self.live_video:
             self.live_video.close()
-        self.ocr_executor.shutdown(wait=True)
-        self.upload_executor.shutdown(wait=True)
+
+    def process_frame(self, frame, now: float):
+        anomaly_active = self.model is not None
+        if anomaly_active:
+            # Klip bukti hanya perlu bila deteksi anomali aktif; tanpa model tidak ada salinan frame.
+            self.ring.append((now, frame))
+            while self.ring and now - self.ring[0][0] > CLIP_SECONDS_BEFORE:
+                self.ring.popleft()
+        if self.ocr_future is not None and self.ocr_future.done():
+            try:
+                if not self.ocr_future.cancelled():
+                    label = self.ocr_future.result()
+                    if label:
+                        self.send_label(self.ocr_frame, label)
+            except Exception:
+                LOG.exception("Label OCR failed")
+            self.ocr_future = None
+            self.ocr_frame = None
+        if self.label_enabled and now - self.last_ocr >= 2 and self.ocr_future is None:
+            self.ocr_frame = frame
+            self.ocr_future = self.ocr_executor.submit(ocr, self.ocr_frame)
+            self.last_ocr = now
+        detections = self.detect(frame)
+        if self.live_video and not self.live_video.source and (self.live_future is None or self.live_future.done()):
+            image, _ = self.draw_tracks(frame, detections)
+            self.live_future = self.live_executor.submit(self.live_video.write, image)
+        if (now - self.last_observation >= self.observation_interval and
+                (self.observation_future is None or self.observation_future.done())):
+            self.observation_future = self.upload_executor.submit(self.send_observation, frame, detections)
+            self.last_observation = now
+        event = self.tracker.update(detections, now) if self.approved else None
+        if event:
+            pending = {"event": event, "occurred_at": datetime.now(timezone.utc).isoformat(),
+                       "snapshot": frame, "frames": list(self.ring),
+                       "last_frame_at": now, "until": now + CLIP_SECONDS_AFTER}
+            pending["start_future"] = self.upload_executor.submit(self.start_incident, pending)
+            self.pending.append(pending)
+        max_after = math.ceil(CLIP_SECONDS_AFTER * self.process_fps) + 2
+        for item in self.pending[:]:
+            if now > item["last_frame_at"] and now <= item["until"] and len(item["frames"]) < len(self.ring) + max_after:
+                item["frames"].append((now, frame))
+                item["last_frame_at"] = now
+            if now >= item["until"]:
+                self.upload_executor.submit(self.flush_incident, item)
+                self.pending.remove(item)
+
+
+def camera_ids() -> list[int]:
+    """Daftar kamera dari CCTV_CAMERA_IDS (mis. "1,2,3"); kompatibel dengan CCTV_CAMERA_ID lama."""
+    ids = env_ids("CCTV_CAMERA_IDS") or env_ids("CCTV_CAMERA_ID")
+    if not ids:
+        raise SystemExit("Isi CCTV_CAMERA_IDS (mis. 1,2,3) atau CCTV_CAMERA_ID")
+    return list(dict.fromkeys(ids))
+
+
+def run_camera_forever(camera_id: int, shared: Shared, stop: threading.Event):
+    """Error satu kamera tidak mematikan kamera lain: dicoba lagi dengan jeda bertahap."""
+    delay = 5.0
+    while not stop.is_set():
+        try:
+            Worker(camera_id, shared, stop).run()
+            delay = 5.0
+        except SystemExit:
+            return
+        except Exception as exc:
+            LOG.error("Kamera %d berhenti karena %s: %s; dicoba lagi dalam %ds",
+                      camera_id, type(exc).__name__, redact(exc), int(delay))
+            stop.wait(delay)
+            delay = min(120.0, delay * 2)
+
+
+def main():
+    stop = threading.Event()
+    signal.signal(signal.SIGTERM, lambda *_: stop.set())
+    signal.signal(signal.SIGINT, lambda *_: stop.set())
+    shared = Shared()
+    ids = camera_ids()
+    LOG.info("Vision multi-kamera aktif untuk kamera %s", ", ".join(map(str, ids)))
+    threads = [threading.Thread(target=run_camera_forever, args=(camera_id, shared, stop),
+                                name=f"cam-{camera_id}", daemon=True) for camera_id in ids]
+    for thread in threads:
+        thread.start()
+    while not stop.is_set():
+        stop.wait(1)
+    for thread in threads:
+        thread.join(timeout=15)
+    shared.shutdown()
 
 
 if __name__ == "__main__":
-    Worker().run()
+    main()

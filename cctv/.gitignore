@@ -18,7 +18,9 @@ camera-*.env
 
 # Hasil build dan data runtime
 /backend/vendor/
-/backend/storage/
+/backend/storage/**/*
+!/backend/storage/**/
+!/backend/storage/**/.gitignore
 /backend/.env
 /backend/bootstrap/cache/*.php
 /backend/database/*.sqlite
