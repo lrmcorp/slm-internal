@@ -1,6 +1,6 @@
 # Android, iPhone, dan notifikasi
 
-Aplikasi terhubung ke `https://cctvslm.playgo.id`. Gunakan akun dashboard untuk masuk. Data kamera dan bukti memerlukan autentikasi.
+Aplikasi terhubung ke `https://cctv.lrmslm.com`. Gunakan akun dashboard untuk masuk. Data kamera dan bukti memerlukan autentikasi.
 
 ## Android
 

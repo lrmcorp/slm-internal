@@ -7,7 +7,7 @@ Alamat server diberikan saat build:
 ```bash
 flutter pub get
 flutter analyze
-flutter build apk --debug --dart-define=API_BASE_URL=https://cctvslm.playgo.id
+flutter build apk --debug --dart-define=API_BASE_URL=https://cctv.lrmslm.com
 ```
 
 Untuk pengguna yang tidak memasang Flutter, GitHub Actions **Build Android APK** membangun APK uji setiap push pada branch `ai-cctv-checker`. Unduh artifact `ai-cctv-checker-debug-apk` setelah workflow berhasil. APK debug untuk pengujian; versi distribusi memerlukan signing release tersendiri. Jangan menaruh keystore atau sandinya di Git.

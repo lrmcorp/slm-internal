@@ -311,15 +311,15 @@ class CctvWorkflowTest extends TestCase
             'field_one' => '061026-23', 'field_two' => 'TK HANSEL ASK', 'field_three' => 'MJ',
             'confidence' => .95, 'first_seen_at' => now(), 'last_seen_at' => now(),
             'review_status' => 'confirmed']);
-        config(['cctv.slm_base_url' => 'https://slm.playgo.id',
+        config(['cctv.slm_base_url' => 'https://mkr.lrmslm.com',
             'cctv.slm_lookup_path' => '/api/cctv/labels/lookup', 'cctv.slm_token' => 'test-token']);
-        Http::fake(['slm.playgo.id/*' => Http::response(['matched' => true, 'reference' => 'INV-1'])]);
+        Http::fake(['mkr.lrmslm.com/*' => Http::response(['matched' => true, 'reference' => 'INV-1'])]);
 
         app(SlmMatcher::class)->match($label);
 
         $this->assertDatabaseHas('labels', ['id' => $label->id, 'slm_status' => 'matched',
             'slm_reference' => 'INV-1', 'slm_sync_status' => 'pending_configuration']);
-        Http::assertSent(fn ($request) => $request->url() === 'https://slm.playgo.id/api/cctv/labels/lookup'
+        Http::assertSent(fn ($request) => $request->url() === 'https://mkr.lrmslm.com/api/cctv/labels/lookup'
             && $request['invoice_number'] === '061026-23'
             && $request['customer_name'] === 'TK HANSEL ASK'
             && $request['source_label'] === 'MJ'
@@ -346,12 +346,12 @@ class CctvWorkflowTest extends TestCase
             'review_status' => 'confirmed'
         ]);
         config([
-            'cctv.slm_base_url' => 'https://slm.playgo.id',
+            'cctv.slm_base_url' => 'https://mkr.lrmslm.com',
             'cctv.slm_lookup_path' => '/api/cctv/labels/lookup',
             'cctv.slm_token' => 'test-token',
         ]);
         Http::fake([
-            'slm.playgo.id/api/cctv/labels/lookup' => Http::sequence()
+            'mkr.lrmslm.com/api/cctv/labels/lookup' => Http::sequence()
                 ->push(['matched' => false, 'note' => "Customer tidak cocok: terbaca 'SIP:Nami Beauty', aktual 'Maya'"])
                 ->push(['matched' => true, 'reference' => 'S-12345', 'customer_name' => 'Maya', 'packing_status' => 'sudah']),
         ]);
@@ -377,17 +377,17 @@ class CctvWorkflowTest extends TestCase
             'evidence_path' => 'cctv/labels/invoice.png', 'review_status' => 'confirmed',
             'slm_status' => 'matched', 'slm_reference' => 'INV-1']);
         config(['app.url' => 'https://cctv.example.test',
-            'cctv.slm_base_url' => 'https://slm.playgo.id',
+            'cctv.slm_base_url' => 'https://mkr.lrmslm.com',
             'cctv.slm_sync_path' => '/api/cctv/labels/sync', 'cctv.slm_token' => 'test-token',
             'cctv.slm_sync_upload_photo' => false]);
-        Http::fake(['slm.playgo.id/*' => Http::response(['saved' => true], 200)]);
+        Http::fake(['mkr.lrmslm.com/*' => Http::response(['saved' => true], 200)]);
 
         (new SyncMatchedLabelToSlm($label->id))->handle();
         (new SyncMatchedLabelToSlm($label->id))->handle();
 
         $this->assertDatabaseHas('labels', ['id' => $label->id, 'slm_sync_status' => 'synced']);
         $this->assertTrue(Storage::disk('local')->exists($label->evidence_path));
-        Http::assertSent(fn ($request) => $request->url() === 'https://slm.playgo.id/api/cctv/labels/sync'
+        Http::assertSent(fn ($request) => $request->url() === 'https://mkr.lrmslm.com/api/cctv/labels/sync'
             && $request['invoice_number'] === '061026-23'
             && $request['customer_name'] === 'TK HANSEL ASK'
             && str_contains($request['evidence_url'], '/api/v1/slm/evidence/label-snapshot/'.$label->id)
@@ -407,16 +407,16 @@ class CctvWorkflowTest extends TestCase
             'evidence_path' => 'cctv/labels/invoice.png', 'review_status' => 'confirmed',
             'slm_status' => 'matched', 'slm_reference' => 'INV-1']);
         config(['app.url' => 'https://cctv.example.test',
-            'cctv.slm_base_url' => 'https://slm.playgo.id',
+            'cctv.slm_base_url' => 'https://mkr.lrmslm.com',
             'cctv.slm_sync_path' => '/api/cctv/labels/sync', 'cctv.slm_token' => 'test-token',
             'cctv.slm_sync_upload_photo' => true]);
-        Http::fake(['slm.playgo.id/*' => Http::response(['saved' => true], 200)]);
+        Http::fake(['mkr.lrmslm.com/*' => Http::response(['saved' => true], 200)]);
 
         (new SyncMatchedLabelToSlm($label->id))->handle();
 
         $this->assertDatabaseHas('labels', ['id' => $label->id, 'slm_sync_status' => 'synced']);
         Http::assertSent(fn ($request) => $request->isMultipart()
-            && $request->url() === 'https://slm.playgo.id/api/cctv/labels/sync');
+            && $request->url() === 'https://mkr.lrmslm.com/api/cctv/labels/sync');
     }
 
     public function test_auto_sync_packing_mode_automatically_matches_and_packs_confident_qr(): void
@@ -426,13 +426,13 @@ class CctvWorkflowTest extends TestCase
         config([
             'cctv.ingest_token' => str_repeat('a', 64),
             'cctv.auto_sync_packing' => true,
-            'cctv.slm_base_url' => 'https://slm.playgo.id',
+            'cctv.slm_base_url' => 'https://mkr.lrmslm.com',
             'cctv.slm_lookup_path' => '/api/cctv/labels/lookup',
             'cctv.slm_sync_path' => '/api/cctv/labels/sync',
             'cctv.slm_token' => 'test-token',
         ]);
         Http::fake([
-            'slm.playgo.id/api/cctv/labels/lookup' => Http::response([
+            'mkr.lrmslm.com/api/cctv/labels/lookup' => Http::response([
                 'matched' => true,
                 'reference' => 'S-9999',
                 'customer_name' => 'TK HANSEL ASK',

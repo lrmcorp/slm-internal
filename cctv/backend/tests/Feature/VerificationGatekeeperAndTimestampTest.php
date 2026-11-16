@@ -71,14 +71,14 @@ class VerificationGatekeeperAndTimestampTest extends TestCase
         $label->id = 32;
         $label->save();
 
-        Config::set('cctv.slm_base_url', 'https://slm.playgo.id');
+        Config::set('cctv.slm_base_url', 'https://mkr.lrmslm.com');
         Config::set('cctv.slm_sync_path', '/api/cctv/labels/sync');
         Config::set('cctv.slm_token', $token);
         Config::set('app.url', 'http://31.97.51.194:8000');
 
         $recordedPayload = null;
         Http::fake([
-            'https://slm.playgo.id/api/cctv/labels/sync' => function ($request) use (&$recordedPayload) {
+            'https://mkr.lrmslm.com/api/cctv/labels/sync' => function ($request) use (&$recordedPayload) {
                 $recordedPayload = $request->data();
                 return Http::response(['saved' => true], 200);
             },
@@ -123,13 +123,13 @@ class VerificationGatekeeperAndTimestampTest extends TestCase
         Config::set('cctv.ingest_token', $ingestToken);
         Config::set('cctv.min_confidence', 0.90);
         Config::set('cctv.auto_sync_packing', true);
-        Config::set('cctv.slm_base_url', 'https://slm.playgo.id');
+        Config::set('cctv.slm_base_url', 'https://mkr.lrmslm.com');
         Config::set('cctv.slm_lookup_path', '/api/cctv/labels/lookup');
         Config::set('cctv.slm_sync_path', '/api/cctv/labels/sync');
         Config::set('cctv.slm_token', 'test-token');
 
         Http::fake([
-            'https://slm.playgo.id/api/cctv/labels/lookup' => Http::response([
+            'https://mkr.lrmslm.com/api/cctv/labels/lookup' => Http::response([
                 'matched' => true,
                 'customer_name' => 'Rohit ask',
                 'reference' => 'REF-161026',
@@ -176,7 +176,7 @@ class VerificationGatekeeperAndTimestampTest extends TestCase
         Config::set('cctv.ingest_token', $ingestToken);
         Config::set('cctv.min_confidence', 0.90);
         Config::set('cctv.auto_sync_packing', true);
-        Config::set('cctv.slm_base_url', 'https://slm.playgo.id');
+        Config::set('cctv.slm_base_url', 'https://mkr.lrmslm.com');
         Config::set('cctv.slm_lookup_path', '/api/cctv/labels/lookup');
         Config::set('cctv.slm_sync_path', '/api/cctv/labels/sync');
         Config::set('cctv.slm_token', 'test-token');
@@ -250,13 +250,13 @@ class VerificationGatekeeperAndTimestampTest extends TestCase
             'metadata' => ['label_id' => $label->id],
         ]);
 
-        Config::set('cctv.slm_base_url', 'https://slm.playgo.id');
+        Config::set('cctv.slm_base_url', 'https://mkr.lrmslm.com');
         Config::set('cctv.slm_lookup_path', '/api/cctv/labels/lookup');
         Config::set('cctv.slm_sync_path', '/api/cctv/labels/sync');
         Config::set('cctv.slm_token', 'test-token');
 
         Http::fake([
-            'https://slm.playgo.id/api/cctv/labels/lookup' => Http::response([
+            'https://mkr.lrmslm.com/api/cctv/labels/lookup' => Http::response([
                 'matched' => true,
                 'customer_name' => 'Rohit ask Terkonfirmasi',
                 'reference' => 'REF-OK-16',
@@ -303,12 +303,12 @@ class VerificationGatekeeperAndTimestampTest extends TestCase
         Config::set('cctv.min_confidence', 0.90);
         Config::set('cctv.min_dwell_seconds', 3); // Minimal 3 detik berada di meja
         Config::set('cctv.auto_sync_packing', true);
-        Config::set('cctv.slm_base_url', 'https://slm.playgo.id');
+        Config::set('cctv.slm_base_url', 'https://mkr.lrmslm.com');
         Config::set('cctv.slm_lookup_path', '/api/cctv/labels/lookup');
         Config::set('cctv.slm_token', 'test-token');
 
         Http::fake([
-            'https://slm.playgo.id/api/cctv/labels/lookup' => Http::response([
+            'https://mkr.lrmslm.com/api/cctv/labels/lookup' => Http::response([
                 'matched' => true,
                 'customer_name' => 'Rohit ask',
                 'reference' => 'REF-DWELL',

@@ -1,10 +1,10 @@
 # Kontrak integrasi ERP SLM
 
-Dokumen ini untuk pengembang `slm.playgo.id`. Endpoint berikut perlu dibuat atau dipetakan pada ERP; keberadaannya belum diverifikasi. CCTV memanggil ERP melalui HTTPS dengan Bearer token khusus integrasi yang disimpan hanya pada server.
+Dokumen ini untuk pengembang `mkr.lrmslm.com`. Endpoint berikut perlu dibuat atau dipetakan pada ERP; keberadaannya belum diverifikasi. CCTV memanggil ERP melalui HTTPS dengan Bearer token khusus integrasi yang disimpan hanya pada server.
 
 ## 1. Lookup invoice
 
-Konfigurasi CCTV: `SLM_BASE_URL=https://slm.playgo.id`, `SLM_LOOKUP_PATH=/api/cctv/labels/lookup`, dan `SLM_API_TOKEN`.
+Konfigurasi CCTV: `SLM_BASE_URL=https://mkr.lrmslm.com`, `SLM_LOOKUP_PATH=/api/cctv/labels/lookup`, dan `SLM_API_TOKEN`.
 
 Permintaan POST JSON:
 

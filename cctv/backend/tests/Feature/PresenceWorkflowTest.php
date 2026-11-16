@@ -118,7 +118,7 @@ class PresenceWorkflowTest extends TestCase
         ]);
         config(['cctv.wa_phone_number_id'=>'phone-id','cctv.wa_access_token'=>'test-token',
             'cctv.wa_template_name'=>'text_template','cctv.wa_image_template_name'=>'image_template',
-            'app.url'=>'https://cctvslm.playgo.id']);
+            'app.url'=>'https://cctv.lrmslm.com']);
         $camera=$this->camera();$user=User::factory()->create();
         Storage::disk('local')->put('cctv/test.jpg',base64_decode('/9j/'));
         $incident=Incident::create(['camera_id'=>$camera->id,'type'=>'person_absent','status'=>'needs_review',

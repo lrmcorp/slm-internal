@@ -1,6 +1,6 @@
 # API CCTV SLM untuk pengembang ERP dan Flutter
 
-Base URL: `https://cctvslm.playgo.id`. Deployment aplikasi sudah berhasil; koneksi ERP dan pengiriman notifikasi tetap perlu konfigurasi serta pengujian layanan nyata. Definisi endpoint tersedia dalam [OpenAPI](openapi.json).
+Base URL: `https://cctv.lrmslm.com`. Deployment aplikasi sudah berhasil; koneksi ERP dan pengiriman notifikasi tetap perlu konfigurasi serta pengujian layanan nyata. Definisi endpoint tersedia dalam [OpenAPI](openapi.json).
 
 ## Autentikasi
 
@@ -55,7 +55,7 @@ Status pencocokan: `unavailable`, `incomplete`, `matched`, `not_found`, `error`.
 
 ## Kontrak yang perlu disediakan ERP SLM
 
-Ini **endpoint yang perlu dibuat atau dipetakan oleh pengembang ERP**, bukan klaim endpoint tersebut sudah ada di `slm.playgo.id`.
+Ini **endpoint yang perlu dibuat atau dipetakan oleh pengembang ERP**, bukan klaim endpoint tersebut sudah ada di `mkr.lrmslm.com`.
 
 Atur `SLM_BASE_URL`, `SLM_LOOKUP_PATH`, `SLM_API_TOKEN`. Adaptor mengirim POST HTTPS dengan Bearer token:
 
@@ -88,7 +88,7 @@ Untuk menerima catatan yang sudah cocok, tetapkan `SLM_SYNC_PATH`. Backend mengi
   "first_seen_at":"2026-10-08T06:00:00+00:00",
   "event_type":"invoice_captured",
   "packing_completed_at":null,
-  "evidence_url":"https://cctvslm.playgo.id/labels/17"
+  "evidence_url":"https://cctv.lrmslm.com/labels/17"
 }
 ```
 
@@ -149,7 +149,7 @@ Aturan notifikasi menerima `channel: email` selain `push` dan `whatsapp`. Email 
 Contoh berikut menggunakan ID basis data. Ganti `17` dan `13` dengan ID hasil API; angka tersebut bukan pemetaan kanal DVR.
 
 ```bash
-curl --request POST 'https://cctvslm.playgo.id/api/login' \
+curl --request POST 'https://cctv.lrmslm.com/api/login' \
   --header 'Accept: application/json' \
   --header 'Content-Type: application/json' \
   --data '{"email":"pengguna@perusahaan.id","password":"SANDI_AKUN_ANDA"}'
@@ -158,21 +158,21 @@ curl --request POST 'https://cctvslm.playgo.id/api/login' \
 Simpan token respons di penyimpanan aman aplikasi. Pada contoh berikut, `CCTV_TOKEN` adalah variabel lingkungan lokal berisi token tersebut; jangan mencetaknya dalam log.
 
 ```bash
-curl 'https://cctvslm.playgo.id/api/cameras' \
+curl 'https://cctv.lrmslm.com/api/cameras' \
   --header 'Accept: application/json' \
   --header "Authorization: Bearer $CCTV_TOKEN"
 
-curl 'https://cctvslm.playgo.id/api/labels?page=1' \
+curl 'https://cctv.lrmslm.com/api/labels?page=1' \
   --header 'Accept: application/json' \
   --header "Authorization: Bearer $CCTV_TOKEN"
 
-curl --request POST 'https://cctvslm.playgo.id/api/labels/17/review' \
+curl --request POST 'https://cctv.lrmslm.com/api/labels/17/review' \
   --header 'Accept: application/json' \
   --header 'Content-Type: application/json' \
   --header "Authorization: Bearer $CCTV_TOKEN" \
   --data '{"status":"confirmed","field_one":"061026-23","field_two":"TK HANSEL ASK","field_three":"MJ"}'
 
-curl --request POST 'https://cctvslm.playgo.id/api/labels/17/packing-complete' \
+curl --request POST 'https://cctv.lrmslm.com/api/labels/17/packing-complete' \
   --header 'Accept: application/json' \
   --header "Authorization: Bearer $CCTV_TOKEN"
 ```

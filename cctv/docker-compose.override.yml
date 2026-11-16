@@ -1,5 +1,0 @@
-# VPS: CCTV memanggil SLM baru lewat Nginx di server ini (tanpa keluar internet).
-services:
-  web: { extra_hosts: ["slm.lrmint.xyz:host-gateway"] }
-  queue: { extra_hosts: ["slm.lrmint.xyz:host-gateway"] }
-  scheduler: { extra_hosts: ["slm.lrmint.xyz:host-gateway"] }

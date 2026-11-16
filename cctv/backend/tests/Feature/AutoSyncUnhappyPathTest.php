@@ -40,13 +40,13 @@ class AutoSyncUnhappyPathTest extends TestCase
         config([
             'cctv.ingest_token' => str_repeat('a', 64),
             'cctv.auto_sync_packing' => true,
-            'cctv.slm_base_url' => 'https://slm.playgo.id',
+            'cctv.slm_base_url' => 'https://mkr.lrmslm.com',
             'cctv.slm_lookup_path' => '/api/cctv/labels/lookup',
             'cctv.slm_sync_path' => '/api/cctv/labels/sync',
             'cctv.slm_token' => 'test-token',
         ]);
         Http::fake([
-            'slm.playgo.id/api/cctv/labels/lookup' => Http::response([
+            'mkr.lrmslm.com/api/cctv/labels/lookup' => Http::response([
                 'matched' => false,
                 'reference' => null,
                 'note' => 'Invoice 999999-99 tidak ditemukan di sistem ERP',
@@ -82,12 +82,12 @@ class AutoSyncUnhappyPathTest extends TestCase
         config([
             'cctv.ingest_token' => str_repeat('a', 64),
             'cctv.auto_sync_packing' => true,
-            'cctv.slm_base_url' => 'https://slm.playgo.id',
+            'cctv.slm_base_url' => 'https://mkr.lrmslm.com',
             'cctv.slm_lookup_path' => '/api/cctv/labels/lookup',
             'cctv.slm_token' => 'test-token',
         ]);
         Http::fake([
-            'slm.playgo.id/api/cctv/labels/lookup' => Http::response('Internal Server Error', 500),
+            'mkr.lrmslm.com/api/cctv/labels/lookup' => Http::response('Internal Server Error', 500),
         ]);
 
         $camera = $this->camera();
@@ -118,11 +118,11 @@ class AutoSyncUnhappyPathTest extends TestCase
         config([
             'cctv.ingest_token' => str_repeat('a', 64),
             'cctv.auto_sync_packing' => true,
-            'cctv.slm_base_url' => 'https://slm.playgo.id',
+            'cctv.slm_base_url' => 'https://mkr.lrmslm.com',
             'cctv.slm_token' => 'test-token',
         ]);
         Http::fake([
-            'slm.playgo.id/api/cctv/labels/lookup' => Http::response([
+            'mkr.lrmslm.com/api/cctv/labels/lookup' => Http::response([
                 'matched' => true,
                 'customer_name' => 'TK HANSEL ASK',
                 'reference' => 'S-1',
@@ -158,7 +158,7 @@ class AutoSyncUnhappyPathTest extends TestCase
         Storage::fake('local');
         Http::fake();
         config([
-            'cctv.slm_base_url' => 'https://slm.playgo.id',
+            'cctv.slm_base_url' => 'https://mkr.lrmslm.com',
             'cctv.slm_sync_path' => '/api/cctv/labels/sync',
             'cctv.slm_token' => 'test-token',
             'app.url' => 'http://cctv.test',
@@ -199,7 +199,7 @@ class AutoSyncUnhappyPathTest extends TestCase
         Storage::disk('local')->put('cctv/labels/label-1.jpg', 'fake-image-content');
 
         config([
-            'cctv.slm_base_url' => 'https://slm.playgo.id',
+            'cctv.slm_base_url' => 'https://mkr.lrmslm.com',
             'cctv.slm_sync_path' => '/api/cctv/labels/sync',
             'cctv.slm_token' => 'test-token',
             'app.url' => 'http://cctv.test',
@@ -207,7 +207,7 @@ class AutoSyncUnhappyPathTest extends TestCase
         ]);
 
         Http::fake([
-            'slm.playgo.id/api/cctv/labels/sync' => Http::response([
+            'mkr.lrmslm.com/api/cctv/labels/sync' => Http::response([
                 'saved' => false,
                 'error' => 'Database constraint violation',
             ], 200),
@@ -312,14 +312,14 @@ class AutoSyncUnhappyPathTest extends TestCase
         Storage::fake('local');
         Storage::disk('local')->put('cctv/labels/label-1.jpg', 'image-content');
         config([
-            'cctv.slm_base_url' => 'https://slm.playgo.id',
+            'cctv.slm_base_url' => 'https://mkr.lrmslm.com',
             'cctv.slm_sync_path' => '/api/cctv/labels/sync',
             'cctv.slm_token' => 'test-token',
             'app.url' => 'http://cctv.test',
             'cctv.slm_sync_upload_photo' => false,
         ]);
 
-        Http::fake(['slm.playgo.id/*' => Http::response(['saved' => true], 200)]);
+        Http::fake(['mkr.lrmslm.com/*' => Http::response(['saved' => true], 200)]);
 
         $camera = $this->camera();
         $label = LabelRecord::create([
@@ -489,7 +489,7 @@ class AutoSyncUnhappyPathTest extends TestCase
             'cctv.slm_base_url' => '', // Kosong
             'cctv.slm_sync_path' => '/api/cctv/labels/sync',
             'cctv.slm_token' => '',
-            'app.url' => 'https://cctvslm.playgo.id',
+            'app.url' => 'https://cctv.lrmslm.com',
         ]);
 
         $camera = $this->camera();

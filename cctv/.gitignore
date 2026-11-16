@@ -1,17 +1,36 @@
+# Rahasia server: hanya ada di VPS, tidak pernah di-commit.
 /.env
 *.env
+.env.*
+!/.env.example
+stack.env*
+*.bak
+*.bak-*
+*.bak.*
 camera-*.env
+/secrets/
+*.pem
+*.key
+*.p12
+*.p8
+*.jks
+*.keystore
+
+# Hasil build dan data runtime
+/backend/vendor/
+/backend/storage/
+/backend/.env
+/backend/bootstrap/cache/*.php
+/backend/database/*.sqlite
+node_modules/
 /vision/.build-ca.crt
 /vision/.venv/
-/vision/__pycache__/
-**/__pycache__/
 /vision/spool/
+**/__pycache__/
+*.pyc
+.venv/
 /mobile/.dart_tool/
 /mobile/build/
-/secrets/
 /.pub-cache/
 /.gradle-cache/
 /.docker-config/
-
-# lingkungan Python lokal; jangan di-commit
-.venv/

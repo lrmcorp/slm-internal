@@ -16,8 +16,8 @@ if [ "$mode" = npm ]; then
   proxy_gateway=$(docker inspect --format '{{range .NetworkSettings.Networks}}{{println .Gateway}}{{end}}' nginx-proxy-manager | head -n 1)
   [[ "$proxy_gateway" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo 'Gateway Nginx Proxy Manager tidak ditemukan.'; exit 1; }
 fi
-read -r -p 'Domain dashboard [cctvslm.playgo.id]: ' domain
-domain=${domain:-cctvslm.playgo.id}
+read -r -p 'Domain dashboard [cctv.lrmslm.com]: ' domain
+domain=${domain:-cctv.lrmslm.com}
 [[ "$domain" =~ ^[a-z0-9][a-z0-9.-]+\.[a-z]{2,}$ ]] || exit 1
 read -r -p 'Email admin dashboard dan sertifikat HTTPS: ' admin_email
 [[ "$admin_email" =~ ^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$ ]] || exit 1

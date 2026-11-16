@@ -10,8 +10,8 @@ class ProxyHttpsTest extends TestCase
     {
         config(['app.url' => 'http://localhost']);
 
-        $this->get('/login', ['X-Forwarded-Proto' => 'https', 'X-Forwarded-Host' => 'cctvslm.playgo.id'])
+        $this->get('/login', ['X-Forwarded-Proto' => 'https', 'X-Forwarded-Host' => 'cctv.lrmslm.com'])
             ->assertOk()
-            ->assertSee('https://cctvslm.playgo.id/css/dashboard.css', false);
+            ->assertSee('https://cctv.lrmslm.com/css/dashboard.css', false);
     }
 }

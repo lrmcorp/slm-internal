@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Script untuk menarik frame live Kamera 14 (Packing/Label) dari server produksi cctvslm.playgo.id ke lingkungan lokal."""
+"""Script untuk menarik frame live Kamera 14 (Packing/Label) dari server produksi cctv.lrmslm.com ke lingkungan lokal."""
 
 import urllib.request
 import urllib.parse
@@ -8,7 +8,7 @@ import re
 import os
 import sys
 
-BASE_URL = "https://cctvslm.playgo.id"
+BASE_URL = "https://cctv.lrmslm.com"
 EMAIL = os.environ.get("CCTV_TEST_EMAIL", "ralamzah@gmail.com")
 PASSWORD = os.environ.get("CCTV_TEST_PASSWORD", "ridho123")
 OUTPUT_PATH = "/tmp/cctv_live_camera_14.jpg"

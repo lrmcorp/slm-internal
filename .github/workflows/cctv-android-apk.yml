@@ -1,4 +1,4 @@
-name: Build Android APK
+name: CCTV · Build Android APK
 
 on:
   workflow_dispatch:
@@ -15,7 +15,7 @@ jobs:
   apk:
     runs-on: ubuntu-latest
     env:
-      API_BASE_URL: ${{ inputs.api_base_url || 'https://cctvslm.playgo.id' }}
+      API_BASE_URL: ${{ inputs.api_base_url || 'https://cctv.lrmslm.com' }}
       FIREBASE_API_KEY: ${{ vars.FIREBASE_API_KEY }}
       FIREBASE_APP_ID: ${{ vars.FIREBASE_APP_ID }}
       FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
@@ -32,12 +32,12 @@ jobs:
           channel: stable
           cache: true
       - name: Get packages and analyze
-        working-directory: mobile
+        working-directory: cctv/mobile
         run: |
           flutter pub get
           flutter analyze --no-pub
       - name: Build debug APK
-        working-directory: mobile
+        working-directory: cctv/mobile
         shell: bash
         run: |
           case "$API_BASE_URL" in https://*) ;; *) echo 'API_BASE_URL must use HTTPS' >&2; exit 1;; esac
@@ -49,7 +49,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: ai-cctv-checker-debug-apk
-          path: mobile/build/app/outputs/flutter-apk/app-debug.apk
+          path: cctv/mobile/build/app/outputs/flutter-apk/app-debug.apk
           retention-days: 7
       - name: Publish downloadable internal test APK
         continue-on-error: true
@@ -58,7 +58,7 @@ jobs:
         shell: bash
         run: |
           tag="android-test-${GITHUB_SHA:0:12}"
-          cp mobile/build/app/outputs/flutter-apk/app-debug.apk SLM-CCTV-Android.apk
+          cp cctv/mobile/build/app/outputs/flutter-apk/app-debug.apk SLM-CCTV-Android.apk
           sha256sum SLM-CCTV-Android.apk > SLM-CCTV-Android.apk.sha256
-          printf '%s\n' 'APK uji Android untuk server https://cctvslm.playgo.id.' 'Masuk dengan akun dashboard. Push memerlukan konfigurasi Firebase saat build dan layanan pengirim pada server.' 'APK debug ini untuk pengujian, bukan rilis Play Store. Repositori publik: berkas APK dapat diunduh siapa pun; data CCTV tetap memerlukan autentikasi.' > /tmp/apk-notes.md
+          printf '%s\n' 'APK uji Android untuk server https://cctv.lrmslm.com.' 'Masuk dengan akun dashboard. Push memerlukan konfigurasi Firebase saat build dan layanan pengirim pada server.' 'APK debug ini untuk pengujian, bukan rilis Play Store. Repositori privat: hanya anggota organisasi yang bisa mengunduh APK; data CCTV tetap memerlukan autentikasi.' > /tmp/apk-notes.md
           gh release create "$tag" SLM-CCTV-Android.apk SLM-CCTV-Android.apk.sha256 --target "$GITHUB_SHA" --title "SLM CCTV Android · ${GITHUB_SHA:0:7}" --notes-file /tmp/apk-notes.md --prerelease || echo "::warning::Gagal mempublikasikan release ke GitHub Releases (API error); APK tetap tersedia di GitHub Artifacts."

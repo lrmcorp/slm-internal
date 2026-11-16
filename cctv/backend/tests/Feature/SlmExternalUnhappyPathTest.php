@@ -25,7 +25,7 @@ class SlmExternalUnhappyPathTest extends TestCase
     {
         parent::setUp();
         Config::set('cctv.slm_token', $this->validToken);
-        Config::set('cctv.slm_base_url', 'https://slm.playgo.id');
+        Config::set('cctv.slm_base_url', 'https://mkr.lrmslm.com');
         Config::set('cctv.slm_events_path', '/api/cctv/events');
         Config::set('cctv.slm_webhook_enabled', true);
     }
@@ -205,7 +205,7 @@ class SlmExternalUnhappyPathTest extends TestCase
     public function test_unhappy_path_webhook_erp_server_error_500_triggers_retry_exception(): void
     {
         Http::fake([
-            'slm.playgo.id/*' => Http::response('Internal Server Error', 500),
+            'mkr.lrmslm.com/*' => Http::response('Internal Server Error', 500),
         ]);
 
         $job = new SendSlmWebhookNotification([
@@ -226,7 +226,7 @@ class SlmExternalUnhappyPathTest extends TestCase
     public function test_unhappy_path_webhook_erp_client_error_400_does_not_throw(): void
     {
         Http::fake([
-            'slm.playgo.id/*' => Http::response(['message' => 'Bad Request'], 400),
+            'mkr.lrmslm.com/*' => Http::response(['message' => 'Bad Request'], 400),
         ]);
 
         $job = new SendSlmWebhookNotification([
@@ -253,7 +253,7 @@ class SlmExternalUnhappyPathTest extends TestCase
         Http::assertNothingSent();
 
         // 2. Token kosong
-        Config::set('cctv.slm_base_url', 'https://slm.playgo.id');
+        Config::set('cctv.slm_base_url', 'https://mkr.lrmslm.com');
         Config::set('cctv.slm_token', '');
         (new SendSlmWebhookNotification(['event_id' => '2']))->handle();
         Http::assertNothingSent();
@@ -265,7 +265,7 @@ class SlmExternalUnhappyPathTest extends TestCase
         Http::assertNothingSent();
 
         // 4. Webhook disabled via config
-        Config::set('cctv.slm_base_url', 'https://slm.playgo.id');
+        Config::set('cctv.slm_base_url', 'https://mkr.lrmslm.com');
         Config::set('cctv.slm_webhook_enabled', false);
         (new SendSlmWebhookNotification(['event_id' => '4']))->handle();
         Http::assertNothingSent();

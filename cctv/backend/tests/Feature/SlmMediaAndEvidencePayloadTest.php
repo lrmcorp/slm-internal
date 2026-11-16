@@ -24,7 +24,7 @@ class SlmMediaAndEvidencePayloadTest extends TestCase
     {
         parent::setUp();
         Config::set('cctv.slm_token', $this->token);
-        Config::set('cctv.slm_base_url', 'https://slm.playgo.id');
+        Config::set('cctv.slm_base_url', 'https://mkr.lrmslm.com');
         Config::set('cctv.slm_events_path', '/api/cctv/events');
         Config::set('cctv.slm_webhook_enabled', true);
         Storage::fake('local');
@@ -214,7 +214,7 @@ class SlmMediaAndEvidencePayloadTest extends TestCase
     public function test_webhook_job_sends_dual_auth_headers(): void
     {
         Http::fake([
-            'https://slm.playgo.id/api/cctv/events' => Http::response(['status' => 'received'], 200),
+            'https://mkr.lrmslm.com/api/cctv/events' => Http::response(['status' => 'received'], 200),
         ]);
 
         $job = new SendSlmWebhookNotification([
@@ -255,20 +255,20 @@ class SlmMediaAndEvidencePayloadTest extends TestCase
         ]);
 
         Config::set('cctv.slm_sync_path', '/api/cctv/labels/sync');
-        Config::set('app.url', 'https://cctvslm.playgo.id');
+        Config::set('app.url', 'https://cctv.lrmslm.com');
         Config::set('cctv.slm_sync_upload_photo', false);
 
         Http::fake([
-            'https://slm.playgo.id/api/cctv/labels/sync' => Http::response(['saved' => true], 200),
+            'https://mkr.lrmslm.com/api/cctv/labels/sync' => Http::response(['saved' => true], 200),
         ]);
 
         (new \App\Jobs\SyncMatchedLabelToSlm($label->id))->handle();
 
         Http::assertSent(function ($request) use ($label) {
-            return $request->url() === 'https://slm.playgo.id/api/cctv/labels/sync'
+            return $request->url() === 'https://mkr.lrmslm.com/api/cctv/labels/sync'
                 && str_contains($request['evidence_url'], "/api/v1/slm/evidence/label-snapshot/{$label->id}")
                 && str_contains($request['evidence_url'], "token={$this->token}")
-                && $request['dashboard_url'] === "https://cctvslm.playgo.id/labels/{$label->id}"
+                && $request['dashboard_url'] === "https://cctv.lrmslm.com/labels/{$label->id}"
                 && $request['photo_url'] === $request['evidence_url'];
         });
     }
@@ -281,7 +281,7 @@ class SlmMediaAndEvidencePayloadTest extends TestCase
         Config::set('cctv.slm_lookup_path', '/api/cctv/labels/lookup');
 
         Http::fake([
-            'https://slm.playgo.id/api/cctv/labels/lookup' => Http::response([
+            'https://mkr.lrmslm.com/api/cctv/labels/lookup' => Http::response([
                 'matched' => true,
                 'reference' => 'SO-UPGRADE-1',
                 'customer_name' => 'Toko Hansel Jaya',
@@ -359,18 +359,18 @@ class SlmMediaAndEvidencePayloadTest extends TestCase
         ]);
 
         Config::set('cctv.slm_sync_path', '/api/cctv/labels/sync');
-        Config::set('app.url', 'https://cctvslm.playgo.id');
+        Config::set('app.url', 'https://cctv.lrmslm.com');
         Config::set('cctv.slm_sync_upload_photo', false);
 
         Http::fake([
-            'https://slm.playgo.id/api/cctv/labels/sync' => Http::response(['saved' => true], 200),
+            'https://mkr.lrmslm.com/api/cctv/labels/sync' => Http::response(['saved' => true], 200),
         ]);
 
         (new \App\Jobs\SyncMatchedLabelToSlm($label->id))->handle();
 
         Http::assertSent(function ($request) use ($label, $detectedPhysicalTime) {
             $expectedIso = $detectedPhysicalTime->toIso8601String();
-            return $request->url() === 'https://slm.playgo.id/api/cctv/labels/sync'
+            return $request->url() === 'https://mkr.lrmslm.com/api/cctv/labels/sync'
                 && $request['cctv_label_id'] === $label->id
                 && $request['invoice_number'] === '141026-01'
                 && $request['occurred_at'] === $expectedIso
@@ -404,7 +404,7 @@ class SlmMediaAndEvidencePayloadTest extends TestCase
         Config::set('cctv.slm_lookup_path', '/api/cctv/labels/lookup');
 
         Http::fake([
-            'https://slm.playgo.id/api/cctv/labels/lookup' => Http::response([
+            'https://mkr.lrmslm.com/api/cctv/labels/lookup' => Http::response([
                 'matched' => true,
                 'customer_name' => 'Customer 14 Oktober Terverifikasi',
                 'reference' => 'REF-MATCH-14',

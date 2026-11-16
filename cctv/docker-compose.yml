@@ -5,9 +5,9 @@ x-logging: &default-logging
     max-file: "3"
 
 x-backend-env: &backend-env
-  APP_URL: ${APP_URL:-https://cctvslm.playgo.id}
+  APP_URL: ${APP_URL:-https://cctv.lrmslm.com}
   CCTV_INGEST_TOKEN: ${CCTV_INGEST_TOKEN:?isi CCTV_INGEST_TOKEN di .env atau environment stack}
-  SLM_BASE_URL: ${SLM_BASE_URL:-https://slm.playgo.id}
+  SLM_BASE_URL: ${SLM_BASE_URL:-https://mkr.lrmslm.com}
   SLM_LOOKUP_PATH: ${SLM_LOOKUP_PATH:-/api/cctv/labels/lookup}
   SLM_SYNC_PATH: ${SLM_SYNC_PATH:-/api/cctv/labels/sync}
   SLM_API_TOKEN: ${SLM_API_TOKEN:-}

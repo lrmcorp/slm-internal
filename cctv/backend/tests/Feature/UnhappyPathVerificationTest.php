@@ -448,7 +448,7 @@ class UnhappyPathVerificationTest extends TestCase
         ]);
         $label->save();
 
-        Config::set('cctv.slm_base_url', 'https://slm.playgo.id');
+        Config::set('cctv.slm_base_url', 'https://mkr.lrmslm.com');
         Config::set('cctv.slm_sync_path', '/api/cctv/labels/sync');
         Config::set('cctv.slm_token', 'token-slm-valid');
 
@@ -457,7 +457,7 @@ class UnhappyPathVerificationTest extends TestCase
 
         $recordedPayload = null;
         Http::fake([
-            'https://slm.playgo.id/api/cctv/labels/sync' => function ($request) use (&$recordedPayload) {
+            'https://mkr.lrmslm.com/api/cctv/labels/sync' => function ($request) use (&$recordedPayload) {
                 $recordedPayload = $request->data();
                 return Http::response(['saved' => true], 200);
             },
@@ -505,13 +505,13 @@ class UnhappyPathVerificationTest extends TestCase
         ]);
         $label->save();
 
-        Config::set('cctv.slm_base_url', 'https://slm.playgo.id');
+        Config::set('cctv.slm_base_url', 'https://mkr.lrmslm.com');
         Config::set('cctv.slm_sync_path', '/api/cctv/labels/sync');
         Config::set('cctv.slm_token', 'token-slm');
 
         // ERP mengalami outage HTTP 500
         Http::fake([
-            'https://slm.playgo.id/api/cctv/labels/sync' => Http::response(['message' => 'Internal Server Error'], 500),
+            'https://mkr.lrmslm.com/api/cctv/labels/sync' => Http::response(['message' => 'Internal Server Error'], 500),
         ]);
 
         $job = new SyncMatchedLabelToSlm($label->id);

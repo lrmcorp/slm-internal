@@ -24,7 +24,7 @@ class SlmExternalIntegrationTest extends TestCase
     {
         parent::setUp();
         Config::set('cctv.slm_token', $this->token);
-        Config::set('cctv.slm_base_url', 'https://slm.playgo.id');
+        Config::set('cctv.slm_base_url', 'https://mkr.lrmslm.com');
         Config::set('cctv.slm_events_path', '/api/cctv/events');
         Config::set('cctv.slm_webhook_enabled', true);
     }
@@ -253,7 +253,7 @@ class SlmExternalIntegrationTest extends TestCase
 
     public function test_webhook_job_sends_http_post_with_hmac_signature(): void
     {
-        Http::fake(['slm.playgo.id/*' => Http::response(['success' => true], 200)]);
+        Http::fake(['mkr.lrmslm.com/*' => Http::response(['success' => true], 200)]);
 
         $eventData = [
             'event_id' => 'evt-test-123',
@@ -271,7 +271,7 @@ class SlmExternalIntegrationTest extends TestCase
             $sigHeader = $request->header('X-CCTV-Signature')[0] ?? '';
             $hasSig = str_starts_with($sigHeader, 'sha256=');
             $expectedSig = 'sha256=' . hash_hmac('sha256', json_encode($eventData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), $this->token);
-            return $request->url() === 'https://slm.playgo.id/api/cctv/events'
+            return $request->url() === 'https://mkr.lrmslm.com/api/cctv/events'
                 && $hasToken
                 && $hasSig
                 && $sigHeader === $expectedSig

@@ -50,7 +50,7 @@ Dokumen ini memuat rencana kerja terstruktur, berurutan, dan detail untuk menyel
 
 ---
 
-## FASE 2: Penerbitan Server Produksi, Domain & SSL (cctvslm.playgo.id)
+## FASE 2: Penerbitan Server Produksi, Domain & SSL (cctv.lrmslm.com)
 
 *Tujuan: Menayangkan dashboard web secara online melalui HTTPS resmi dengan enkripsi SSL Let's Encrypt.*
 
@@ -69,15 +69,15 @@ Dokumen ini memuat rencana kerja terstruktur, berurutan, dan detail untuk menyel
      cd /opt/cctvslm
      bash scripts/deploy-vps.sh
      ```
-   - Masukkan nama domain `cctvslm.playgo.id` dan email admin saat diminta.
+   - Masukkan nama domain `cctv.lrmslm.com` dan email admin saat diminta.
    - Masukkan kata sandi admin dashboard (minimal 12 karakter).
 4. **Verifikasi Web Service & SSL:**
    - Periksa status layanan systemd:
      ```bash
      systemctl status slm-web slm-queue slm-scheduler --no-pager
-     curl -fsS https://cctvslm.playgo.id/up
+     curl -fsS https://cctv.lrmslm.com/up
      ```
-   - Buka `https://cctvslm.playgo.id` di browser, pastikan sertifikat SSL valid dan lakukan login menggunakan akun admin yang baru dibuat.
+   - Buka `https://cctv.lrmslm.com` di browser, pastikan sertifikat SSL valid dan lakukan login menggunakan akun admin yang baru dibuat.
 
 ### Kriteria Keberhasilan (Definition of Done):
 * Endpoint `/up` merespons HTTP 200.
@@ -112,7 +112,7 @@ Dokumen ini memuat rencana kerja terstruktur, berurutan, dan detail untuk menyel
    - Isi payload QR hanya nomor invoice murni, contoh: `061026-23` (tanpa URL atau prefix tambahan).
 4. **Uji Coba Lapangan (Real Test):**
    - Letakkan dus berlabel di depan Kamera A14 pada pencahayaan dan jarak operasional toko.
-   - Buka menu **Label & Invoice** pada dashboard web `https://cctvslm.playgo.id`.
+   - Buka menu **Label & Invoice** pada dashboard web `https://cctv.lrmslm.com`.
    - Pastikan invoice tertangkap otomatis:
      - Nomor invoice terbaca utuh (nol di depan tidak hilang).
      - Foto bukti (*snapshot*) tersimpan di storage privat dan muncul di dashboard.
@@ -126,7 +126,7 @@ Dokumen ini memuat rencana kerja terstruktur, berurutan, dan detail untuk menyel
 
 ---
 
-## FASE 4: Integrasi API ERP SLM (`slm.playgo.id`)
+## FASE 4: Integrasi API ERP SLM (`mkr.lrmslm.com`)
 
 *Tujuan: Menghubungkan sistem CCTV dengan ERP SLM agar invoice yang tertangkap otomatis dicocokkan dan status packing tersinkronisasi.*
 
@@ -145,7 +145,7 @@ Dokumen ini memuat rencana kerja terstruktur, berurutan, dan detail untuk menyel
 3. **Pembaruan Konfigurasi di VPS:**
    - Buka `/opt/cctvslm/backend/.env`, isi variabel integrasi:
      ```env
-     SLM_BASE_URL=https://slm.playgo.id
+     SLM_BASE_URL=https://mkr.lrmslm.com
      SLM_LOOKUP_PATH=/api/cctv/labels/lookup
      SLM_SYNC_PATH=/api/cctv/labels/sync
      SLM_SYNC_UPLOAD_PHOTO=true
@@ -162,7 +162,7 @@ Dokumen ini memuat rencana kerja terstruktur, berurutan, dan detail untuk menyel
    - Petugas packing mengklik tombol **"Konfirmasi packing selesai"** di dashboard -> Job `SyncMatchedLabelToSlm` berjalan -> Mengirim payload `packing_completed` ke ERP -> ERP membalas `{"saved": true}` -> Status berubah menjadi `synced`.
 
 ### Kriteria Keberhasilan (Definition of Done):
-* Data invoice, foto bukti, dan waktu packing berhasil masuk ke database ERP `slm.playgo.id`.
+* Data invoice, foto bukti, dan waktu packing berhasil masuk ke database ERP `mkr.lrmslm.com`.
 * Pengiriman berulang dengan idempotency key yang sama tidak membuat data ganda di ERP.
 
 ---
@@ -210,7 +210,7 @@ Dokumen ini memuat rencana kerja terstruktur, berurutan, dan detail untuk menyel
    - Masukkan path model `/opt/cctvslm/vision/models/barang.pt` saat ditanya.
    - Mulai layanan: `systemctl enable --now slm-camera@12 slm-camera@13`.
 2. **Unggah Frame Referensi Operasional:**
-   - Buka dashboard `https://cctvslm.playgo.id/cameras/<id-kamera>`.
+   - Buka dashboard `https://cctv.lrmslm.com/cameras/<id-kamera>`.
    - Unggah 1 frame gambar bersih yang diambil langsung dari stream RTSP kamera tersebut.
 3. **Menggambar 4 Poligon Zona:**
    - Menggunakan canvas interaktif di dashboard, gambar 4 zona dengan teliti:
@@ -286,7 +286,7 @@ Dokumen ini memuat rencana kerja terstruktur, berurutan, dan detail untuk menyel
    - Siapkan konfigurasi build dengan parameter environment:
      ```bash
      flutter build apk --release \
-       --dart-define=API_BASE_URL=https://cctvslm.playgo.id \
+       --dart-define=API_BASE_URL=https://cctv.lrmslm.com \
        --dart-define=FIREBASE_API_KEY=<key> \
        --dart-define=FIREBASE_APP_ID=<app-id-android> \
        --dart-define=FIREBASE_PROJECT_ID=<project-id> \

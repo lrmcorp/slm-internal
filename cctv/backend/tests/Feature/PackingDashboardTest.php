@@ -45,7 +45,7 @@ class PackingDashboardTest extends TestCase {
         $this->get('/')->assertOk()->assertSee('data-camera-id',false)->assertSee('Invoice Packing');
     }
     public function test_auto_sync_recovers_matched_and_unavailable_records_but_excludes_uncertain_readings(): void {
-        Queue::fake();config(['cctv.slm_base_url'=>'https://slm.playgo.id','cctv.slm_token'=>'test',
+        Queue::fake();config(['cctv.slm_base_url'=>'https://mkr.lrmslm.com','cctv.slm_token'=>'test',
             'cctv.slm_sync_path'=>'/api/cctv/labels/sync']);
         $label=$this->label();
         LabelRecord::create(array_merge($label->getAttributes(),['id'=>null,'slm_status'=>'unavailable']));
@@ -55,10 +55,10 @@ class PackingDashboardTest extends TestCase {
     }
     public function test_erp_must_acknowledge_saved_and_receives_distinct_packing_event(): void {
         Storage::fake('local');Storage::disk('local')->put('cctv/label.png','photo');
-        config(['cctv.slm_base_url'=>'https://slm.playgo.id','cctv.slm_token'=>'test',
-            'cctv.slm_sync_path'=>'/api/cctv/labels/sync','app.url'=>'https://cctvslm.playgo.id']);
+        config(['cctv.slm_base_url'=>'https://mkr.lrmslm.com','cctv.slm_token'=>'test',
+            'cctv.slm_sync_path'=>'/api/cctv/labels/sync','app.url'=>'https://cctv.lrmslm.com']);
         $label=$this->label(['packing_completed_at'=>now()]);
-        Http::fake(['slm.playgo.id/*'=>Http::sequence()->push(['saved'=>true],202)->push(['saved'=>false],200)->push(['saved'=>true],200)]);
+        Http::fake(['mkr.lrmslm.com/*'=>Http::sequence()->push(['saved'=>true],202)->push(['saved'=>false],200)->push(['saved'=>true],200)]);
         for ($i=0; $i<2; $i++) {
             try {(new SyncMatchedLabelToSlm($label->id))->handle();$this->fail('Belum tersimpan harus gagal.');}
             catch (\RuntimeException $e) {$this->assertNotSame('synced',$label->fresh()->slm_sync_status);}
@@ -70,8 +70,8 @@ class PackingDashboardTest extends TestCase {
     }
     public function test_packing_change_during_http_does_not_mark_new_event_as_synced(): void {
         Storage::fake('local');Storage::disk('local')->put('cctv/label.png','photo');
-        config(['cctv.slm_base_url'=>'https://slm.playgo.id','cctv.slm_token'=>'test',
-            'cctv.slm_sync_path'=>'/api/cctv/labels/sync','app.url'=>'https://cctvslm.playgo.id']);
+        config(['cctv.slm_base_url'=>'https://mkr.lrmslm.com','cctv.slm_token'=>'test',
+            'cctv.slm_sync_path'=>'/api/cctv/labels/sync','app.url'=>'https://cctv.lrmslm.com']);
         $label=$this->label();
         Http::fake(function () use ($label) {
             $label->update(['packing_completed_at'=>now(), 'slm_sync_status'=>'queued']);

@@ -8,7 +8,7 @@ Katalog dan indeks dokumentasi teknis, integrasi API ERP, dan panduan operasiona
 
 | Item | Tautan / Nilai | Keterangan |
 |---|---|---|
-| **Dashboard Operasional** | [https://cctvslm.playgo.id](https://cctvslm.playgo.id) | Antarmuka web produksi pemantauan kamera, review anomali, & persetujuan label |
+| **Dashboard Operasional** | [https://cctv.lrmslm.com](https://cctv.lrmslm.com) | Antarmuka web produksi pemantauan kamera, review anomali, & persetujuan label |
 | **Repositori Utama** | [ridho15/cctvslm (branch: ai-cctv-checker)](https://github.com/ridho15/cctvslm/tree/ai-cctv-checker) | Repositori aktif kode sumber sistem |
 | **Referensi Upstream** | [lrmcorp/SLM (branch: ai-cctv-checker)](https://github.com/lrmcorp/SLM/tree/ai-cctv-checker) | Penamaan repositori pada naskah serah terima awal |
 
@@ -16,7 +16,7 @@ Katalog dan indeks dokumentasi teknis, integrasi API ERP, dan panduan operasiona
 
 ## 2. Berkas Serah Terima Pengembang ERP SLM
 
-Empat berkas utama berikut disediakan khusus untuk pengembang ERP (`slm.playgo.id`):
+Empat berkas utama berikut disediakan khusus untuk pengembang ERP (`mkr.lrmslm.com`):
 
 1. **[Dokumentasi API Lengkap](api.md)** (`docs/api.md`)  
    Memuat panduan autentikasi Bearer token, endpoint daftar kamera, snapshot frame, penarikan cuplikan video bukti MP4, pelaporan track orang anonim, review invoice, dan aturan notifikasi.

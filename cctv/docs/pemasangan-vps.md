@@ -1,6 +1,6 @@
 # Memasang dashboard pada VPS
 
-Domain yang dipilih adalah **cctvslm.playgo.id**. Panduan ini untuk Ubuntu 24.04. Kode pemasangan sudah disiapkan; menjalankannya di lingkungan pengembangan tidak memasang aplikasi pada VPS toko.
+Domain yang dipilih adalah **cctv.lrmslm.com**. Panduan ini untuk Ubuntu 24.04. Kode pemasangan sudah disiapkan; menjalankannya di lingkungan pengembangan tidak memasang aplikasi pada VPS toko.
 
 ## Sebelum menjalankan perintah
 
@@ -41,12 +41,12 @@ Mode awal adalah `CCTV_LABEL_MODE=qr`. Kamera membaca QR setiap sekitar dua deti
 
 ## Memeriksa hasil
 
-Buka `https://cctvslm.playgo.id` dan masuk dengan akun yang dibuat. Periksa kamera A14, letakkan label QR, kemudian lihat catatan dan foto bukti. Waktu pertama terlihat ditampilkan dalam WIB. Keberhasilan membaca satu QR uji tidak membuktikan kemampuan 24 jam.
+Buka `https://cctv.lrmslm.com` dan masuk dengan akun yang dibuat. Periksa kamera A14, letakkan label QR, kemudian lihat catatan dan foto bukti. Waktu pertama terlihat ditampilkan dalam WIB. Keberhasilan membaca satu QR uji tidak membuktikan kemampuan 24 jam.
 
 ```bash
 systemctl status slm-queue slm-scheduler slm-camera@14 --no-pager
 journalctl -u slm-camera@14 -n 30 --no-pager
-curl -fsS https://cctvslm.playgo.id/up
+curl -fsS https://cctv.lrmslm.com/up
 certbot renew --dry-run
 ```
 
@@ -85,7 +85,7 @@ bash scripts/deploy-vps.sh npm
 
 Mode ini memasang dependensi, konfigurasi aplikasi, basis data, akun admin, antrean, dan penjadwal. Nginx CCTV berjalan sebagai `slm-web.service` dengan konfigurasi terpisah di `/etc/slm-cctv/nginx.conf`; tidak mengaktifkan layanan Nginx bawaan dan tidak memakai port 80/443. Pekerja kamera mengakses API melalui loopback port 8088. Listener untuk Proxy Manager berada pada alamat gateway jaringan Docker, port 8095. Skrip mencetak alamat gateway yang harus dipakai.
 
-Di panel Proxy Manager, pilih **Hosts → Proxy Hosts → Add Proxy Host**. Isi domain `cctvslm.playgo.id`, scheme `http`, Forward Hostname/IP sesuai alamat gateway yang dicetak skrip, dan Forward Port `8095`. Pada tab SSL, minta sertifikat Let's Encrypt, isi email, setujui ketentuan, dan aktifkan **Force SSL**. Pastikan record Cloudflare masih **DNS only** selama penerbitan sertifikat. Setelah tersimpan, buka `https://cctvslm.playgo.id/up`, lalu login dashboard. Login memerlukan HTTPS karena cookie sesi diatur secure.
+Di panel Proxy Manager, pilih **Hosts → Proxy Hosts → Add Proxy Host**. Isi domain `cctv.lrmslm.com`, scheme `http`, Forward Hostname/IP sesuai alamat gateway yang dicetak skrip, dan Forward Port `8095`. Pada tab SSL, minta sertifikat Let's Encrypt, isi email, setujui ketentuan, dan aktifkan **Force SSL**. Pastikan record Cloudflare masih **DNS only** selama penerbitan sertifikat. Setelah tersimpan, buka `https://cctv.lrmslm.com/up`, lalu login dashboard. Login memerlukan HTTPS karena cookie sesi diatur secure.
 
 Jika jaringan Docker milik Proxy Manager dibuat ulang dan gateway berubah, jalankan ulang pemasangan mode `npm` dan ubah alamat tujuan di Proxy Manager. Tidak ada penghapusan basis data atau bukti pada pemasangan ulang. Mode ini belum membuktikan kamera tersambung: jalankan `python3 scripts/configure-vps-camera.py` setelah web tersedia, lalu periksa status kamera dan bukti terbaru.
 
