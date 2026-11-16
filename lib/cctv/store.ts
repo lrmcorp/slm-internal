@@ -3,6 +3,7 @@ import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { prisma } from "@/lib/db/prisma";
 import { getCctvSystemStatus } from "@/lib/cctv/client";
+import { jakartaDateKey } from "@/lib/date/jakarta";
 
 export function sanitizeCctvEvidenceUrl(url: string | null | undefined): string | null {
   if (!url || typeof url !== "string") return null;
@@ -57,6 +58,15 @@ export function parseDateFilterRange(from?: string, to?: string): { gte?: Date; 
   }
   if (!range.gte && !range.lte) return null;
   return range;
+}
+
+/**
+ * "Hari ini" menurut jam Jakarta (00.00–23.59 WIB). Server berjalan di UTC, jadi setHours(0) memotong hari
+ * pada 07.00 WIB dan paket yang dipacking dini hari tidak terhitung hari ini.
+ */
+export function jakartaTodayRange(now: Date = new Date()) {
+  const gte = new Date(`${jakartaDateKey(now)}T00:00:00.000+07:00`);
+  return { gte, lte: new Date(gte.getTime() + 24 * 60 * 60 * 1000 - 1) };
 }
 
 export function getPackingDateCondition(range: { gte?: Date; lte?: Date }) {
@@ -170,11 +180,7 @@ export async function listCctvDetectionsPaginated(filter: ListCctvFilter) {
 }
 
 export async function getCctvStats() {
-  const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date();
-  endOfDay.setHours(23, 59, 59, 999);
-  const todayRange = { gte: startOfDay, lte: endOfDay };
+  const todayRange = jakartaTodayRange();
   const todayPackingCond = getPackingDateCondition(todayRange);
   const todayActivityCond = getActivityDateCondition(todayRange);
 
@@ -441,11 +447,7 @@ export async function getCctvOutboundReport(filter: CctvOutboundReportFilter) {
 }
 
 export async function getCctvDashboardSummary() {
-  const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date();
-  endOfDay.setHours(23, 59, 59, 999);
-  const todayRange = { gte: startOfDay, lte: endOfDay };
+  const todayRange = jakartaTodayRange();
   const todayPackingCond = getPackingDateCondition(todayRange);
   const todayActivityCond = getActivityDateCondition(todayRange);
 
@@ -600,11 +602,7 @@ export async function getCctvAnomaliesReport(filter: CctvAnomaliesFilter) {
 }
 
 export async function getCctvCamerasReport() {
-  const startOfDay = new Date();
-  startOfDay.setHours(0, 0, 0, 0);
-  const endOfDay = new Date();
-  endOfDay.setHours(23, 59, 59, 999);
-  const todayRange = { gte: startOfDay, lte: endOfDay };
+  const todayRange = jakartaTodayRange();
   const todayActivityCond = getActivityDateCondition(todayRange);
 
   const [allTimeGroupBy, todayGroupBy, liveSystem] = await Promise.all([
