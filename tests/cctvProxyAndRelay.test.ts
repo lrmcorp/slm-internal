@@ -68,12 +68,23 @@ describe("CCTV HTTPS Proxy & Evidence Relay Integration", () => {
   });
 
   describe("2. Camera Stream URL Resolver for Mixed Content Prevention", () => {
-    it("resolves stream URL to internal HTTPS relay route by default", () => {
+    it("resolves stream URL to the internal HTTPS live HLS relay by default", () => {
       const url = resolveCameraStreamUrl("cam-1");
-      expect(url).toBe("/api/cctv/stream/cam-1/live");
+      expect(url).toBe("/api/cctv/stream/1/hls/stream.m3u8");
 
       const numUrl = resolveCameraStreamUrl(1);
-      expect(numUrl).toBe("/api/cctv/stream/1/live");
+      expect(numUrl).toBe("/api/cctv/stream/1/hls/stream.m3u8");
+    });
+
+    it("falls back to the snapshot relay when CCTV_LIVE_MODE=snapshot", () => {
+      const previous = process.env.CCTV_LIVE_MODE;
+      process.env.CCTV_LIVE_MODE = "snapshot";
+      try {
+        expect(resolveCameraStreamUrl(1)).toBe("/api/cctv/stream/1/live");
+      } finally {
+        if (previous === undefined) delete process.env.CCTV_LIVE_MODE;
+        else process.env.CCTV_LIVE_MODE = previous;
+      }
     });
 
     it("preserves external HTTPS stream URL if provided in environment override", () => {
@@ -105,8 +116,11 @@ describe("CCTV HTTPS Proxy & Evidence Relay Integration", () => {
       ];
 
       const streams = getConfiguredCameraStreams(liveCams);
-      expect(streams[0].streamUrl).toBe("/api/cctv/stream/1/live");
-      expect(streams[1].streamUrl).toBe("/api/cctv/stream/2/live");
+      expect(streams[0].streamUrl).toBe("/api/cctv/stream/1/hls/stream.m3u8");
+      expect(streams[0].streamType).toBe("hls");
+      // Foto pantauan terakhir tetap dipakai sebagai gambar sementara saat live menyambung.
+      expect(streams[0].posterUrl).toBe("/api/cctv/stream/1/live");
+      expect(streams[1].streamUrl).toBe("/api/cctv/stream/2/hls/stream.m3u8");
     });
   });
 
