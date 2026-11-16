@@ -1,0 +1,55 @@
+name: CCTV · Distribute iPhone with TestFlight
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  testflight:
+    runs-on: macos-latest
+    environment: cctv-ios
+    env:
+      IOS_CERTIFICATE_P12_BASE64: ${{ secrets.IOS_CERTIFICATE_P12_BASE64 }}
+      IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+      IOS_PROVISION_PROFILE_BASE64: ${{ secrets.IOS_PROVISION_PROFILE_BASE64 }}
+      IOS_TEAM_ID: ${{ secrets.IOS_TEAM_ID }}
+      APPSTORE_API_KEY_ID: ${{ secrets.APPSTORE_API_KEY_ID }}
+      APPSTORE_API_ISSUER_ID: ${{ secrets.APPSTORE_API_ISSUER_ID }}
+      APPSTORE_API_PRIVATE_KEY: ${{ secrets.APPSTORE_API_PRIVATE_KEY }}
+      FIREBASE_API_KEY: ${{ vars.FIREBASE_API_KEY }}
+      FIREBASE_IOS_APP_ID: ${{ vars.FIREBASE_IOS_APP_ID }}
+      FIREBASE_PROJECT_ID: ${{ vars.FIREBASE_PROJECT_ID }}
+      FIREBASE_SENDER_ID: ${{ vars.FIREBASE_SENDER_ID }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.44.0'
+          channel: stable
+          cache: true
+      - name: Import signing identity and verify profile
+        run: bash cctv/scripts/prepare-ios-signing.sh
+      - name: Build signed IPA
+        working-directory: cctv/mobile
+        run: |
+          flutter pub get
+          flutter analyze --no-pub
+          flutter build ipa --release --no-pub --build-number="$((GITHUB_RUN_NUMBER * 100 + GITHUB_RUN_ATTEMPT))" --export-options-plist="$RUNNER_TEMP/ExportOptions.plist" --dart-define=API_BASE_URL=https://cctv.lrmslm.com --dart-define=FIREBASE_API_KEY="$FIREBASE_API_KEY" --dart-define=FIREBASE_IOS_APP_ID="$FIREBASE_IOS_APP_ID" --dart-define=FIREBASE_PROJECT_ID="$FIREBASE_PROJECT_ID" --dart-define=FIREBASE_SENDER_ID="$FIREBASE_SENDER_ID"
+      - name: Upload IPA to App Store Connect
+        run: |
+          set -euo pipefail
+          mkdir -p "$HOME/.appstoreconnect/private_keys"
+          umask 077
+          printf '%s\n' "$APPSTORE_API_PRIVATE_KEY" > "$HOME/.appstoreconnect/private_keys/AuthKey_${APPSTORE_API_KEY_ID}.p8"
+          ipa_files=(cctv/mobile/build/ios/ipa/*.ipa)
+          test "${#ipa_files[@]}" -eq 1
+          xcrun altool --upload-app --type ios --file "${ipa_files[0]}" --apiKey "$APPSTORE_API_KEY_ID" --apiIssuer "$APPSTORE_API_ISSUER_ID"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: slm-cctv-signed-iphone-ipa
+          path: cctv/mobile/build/ios/ipa/*.ipa
+          retention-days: 7
+      - name: Remove temporary signing credentials
+        if: always()
+        run: |
+          security delete-keychain "$RUNNER_TEMP/cctv-signing.keychain-db" || true
+          rm -f "$RUNNER_TEMP/cctv-signing.p12" "$RUNNER_TEMP/cctv-profile.mobileprovision" "$RUNNER_TEMP/cctv-profile.plist" "$HOME/.appstoreconnect/private_keys/AuthKey_${APPSTORE_API_KEY_ID}.p8"

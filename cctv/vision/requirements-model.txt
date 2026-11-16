@@ -1,0 +1,2 @@
+# Optional detector runtime. Use a model trained and licensed for your own parcels.
+ultralytics==8.3.228

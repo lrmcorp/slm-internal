@@ -20,3 +20,7 @@ scratch
 graphify-out
 android
 .claude
+
+# Stack CCTV punya image dan compose sendiri (cctv/docker-compose.yml).
+# Rahasianya (cctv/.env, cctv/stack.env, cctv/secrets/) tidak boleh ikut masuk image SLM.
+cctv

@@ -3,6 +3,9 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { CctvCameraStream } from "@/lib/cctv/streams";
 
+/** Percobaan ulang otomatis sebelum kamera dinyatakan offline (encoder live bisa butuh beberapa detik). */
+const LIVE_MAX_RETRIES = 4;
+
 interface CameraCellProps {
   camera: CctvCameraStream;
   autoPlay?: boolean;
@@ -29,8 +32,15 @@ export function CameraCell({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const hlsRef = useRef<any>(null);
+  const retryCountRef = useRef<number>(0);
+  const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const startStreamRef = useRef<(() => void) | null>(null);
 
   const cleanupStream = useCallback(() => {
+    if (retryTimerRef.current) {
+      clearTimeout(retryTimerRef.current);
+      retryTimerRef.current = null;
+    }
     if (hlsRef.current) {
       try {
         hlsRef.current.destroy();
@@ -77,13 +87,24 @@ export function CameraCell({
           const hls = new HlsModule({
             enableWorker: true,
             lowLatencyMode: true,
-            backBufferLength: 30,
+            // Buffer pendek: gambar dekat realtime, memori dan kuota kecil.
+            liveSyncDurationCount: 2,
+            liveMaxLatencyDurationCount: 5,
+            maxBufferLength: 6,
+            backBufferLength: 4,
+            // Encoder di server CCTV baru menyala saat playlist diminta (±2–4 detik): coba lagi.
+            manifestLoadingMaxRetry: 10,
+            manifestLoadingRetryDelay: 1000,
+            manifestLoadingMaxRetryTimeout: 4000,
+            levelLoadingMaxRetry: 6,
+            fragLoadingMaxRetry: 6,
           });
           hlsRef.current = hls;
           hls.loadSource(streamUrl);
           hls.attachMedia(videoEl);
 
           hls.on(HlsModule.Events.MANIFEST_PARSED, () => {
+            retryCountRef.current = 0;
             videoEl
               .play()
               .then(() => setConnectionStatus("live"))
@@ -91,10 +112,16 @@ export function CameraCell({
           });
 
           hls.on(HlsModule.Events.ERROR, (_event: any, data: any) => {
-            if (data.fatal) {
-              setConnectionStatus("offline");
-              setErrorMessage("Sinyal kamera offline.");
+            if (!data.fatal) return;
+            if (retryCountRef.current < LIVE_MAX_RETRIES) {
+              retryCountRef.current += 1;
+              setConnectionStatus("connecting");
+              if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+              retryTimerRef.current = setTimeout(() => startStreamRef.current?.(), 2000 * retryCountRef.current);
+              return;
             }
+            setConnectionStatus("offline");
+            setErrorMessage("Sinyal kamera offline.");
           });
         } else if (videoEl.canPlayType("application/vnd.apple.mpegurl")) {
           videoEl.src = streamUrl;
@@ -125,6 +152,10 @@ export function CameraCell({
   }, [camera, cleanupStream]);
 
   useEffect(() => {
+    startStreamRef.current = startStream;
+  }, [startStream]);
+
+  useEffect(() => {
     if (isPlaying) {
       startStream();
     } else {
@@ -143,24 +174,43 @@ export function CameraCell({
 
     let wasPlayingBeforeHidden = isPlaying;
 
+    let inView = true;
+    // Tidak terlihat (di luar layar atau tab disembunyikan): berhenti mengunduh segmen supaya kuota tidak terbuang.
+    const pause = () => {
+      if (videoRef.current) videoRef.current.pause();
+      hlsRef.current?.stopLoad?.();
+    };
+    const resume = () => {
+      hlsRef.current?.startLoad?.(-1);
+      if (videoRef.current && videoRef.current.paused) {
+        videoRef.current.play().catch(() => {});
+      }
+    };
+
     const observer = new IntersectionObserver(
       (entries) => {
         const [entry] = entries;
+        inView = entry.isIntersecting;
         if (!entry.isIntersecting && isPlaying) {
           wasPlayingBeforeHidden = true;
-          if (videoRef.current) videoRef.current.pause();
-        } else if (entry.isIntersecting && wasPlayingBeforeHidden) {
-          if (videoRef.current && videoRef.current.paused) {
-            videoRef.current.play().catch(() => {});
-          }
+          pause();
+        } else if (entry.isIntersecting && wasPlayingBeforeHidden && document.visibilityState === "visible") {
+          resume();
         }
       },
       { threshold: 0.15 }
     );
+    const onVisibility = () => {
+      if (!isPlaying) return;
+      if (document.visibilityState === "hidden") pause();
+      else if (inView) resume();
+    };
 
     observer.observe(el);
+    document.addEventListener("visibilitychange", onVisibility);
     return () => {
       observer.disconnect();
+      document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [isPlaying]);
 
@@ -314,8 +364,17 @@ export function CameraCell({
           />
         )}
 
-        {/* Layar Siaga / Offline (Light Surveillance UI) */}
-        {(!isPlaying || connectionStatus !== "live") && (
+        {/* Selama live menyambung: foto pantauan terakhir, supaya layar tidak kosong. */}
+        {isPlaying && connectionStatus === "connecting" && camera.posterUrl && camera.streamType === "hls" ? (
+          <div className="absolute inset-0 bg-slate-950">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={camera.posterUrl} alt={`Foto terakhir ${camera.name}`} className="h-full w-full object-contain" />
+            <span className="absolute left-2 top-2 inline-flex items-center gap-1.5 rounded-md bg-black/65 px-2 py-1 text-[11px] font-semibold text-white">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+              Menyambungkan live…
+            </span>
+          </div>
+        ) : (!isPlaying || connectionStatus !== "live") && (
           <div className="absolute inset-0 flex flex-col items-center justify-center bg-slate-50 p-4 text-center">
             <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-400 mb-2 shadow-2xs">
               {connectionStatus === "connecting" ? (

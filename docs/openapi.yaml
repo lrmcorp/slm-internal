@@ -3408,6 +3408,27 @@ paths:
       responses:
         "200":
           description: Stream live kamera
+  /api/cctv/stream/{cameraId}/hls/{file}:
+    get:
+      summary: Live HLS kamera CCTV (playlist stream.m3u8 dan segmen segmentNNN.ts) diteruskan dari server CCTV. Khusus Super Admin atau token CCTV. Encoder baru menyala saat diminta, jadi permintaan pertama bisa 503 dengan Retry-After.
+      parameters:
+        - name: cameraId
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: file
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Playlist atau segmen video
+        "403":
+          description: Bukan Super Admin
+        "503":
+          description: Encoder live sedang menyala atau kamera offline; coba lagi sesuai Retry-After
   /api/cctv/evidence:
     get:
       summary: Ambil bukti foto/video CCTV berdasarkan transaksi atau packing

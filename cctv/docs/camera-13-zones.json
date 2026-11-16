@@ -1,0 +1,15 @@
+{
+  "frame_width": 960,
+  "frame_height": 1080,
+  "status": "two_zones_owner_confirmed_pending_live_stream_and_required_zones",
+  "zones": [
+    {
+      "type": "danger_zone",
+      "points": [[0, 0.2037], [0.3448, 0.2037], [0.1552, 0.999], [0, 0.999]]
+    },
+    {
+      "type": "packing_area",
+      "points": [[0.3646, 0.2009], [0.5292, 0.2009], [0.5417, 0.999], [0.3042, 0.999]]
+    }
+  ]
+}

@@ -41,6 +41,22 @@ export function detectStreamType(url?: string | null): CctvStreamType {
   return "auto";
 }
 
+/** Foto pantauan terakhir dari server CCTV (diperbarui ±5 detik), dipakai sebagai gambar sementara. */
+export function cameraSnapshotUrl(cameraId: string | number): string {
+  return `/api/cctv/stream/${cameraId}/live`;
+}
+
+/**
+ * Live sungguhan: HLS dari server CCTV lewat proxy SLM. Dengan CCTV_LIVE_MODE=snapshot,
+ * dashboard kembali memakai foto pantauan saja (paling hemat kuota, tidak realtime).
+ */
+export function cameraLiveUrl(cameraId: string | number): string {
+  if ((process.env.CCTV_LIVE_MODE || "hls").trim().toLowerCase() === "snapshot") {
+    return cameraSnapshotUrl(cameraId);
+  }
+  return `/api/cctv/stream/${String(cameraId).replace(/^cam-?/i, "")}/hls/stream.m3u8`;
+}
+
 /**
  * Helper untuk menentukan URL stream kamera yang aman (HTTPS)
  * Mencegah Mixed Content di browser dengan mem-proxy stream jika URL belum HTTPS.
@@ -56,10 +72,10 @@ export function resolveCameraStreamUrl(
   }
   // 2. Jika secara eksplisit dikonfigurasi untuk menggunakan direct stream URL
   if (process.env.CCTV_USE_DIRECT_STREAM === "true") {
-    return envOverrideUrl || directFallbackUrl || `/api/cctv/stream/${cameraId}/live`;
+    return envOverrideUrl || directFallbackUrl || cameraLiveUrl(cameraId);
   }
   // 3. Default aman (Bebas Mixed Content): salurkan lewat HTTPS proxy Next.js internal
-  return `/api/cctv/stream/${cameraId}/live`;
+  return cameraLiveUrl(cameraId);
 }
 
 /**
@@ -81,7 +97,7 @@ export function getConfiguredCameraStreams(
   const cam1Url = process.env.CCTV_STREAM_URL_CAM1;
   const cam2Url = process.env.CCTV_STREAM_URL_CAM2;
   const cam3Url = process.env.CCTV_STREAM_URL_CAM3;
-  const embedUrl = process.env.CCTV_EMBED_URL || "https://cctvslm.playgo.id/live-embed";
+  const embedUrl = process.env.CCTV_EMBED_URL || "https://cctv.lrmslm.com/live-embed";
 
   // Jika ada live cameras yang dilaporkan oleh CCTV VPS API
   if (liveCameras && liveCameras.length > 0) {
@@ -102,6 +118,7 @@ export function getConfiguredCameraStreams(
         streamType,
         streamUrl,
         embedUrl,
+        posterUrl: cameraSnapshotUrl(cam.id),
         isOnline: cam.status === "online" && cam.fresh,
         fps: cam.fps || 3,
         lastSeenAt: cam.lastSeenAt || cam.last_seen_at || null,
@@ -121,6 +138,7 @@ export function getConfiguredCameraStreams(
       streamType: globalStreamType !== "auto" ? globalStreamType : detectStreamType(defaultCam1Stream),
       streamUrl: defaultCam1Stream,
       embedUrl,
+      posterUrl: cameraSnapshotUrl("cam-1"),
       isOnline: false,
       fps: 3,
     },
@@ -131,6 +149,7 @@ export function getConfiguredCameraStreams(
       streamType: globalStreamType !== "auto" ? globalStreamType : detectStreamType(defaultCam2Stream),
       streamUrl: defaultCam2Stream,
       embedUrl,
+      posterUrl: cameraSnapshotUrl("cam-2"),
       isOnline: false,
       fps: 3,
     },
