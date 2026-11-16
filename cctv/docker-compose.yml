@@ -1,3 +1,7 @@
+name: cctvslm
+# Stack CCTV berdiri sendiri: deploy/restart SLM tidak menyentuh CCTV, dan sebaliknya.
+# Jalankan dari folder ini (/opt/slm/cctv): docker compose up -d --build --remove-orphans
+
 x-logging: &default-logging
   driver: "json-file"
   options:
@@ -7,6 +11,7 @@ x-logging: &default-logging
 x-backend-env: &backend-env
   APP_URL: ${APP_URL:-https://cctv.lrmslm.com}
   CCTV_INGEST_TOKEN: ${CCTV_INGEST_TOKEN:?isi CCTV_INGEST_TOKEN di .env atau environment stack}
+  # Lewat Cloudflare (https). Nginx mkr menolak koneksi yang tidak datang dari Cloudflare.
   SLM_BASE_URL: ${SLM_BASE_URL:-https://mkr.lrmslm.com}
   SLM_LOOKUP_PATH: ${SLM_LOOKUP_PATH:-/api/cctv/labels/lookup}
   SLM_SYNC_PATH: ${SLM_SYNC_PATH:-/api/cctv/labels/sync}
@@ -18,6 +23,7 @@ x-backend-env: &backend-env
   CCTV_AI_API_KEY: ${CCTV_AI_API_KEY:-${GEMINI_API_KEY:-}}
   CCTV_ADMIN_EMAIL: ${CCTV_ADMIN_EMAIL:-}
   CCTV_ADMIN_PASSWORD: ${CCTV_ADMIN_PASSWORD:-}
+  PHP_MEMORY_LIMIT: ${PHP_MEMORY_LIMIT:-128M}
   SESSION_DRIVER: file
   CACHE_STORE: file
   LOG_STACK: daily
@@ -40,99 +46,85 @@ x-backend: &backend
     - cctv_storage:/app/storage
     - ./secrets:/run/secrets:ro
 
-x-vision-env: &vision-env
-  CCTV_API_BASE: http://web:8000
-  CCTV_INGEST_TOKEN: ${CCTV_INGEST_TOKEN:?isi CCTV_INGEST_TOKEN di .env atau environment stack}
-  CCTV_PROCESS_FPS: 3
-  CCTV_HLS_DIRECTORY: /app/storage/app/private/cctv/live-video
-  CCTV_LIVE_USE_SUBSTREAM: ${CCTV_LIVE_USE_SUBSTREAM:-true}
-  CCTV_LIVE_FPS: ${CCTV_LIVE_FPS:-6}
-  CCTV_LIVE_MAX_WIDTH: ${CCTV_LIVE_MAX_WIDTH:-960}
-  CCTV_DETECT_USE_SUBSTREAM: ${CCTV_DETECT_USE_SUBSTREAM:-false}
-  CCTV_AI_MODEL: ${CCTV_AI_MODEL:-gemini-3.5-flash-lite}
-  CCTV_AI_API_KEY: ${CCTV_AI_API_KEY:-${GEMINI_API_KEY:-}}
-
-x-vision: &vision
-  logging: *default-logging
-  build:
-    context: ./vision
-    args:
-      WITH_MODEL: ${CCTV_WITH_MODEL:-0}
-  image: cctvslm-vision:latest
-  pull_policy: never
-  working_dir: /app
-  command: python worker.py
-  restart: unless-stopped
-  env_file:
-    - path: .env
-      required: false
-
 services:
   web:
     <<: *backend
-    # Banyak pekerja agar satu permintaan lambat tidak memblokir dashboard dan ingest.
+    # artisan serve dengan 4 pekerja cukup untuk dashboard, ingest 3 kamera, dan live HLS (lihat README).
     command: php artisan serve --host=0.0.0.0 --port=8000 --no-reload
     environment:
       <<: *backend-env
-      PHP_CLI_SERVER_WORKERS: ${PHP_CLI_SERVER_WORKERS:-8}
+      PHP_CLI_SERVER_WORKERS: ${PHP_CLI_SERVER_WORKERS:-4}
+    # Nginx host meneruskan cctv.lrmslm.com ke 127.0.0.1:8095.
     ports:
-      - "${CCTV_WEB_BIND:-127.0.0.1}:${CCTV_WEB_PORT:-8000}:8000"
+      - "127.0.0.1:${CCTV_WEB_PORT:-8095}:8000"
+    mem_limit: ${CCTV_WEB_MEM_LIMIT:-256m}
+    memswap_limit: ${CCTV_WEB_MEM_LIMIT:-256m}
+    cpus: ${CCTV_WEB_CPUS:-0.50}
 
-  queue:
+  # Antrian dan penjadwal dalam satu container (docker/worker.sh).
+  worker:
     <<: *backend
-    # alerts dibaca lebih dulu agar notifikasi tidak antre di belakang sinkronisasi ERP.
-    command: php artisan queue:work --queue=alerts,default --sleep=1 --tries=5 --timeout=90 --max-time=3600
+    command: ["sh", "/app/docker/worker.sh"]
     depends_on:
       - web
+    mem_limit: ${CCTV_WORKER_MEM_LIMIT:-256m}
+    memswap_limit: ${CCTV_WORKER_MEM_LIMIT:-256m}
+    cpus: ${CCTV_WORKER_CPUS:-0.50}
 
-  scheduler:
-    <<: *backend
-    command: php artisan schedule:work
-    depends_on:
-      - web
-
-  vision-cam14:
-    <<: *vision
+  # Satu proses untuk semua kamera (satu thread per kamera); kamera putus tidak mematikan yang lain.
+  vision:
+    logging: *default-logging
+    build:
+      context: ./vision
+      args:
+        WITH_MODEL: ${CCTV_WITH_MODEL:-0}
+        WITH_TESSERACT: ${CCTV_WITH_TESSERACT:-0}
+    image: cctvslm-vision:latest
+    pull_policy: never
+    working_dir: /app
+    command: python worker.py
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
     environment:
-      <<: *vision-env
-      CCTV_CAMERA_ID: 1
+      CCTV_API_BASE: http://web:8000
+      CCTV_INGEST_TOKEN: ${CCTV_INGEST_TOKEN:?isi CCTV_INGEST_TOKEN di .env atau environment stack}
+      CCTV_CAMERA_IDS: ${CCTV_CAMERA_IDS:-1,2,3}
+      CCTV_LABEL_CAMERA_IDS: ${CCTV_LABEL_CAMERA_IDS:-1}
+      CCTV_LABEL_MODE: ${CCTV_LABEL_MODE:-qr}
       CCTV_CAMERA_14_URL: ${CCTV_CAMERA_14_URL:-${CCTV_RTSP_14:-}}
-      CCTV_LABEL_ENABLED: "true"
-      CCTV_LABEL_MODE: qr
+      CCTV_CAMERA_13_URL: ${CCTV_CAMERA_13_URL:-${CCTV_RTSP_13:-}}
+      CCTV_CAMERA_12_URL: ${CCTV_CAMERA_12_URL:-${CCTV_RTSP_12:-}}
+      CCTV_PROCESS_FPS: ${CCTV_PROCESS_FPS:-3}
+      CCTV_HLS_DIRECTORY: /app/storage/app/private/cctv/live-video
+      CCTV_LIVE_ON_DEMAND: ${CCTV_LIVE_ON_DEMAND:-true}
+      CCTV_LIVE_IDLE_SECONDS: ${CCTV_LIVE_IDLE_SECONDS:-45}
+      CCTV_LIVE_SEGMENT_SECONDS: ${CCTV_LIVE_SEGMENT_SECONDS:-1}
+      CCTV_LIVE_USE_SUBSTREAM: ${CCTV_LIVE_USE_SUBSTREAM:-true}
+      CCTV_LIVE_FPS: ${CCTV_LIVE_FPS:-6}
+      CCTV_LIVE_MAX_WIDTH: ${CCTV_LIVE_MAX_WIDTH:-960}
+      CCTV_DETECT_USE_SUBSTREAM: ${CCTV_DETECT_USE_SUBSTREAM:-auto}
+      CCTV_WORK_MAX_WIDTH: ${CCTV_WORK_MAX_WIDTH:-640}
+      CCTV_LABEL_WORK_MAX_WIDTH: ${CCTV_LABEL_WORK_MAX_WIDTH:-1280}
+      CCTV_OBSERVATION_MAX_WIDTH: ${CCTV_OBSERVATION_MAX_WIDTH:-640}
+      CCTV_AI_MODEL: ${CCTV_AI_MODEL:-gemini-3.5-flash-lite}
+      CCTV_AI_API_KEY: ${CCTV_AI_API_KEY:-${GEMINI_API_KEY:-}}
+      OMP_NUM_THREADS: "1"
+      OPENBLAS_NUM_THREADS: "1"
+      MALLOC_ARENA_MAX: "2"
     volumes:
       - cctv_spool_1:/var/lib/cctv-spool/1
-      - cctv_storage:/app/storage
-    depends_on:
-      - web
-
-  vision-cam13:
-    <<: *vision
-    environment:
-      <<: *vision-env
-      CCTV_CAMERA_ID: 2
-      CCTV_CAMERA_13_URL: ${CCTV_CAMERA_13_URL:-${CCTV_RTSP_13:-}}
-      CCTV_LABEL_ENABLED: "false"
-    volumes:
       - cctv_spool_2:/var/lib/cctv-spool/2
-      - cctv_storage:/app/storage
-    depends_on:
-      - web
-      - vision-cam14
-
-  vision-cam12:
-    <<: *vision
-    environment:
-      <<: *vision-env
-      CCTV_CAMERA_ID: 3
-      CCTV_CAMERA_12_URL: ${CCTV_CAMERA_12_URL:-${CCTV_RTSP_12:-}}
-      CCTV_LABEL_ENABLED: "false"
-    volumes:
       - cctv_spool_3:/var/lib/cctv-spool/3
       - cctv_storage:/app/storage
     depends_on:
       - web
-      - vision-cam14
+    mem_limit: ${CCTV_VISION_MEM_LIMIT:-448m}
+    memswap_limit: ${CCTV_VISION_MEM_LIMIT:-448m}
+    cpus: ${CCTV_VISION_CPUS:-1.00}
 
+# Nama volume tetap sama dengan stack lama (cctvslm_cctv_*), jadi data dan bukti lama ikut terbawa.
 volumes:
   cctv_database:
   cctv_storage:

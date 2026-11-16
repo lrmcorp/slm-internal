@@ -1,0 +1,72 @@
+name: CCTV · Deploy ke VPS
+# Hanya jalan bila ada perubahan di cctv/. Deploy menarik kode di /opt/slm lalu membangun ulang
+# stack CCTV saja (project compose "cctvslm"); container SLM tidak di-restart.
+on:
+  push:
+    branches: [main]
+    paths: ['cctv/**', '.github/workflows/cctv-deploy-vps.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: cctv-production-deploy
+  cancel-in-progress: false
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Tes backend CCTV (Laravel)
+        working-directory: cctv/backend
+        run: |
+          cp .env.example .env
+          composer install --prefer-dist --no-interaction --no-progress --no-scripts
+          php artisan key:generate
+          php artisan test
+      - name: Tes worker vision (Python)
+        working-directory: cctv/vision
+        run: |
+          sudo apt-get update -q && sudo apt-get install -y -q ffmpeg
+          python3 -m pip install -q -r requirements.txt pytesseract==0.3.13 numpy
+          python3 -m unittest discover -s tests
+
+  deploy:
+    needs: test
+    if: vars.CCTV_AUTO_DEPLOY == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    environment: cctv-production
+    steps:
+      - name: Tarik kode dan bangun ulang stack CCTV di VPS
+        env:
+          VPS_HOST: ${{ secrets.CCTV_VPS_HOST }}
+          VPS_PORT: ${{ secrets.CCTV_VPS_PORT }}
+          VPS_USER: ${{ secrets.CCTV_VPS_USER }}
+          VPS_KEY: ${{ secrets.CCTV_VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.CCTV_VPS_KNOWN_HOSTS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for variable in VPS_HOST VPS_PORT VPS_USER VPS_KEY VPS_KNOWN_HOSTS; do
+            [ -n "${!variable}" ] || { echo "Setelan belum ada: $variable"; exit 1; }
+          done
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$VPS_KEY" > ~/.ssh/cctv_deploy && chmod 600 ~/.ssh/cctv_deploy
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/cctv_deploy -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" bash -s <<'REMOTE'
+          set -euo pipefail
+          cd /opt/slm
+          git fetch --quiet origin main
+          git merge --ff-only --quiet origin/main
+          cd cctv
+          [ -f .env ] || { echo "cctv/.env belum ada di server; lihat cctv/docs/pemasangan-vps.md"; exit 1; }
+          docker compose up -d --build --remove-orphans
+          docker compose ps
+          port=$(grep -E '^CCTV_WEB_PORT=' .env | tail -1 | cut -d= -f2 || true)
+          for attempt in $(seq 1 30); do
+            code=$(curl -s -o /dev/null -w '%{http_code}' "http://127.0.0.1:${port:-8095}/login" || true)
+            [ "$code" = "200" ] && { echo "CCTV web sehat"; exit 0; }
+            sleep 2
+          done
+          echo "CCTV web belum sehat (HTTP $code); cek: docker compose -p cctvslm logs --tail=80 web"
+          exit 1
+          REMOTE

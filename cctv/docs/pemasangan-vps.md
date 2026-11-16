@@ -2,6 +2,108 @@
 
 Domain yang dipilih adalah **cctv.lrmslm.com**. Panduan ini untuk Ubuntu 24.04. Kode pemasangan sudah disiapkan; menjalankannya di lingkungan pengembangan tidak memasang aplikasi pada VPS toko.
 
+## CCTV di repo SLM (mulai November 2026)
+
+Kode CCTV sekarang ada di repo `lrmcorp/slm-internal`, folder `cctv/`. Di VPS, kodenya ikut clone SLM di `/opt/slm`, tetapi berjalan sebagai stack Docker terpisah (project compose `cctvslm`): deploy atau restart SLM tidak menyentuh CCTV, dan sebaliknya.
+
+| Container | Isi | Batas bawaan |
+|---|---|---|
+| `cctvslm-web-1` | Dashboard dan API Laravel (`artisan serve`, 4 pekerja), port `127.0.0.1:8095` | 256 MB, 0,5 CPU |
+| `cctvslm-worker-1` | Antrian (`queue:work`) dan penjadwal (`schedule:work`) dalam satu container | 256 MB, 0,5 CPU |
+| `cctvslm-vision-1` | Satu proses untuk ketiga kamera (satu thread per kamera) | 448 MB, 1 CPU |
+
+### Prasyarat
+
+- Kamera hanya bisa dijangkau lewat **Tailscale**: komputer toko "hype" (`100.118.114.23`) meneruskan port `8554` ke DVR. Tailscale di VPS harus login (`tailscale status`); bila `Logged out`, jalankan `tailscale up`.
+- Selama kamera belum terjangkau, worker vision tetap berjalan normal: mencoba lagi dengan jeda bertahap (5 detik sampai paling lama 60 detik), satu baris log per 5 menit, tanpa crash loop dan tanpa mencetak password.
+- Nginx host meneruskan `cctv.lrmslm.com` ke `127.0.0.1:8095`. CCTV memanggil SLM lewat `https://mkr.lrmslm.com` (Cloudflare); jangan memakai trik `extra_hosts`, karena nginx mkr menolak koneksi yang tidak datang dari Cloudflare.
+
+### Migrasi satu kali dari `/opt/cctv`
+
+Jalankan sebagai root. Langkah ini tidak menyentuh container SLM, MJ, ANKJY, SLMJ, maupun katalog.
+
+1. Ambil kode terbaru SLM (berisi folder `cctv/`), lalu pindahkan rahasia CCTV. File ini tidak pernah di-commit:
+
+   ```bash
+   cd /opt/slm && git pull --ff-only
+   ```
+
+   ```bash
+   cp -a /opt/cctv/.env /opt/slm/cctv/.env; [ -f /opt/cctv/stack.env ] && cp -a /opt/cctv/stack.env /opt/slm/cctv/; [ -d /opt/cctv/secrets ] && cp -a /opt/cctv/secrets /opt/slm/cctv/; chmod 600 /opt/slm/cctv/.env
+   ```
+
+   Pastikan `CCTV_WEB_PORT=8095` ada di `/opt/slm/cctv/.env` (atau biarkan kosong; bawaannya 8095).
+
+2. Bangun image baru:
+
+   ```bash
+   cd /opt/slm/cctv && docker compose build
+   ```
+
+3. Jalankan. `--remove-orphans` menghapus container lama `queue`, `scheduler`, dan `vision-cam12/13/14` milik project `cctvslm` saja; volume data lama (`cctvslm_cctv_*`) tetap dipakai:
+
+   ```bash
+   cd /opt/slm/cctv && docker compose up -d --remove-orphans
+   ```
+
+4. Periksa:
+
+   ```bash
+   curl -s -o /dev/null -w '%{http_code}\n' http://127.0.0.1:8095/login
+   ```
+
+   ```bash
+   curl -s -o /dev/null -w '%{http_code}\n' https://cctv.lrmslm.com/login
+   ```
+
+   Keduanya harus `200`. Lalu lihat log vision dan RAM:
+
+   ```bash
+   docker logs --since 5m --tail 30 cctvslm-vision-1; docker stats --no-stream $(docker ps --format '{{.Names}}' | grep '^cctvslm-')
+   ```
+
+5. Setelah beberapa hari stabil, arsipkan folder lama:
+
+   ```bash
+   tar -czf /root/cctv-lama-$(date +%Y%m%d).tar.gz -C /opt cctv && mv /opt/cctv /opt/cctv.arsip
+   ```
+
+### Pembaruan rutin
+
+Workflow GitHub **CCTV · Deploy ke VPS** jalan otomatis bila ada perubahan di `cctv/` pada `main` (variabel repo `CCTV_AUTO_DEPLOY=true` dan secret `CCTV_VPS_*`), atau manual. Secara manual di VPS:
+
+```bash
+cd /opt/slm && git pull --ff-only && cd cctv && docker compose up -d --build --remove-orphans
+```
+
+### Rollback
+
+Bila versi baru bermasalah, kembalikan kode CCTV ke commit sebelumnya lalu bangun ulang. Data di volume tidak berubah:
+
+```bash
+cd /opt/slm && git log --oneline -5 -- cctv
+```
+
+```bash
+cd /opt/slm/cctv && git checkout <commit-sebelumnya> -- . && docker compose up -d --build --remove-orphans
+```
+
+Bila perlu kembali ke susunan lama sepenuhnya (tiga container vision), folder `/opt/cctv` yang belum diarsipkan masih bisa dipakai:
+
+```bash
+cd /opt/slm/cctv && docker compose down && cd /opt/cctv && docker compose up -d
+```
+
+### Ukur RAM
+
+```bash
+docker stats --no-stream --format '{{.Name}} {{.MemUsage}} {{.CPUPerc}}' $(docker ps --format '{{.Names}}' | grep '^cctvslm-')
+```
+
+---
+
+Catatan pemasangan di bawah ini berlaku untuk susunan sebelum monorepo.
+
 ## Sebelum menjalankan perintah
 
 Pada pengelola DNS `playgo.id`, buat record **A** dengan nama `cctvslm`, menuju **IP publik VPS**. IP Tailscale tidak dipakai untuk DNS publik. Jika terdapat record AAAA, pastikan alamat IPv6 itu benar menuju VPS atau hapus record yang keliru. Izinkan koneksi masuk TCP 80 dan 443 pada firewall VPS dan panel penyedia. Port DVR 554, penerus 8554, dan API lokal 8088 tidak dibuka ke internet.

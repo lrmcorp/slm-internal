@@ -111,6 +111,21 @@ class PresenceWorkflowTest extends TestCase
         $this->get($url)->assertStatus(503);
     }
 
+    public function test_watching_live_marks_a_viewer_so_the_worker_starts_encoding_on_demand(): void {
+        Storage::fake('local');$camera=$this->camera();
+        $marker=Storage::disk('local')->path("cctv/live-video/{$camera->id}/.viewer");
+        $this->assertFileDoesNotExist($marker);
+        $url='/cameras/'.$camera->id.'/live/stream.m3u8';
+        // Encoder belum jalan: penonton tetap ditandai dan pemutar diminta mencoba lagi.
+        $this->actingAs(User::factory()->create())->get($url)->assertStatus(503)->assertHeader('Retry-After','2');
+        $this->assertFileExists($marker);
+        Storage::disk('local')->put("cctv/live-video/{$camera->id}/stream.m3u8", "#EXTM3U\nsegment000001.ts\n");
+        touch($marker, now()->subMinutes(5)->timestamp);
+        $this->get($url)->assertOk();
+        clearstatcache(true, $marker);
+        $this->assertGreaterThan(now()->subMinute()->timestamp, filemtime($marker));
+    }
+
     public function test_whatsapp_uploads_private_image_and_uses_approved_image_template(): void {
         Storage::fake('local');Http::fake([
             'graph.facebook.com/*/media'=>Http::response(['id'=>'media-id']),

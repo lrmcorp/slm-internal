@@ -78,7 +78,7 @@ API_BASE_URL=https://nama-domain-anda bash scripts/build-apk.sh
 
 Hasilnya `mobile/build/app/outputs/flutter-apk/app-debug.apk`. APK debug hanya untuk uji; sebelum distribusi umum, siapkan keystore Android pribadi, tanda tangani APK/AAB release, serta pasang domain HTTPS dan identitas Firebase (`FIREBASE_API_KEY`, `FIREBASE_APP_ID`, `FIREBASE_PROJECT_ID`, `FIREBASE_SENDER_ID`) melalui `--dart-define`. Tanpa Firebase, aplikasi tetap dapat masuk dan membuka daftar/detail kejadian, namun push tidak aktif.
 
-Jika komputer/server tidak cukup ruang untuk SDK Android, gunakan GitHub: buka tab **Actions → Build Android APK → Run workflow**, pilih branch `ai-cctv-checker`, masukkan alamat HTTPS server, tunggu sampai pekerjaan selesai, lalu unduh artefak `ai-cctv-checker-debug-apk`. Saat branch didorong, workflow membangun APK uji dengan alamat `https://cctv.lrmslm.com`. APK baru dapat dipakai setelah server dan HTTPS bekerja. Untuk push, isi konfigurasi Firebase Android pada repository variables sebelum build ulang.
+Jika komputer/server tidak cukup ruang untuk SDK Android, gunakan GitHub: buka tab **Actions → CCTV · Build Android APK → Run workflow** di repo `slm-internal`, pilih branch `main`, masukkan alamat HTTPS server, tunggu sampai pekerjaan selesai, lalu unduh artefak `ai-cctv-checker-debug-apk`. Saat branch didorong, workflow membangun APK uji dengan alamat `https://cctv.lrmslm.com`. APK baru dapat dipakai setelah server dan HTTPS bekerja. Untuk push, isi konfigurasi Firebase Android pada repository variables sebelum build ulang.
 
 ## Pengujian dan perkiraan
 
@@ -89,7 +89,28 @@ Perkiraan setelah data tersedia: 6–10 minggu untuk survei kamera, integrasi SL
 
 ## API, laporan, dan pemasangan VPS
 
-[Dokumentasi API untuk pengembang ERP](docs/api.md) dan [OpenAPI JSON](docs/openapi.json) memuat autentikasi, invoice, sinkronisasi foto, laporan track anonim, aturan penerima, dan bukti privat. Pemasangan produksi menggunakan folder terpisah `/opt/cctvslm` serta domain `cctv.lrmslm.com`; lihat [perintah pemasangan](docs/pemasangan-vps.md).
+[Dokumentasi API untuk pengembang ERP](docs/api.md) dan [OpenAPI JSON](docs/openapi.json) memuat autentikasi, invoice, sinkronisasi foto, laporan track anonim, aturan penerima, dan bukti privat.
+
+### Deploy VPS (repo SLM, folder `cctv/`)
+
+Kode CCTV ada di repo `lrmcorp/slm-internal`, folder `cctv/`, dan di VPS ikut clone SLM di `/opt/slm`. Stack-nya terpisah (project compose `cctvslm`, file `cctv/docker-compose.yml`), jadi deploy SLM tidak me-restart CCTV dan sebaliknya. Migrasi satu kali dari `/opt/cctv`, pembaruan rutin, rollback, dan cara mengukur RAM ada di [panduan VPS](docs/pemasangan-vps.md#cctv-di-repo-slm-mulai-november-2026). Semua variabel beserta nilai bawaannya ada di [`.env.example`](.env.example).
+
+```bash
+cd /opt/slm && git pull --ff-only && cd cctv && docker compose up -d --build --remove-orphans
+```
+
+Susunan hemat RAM untuk VPS 2 vCPU yang dipakai bersama aplikasi lain:
+
+- **Satu container vision untuk semua kamera** (`CCTV_CAMERA_IDS=1,2,3`), satu thread per kamera. Kamera yang putus dicoba lagi dengan jeda bertahap tanpa mengganggu kamera lain; heartbeat tetap per kamera.
+- Frame diambil dengan `grab()`; hanya frame sesuai `CCTV_PROCESS_FPS` yang diubah jadi gambar (`retrieve()`) lalu langsung diperkecil ke lebar kerja (`CCTV_LABEL_WORK_MAX_WIDTH=1280` untuk kamera label, `CCTV_WORK_MAX_WIDTH=640` untuk lainnya). Buffer decoder 1 frame, satu thread OpenCV, `MALLOC_ARENA_MAX=2`.
+- Kamera tanpa pembacaan label dan tanpa model deteksi memakai **sub-stream** (`CCTV_DETECT_USE_SUBSTREAM=auto`). Set `false` bila foto/klip bukti harus resolusi penuh.
+- **Live hanya saat ditonton** (`CCTV_LIVE_ON_DEMAND=true`): encoder HLS menyala saat dashboard meminta playlist dan mati setelah 45 detik tanpa penonton, jadi DVR toko tidak mengirim video 24 jam. Segmen 1 detik supaya mendekati realtime.
+- Antrian OCR, unggah, dan live dibatasi; bila penuh, tugas terlama dibuang dan dicatat di log.
+- Image vision tanpa paket ffmpeg/tesseract Debian (ffmpeg statis dari `imageio-ffmpeg`). Tesseract (`CCTV_WITH_TESSERACT=1`) dan model YOLO (`CCTV_WITH_MODEL=1`) opsional.
+- Antrian dan penjadwal Laravel digabung dalam satu container `worker` (`queue:work --memory=128 --max-jobs=500 --max-time=3600` dan `schedule:work`). PHP `memory_limit=128M` dengan opcache 32 MB.
+- Setiap container punya `mem_limit`, `memswap_limit`, dan `cpus` (bisa diubah lewat `.env`).
+
+`php artisan serve` tetap dipakai untuk web dengan 4 pekerja. Bebannya kecil (dashboard, ingest 3 kamera, dan segmen HLS), dan menggantinya dengan php-fpm + nginx atau FrankenPHP akan menambah komponen tanpa penghematan RAM yang berarti pada beban ini.
 
 Track tidak mengenali wajah dan tidak menyimpulkan identitas. Pemeriksa menandai customer/staf/pengunjung; orang yang belum diperiksa berstatus `unclassified`. Batas tidak terlihat awal 300 detik dapat diubah dan diaktifkan per kamera. Peringatan ditahan ketika kamera atau gambar terbaru terhenti dan ketika sesi pelacakan berubah. ID track dapat berubah karena tertutup; jumlah track bukan jumlah orang unik. Model deteksi orang tetap harus disediakan dan diuji.
 

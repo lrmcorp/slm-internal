@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Jobs\SyncMatchedLabelToSlm;
 use App\Models\LabelRecord;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class SlmMatcher
 {
@@ -21,6 +22,7 @@ class SlmMatcher
             || str_starts_with($base, 'http://127.0.0.1')
         );
         if (!$base || !$isAllowedUrl || !$token) {
+            $this->skip($label, 'konfigurasi SLM belum lengkap (SLM_BASE_URL https / SLM_API_TOKEN)');
             $label->update(['slm_status' => 'unavailable', 'slm_sync_status' => 'not_ready']);
             return;
         }
@@ -48,6 +50,7 @@ class SlmMatcher
             ];
             $response = Http::withToken($token)->timeout(5)->acceptJson()->post($lookupUrl, $payload);
             if (!$response->successful()) {
+                $this->skip($label, 'lookup SLM gagal HTTP '.$response->status());
                 $label->update(['slm_status' => 'error', 'slm_sync_status' => 'not_ready']);
                 return;
             }
@@ -123,6 +126,7 @@ class SlmMatcher
         }
 
         if (!$matched) {
+            $this->skip($label, 'nomor invoice tidak ditemukan di SLM');
             $label->update(['slm_sync_status' => 'not_ready']);
             return;
         }
@@ -133,12 +137,14 @@ class SlmMatcher
         // Verification Gatekeeper: JANGAN masukkan ke antrean sinkronisasi ERP jika belum terverifikasi
         // atau skor confidence di bawah ambang batas (kecuali telah disetujui manual oleh operator).
         if (!$isFinallyVerified || ($finalStatus !== 'confirmed' && (float) $label->confidence < $minConfidence)) {
+            $this->skip($label, "belum terverifikasi (status {$finalStatus}, confidence {$label->confidence} < {$minConfidence})");
             $label->update(['slm_sync_status' => 'not_ready']);
             return;
         }
 
         if ($label->slm_sync_status === 'synced'
             && $label->slm_synced_hash === SyncMatchedLabelToSlm::fingerprint($label)) {
+            $this->skip($label, 'sudah tercatat di SLM dan tidak ada perubahan');
             return;
         }
         if (!config('cctv.slm_sync_path')) {
@@ -147,5 +153,12 @@ class SlmMatcher
         }
         $label->update(['slm_sync_status' => 'queued', 'slm_sync_error' => null]);
         SyncMatchedLabelToSlm::dispatch($label->id);
+        Log::info("Label #{$label->id} ({$label->field_one}) masuk antrean kirim ke SLM");
+    }
+
+    /** Alasan label tidak dikirim ke SLM, supaya terlihat di log tanpa membuka database. */
+    private function skip(LabelRecord $label, string $reason): void
+    {
+        Log::info("Label #{$label->id} ({$label->field_one}) tidak dikirim ke SLM: {$reason}");
     }
 }

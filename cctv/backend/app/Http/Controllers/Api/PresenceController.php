@@ -82,13 +82,18 @@ class PresenceController extends Controller
     public function video(Camera $camera, string $file)
     {
         abort_unless(preg_match('/^(stream\.m3u8|segment[0-9]+\.ts)$/', $file), 404);
-        abort_unless($camera->frame_at && $camera->frame_at->greaterThan(now()->subSeconds(20)), 503);
+        // Penanda penonton: worker vision hanya menyalakan encoder live selama penanda ini baru,
+        // jadi DVR toko tidak mengirim video 24 jam bila tidak ada yang menonton.
+        $this->markViewer($camera);
+        $retry = ['Retry-After' => '2', 'Cache-Control' => 'no-store'];
+        abort_unless($camera->frame_at && $camera->frame_at->greaterThan(now()->subSeconds(20)), 503, '', $retry);
         $path = "cctv/live-video/{$camera->id}/{$file}";
         $playlist = "cctv/live-video/{$camera->id}/stream.m3u8";
-        abort_unless(Storage::disk('local')->exists($path), 404);
+        // Encoder baru dinyalakan saat penonton datang: playlist belum ada = coba lagi sebentar.
+        abort_unless(Storage::disk('local')->exists($path), $file === 'stream.m3u8' ? 503 : 404, '', $retry);
         // A healthy AI worker does not prove its separate live encoder is healthy.
         abort_unless(Storage::disk('local')->exists($playlist)
-            && Storage::disk('local')->lastModified($playlist) >= now()->subSeconds(20)->timestamp, 503);
+            && Storage::disk('local')->lastModified($playlist) >= now()->subSeconds(20)->timestamp, 503, '', $retry);
         if (config('cctv.x_accel_redirect')) {
             return response('', 200, [
                 'X-Accel-Redirect' => "/protected-live-video/{$camera->id}/{$file}",
@@ -104,6 +109,15 @@ class PresenceController extends Controller
             'Content-Type'=>str_ends_with($file,'.m3u8') ? 'application/vnd.apple.mpegurl' : 'video/mp2t',
         ]);
     }
+    private function markViewer(Camera $camera): void
+    {
+        $directory = Storage::disk('local')->path("cctv/live-video/{$camera->id}");
+        if (!is_dir($directory)) {
+            @mkdir($directory, 0775, true);
+        }
+        @touch($directory.'/.viewer');
+    }
+
     public function stream(Camera $camera)
     {
         return $this->live($camera);
