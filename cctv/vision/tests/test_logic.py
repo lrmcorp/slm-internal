@@ -113,6 +113,15 @@ class VisionRulesTest(unittest.TestCase):
         self.assertIsNone(parse_qr_payload(""))
         self.assertIsNone(parse_qr_payload("BARCODE_12345"))
 
+    def test_parse_qr_payload_mj_invoice(self):
+        # Label DO untuk penjualan MJ memakai nomor invoice MJ apa adanya.
+        res = parse_qr_payload("INVOICE: MJ-20261117-0005\nCUSTOMER: ALMIRA\nASAL: MJ\nPETUGAS: ADI")
+        self.assertEqual("MJ-20261117-0005", res["field_one"])
+        self.assertEqual("ALMIRA", res["field_two"])
+        self.assertEqual("MJ", res["field_three"])
+        self.assertIsNone(parse_qr_payload("INVOICE: 171126-105"))
+        self.assertIsNone(parse_qr_payload("INVOICE: MJ-2026111-0005"))
+
 
 if __name__ == "__main__":
     unittest.main()

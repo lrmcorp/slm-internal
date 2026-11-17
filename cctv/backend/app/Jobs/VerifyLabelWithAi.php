@@ -130,7 +130,7 @@ class VerifyLabelWithAi implements ShouldQueue
             $suggestion[$field] = is_string($value) ? mb_substr(trim($value), 0, 150) : null;
         }
         if ($suggestion['field_one'] !== null &&
-            !preg_match('/^\d{6}-\d{2}$/', $suggestion['field_one'])) {
+            !preg_match(\App\Models\LabelRecord::INVOICE_PATTERN, $suggestion['field_one'])) {
             $suggestion['field_one'] = null;
         }
 

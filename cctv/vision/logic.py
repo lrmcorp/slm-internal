@@ -8,7 +8,8 @@ import re
 import time
 import uuid
 
-CODE = re.compile(r"(?<!\d)(\d{6}-\d{2})(?!\d)")
+# Nomor invoice SLM (171126-05) atau invoice MJ (MJ-20261117-0005).
+CODE = re.compile(r"(MJ-\d{8}-\d{4}|(?<!\d)\d{6}-\d{2})(?!\d)")
 
 
 def normalize_store(val: str | None) -> str | None:

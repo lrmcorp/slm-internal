@@ -64,7 +64,7 @@ class IngestController extends Controller
         // 1. Confidence threshold check (confidence >= 0.90)
         $isConfidenceHigh = (float) $data['confidence'] >= $minConfidence;
         // 2. Format check: nomor invoice valid / terbaca utuh
-        $isInvoiceFormatValid = (bool) preg_match('/^\d{6}-\d{2}$/', $code);
+        $isInvoiceFormatValid = (bool) preg_match(\App\Models\LabelRecord::INVOICE_PATTERN, $code);
         // Valid and intact criteria
         $hasCompleteDetails = $isConfidenceHigh && $isInvoiceFormatValid && !empty($data['field_two']) && $isStoreExplicitlyValid;
         $isAutoApproved = $hasCompleteDetails || ($autoPacking && $isConfidenceHigh && $isInvoiceFormatValid && $isStoreValidOrEmpty);

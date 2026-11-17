@@ -123,7 +123,7 @@ def scan_with_gemini(frame, api_key: str, model: str = None) -> dict | None:
                         "text": (
                             "Anda adalah asisten visual CCTV packing toko. "
                             "Baca kode QR atau nomor invoice, nama customer tujuan, dan tanda toko (Aneka Jaya atau MJ) pada label dus ini. "
-                            "Nomor invoice format 6 digit - 2 digit (contoh: 061026-23). "
+                            "Nomor invoice berformat 6 digit - 2 digit (contoh: 061026-23) atau invoice MJ (contoh: MJ-20261117-0005). "
                             "Kembalikan JSON persis: {\"field_one\": \"...\", \"field_two\": \"...\", \"field_three\": \"...\"}."
                         )
                     },

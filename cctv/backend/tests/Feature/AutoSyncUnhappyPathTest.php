@@ -71,6 +71,45 @@ class AutoSyncUnhappyPathTest extends TestCase
         Queue::assertNotPushed(\App\Jobs\SyncMatchedLabelToSlm::class);
     }
 
+    /** Label DO penjualan MJ (nomor MJ-YYYYMMDD-NNNN) diverifikasi otomatis dan dikirim ke SLM. */
+    public function test_mj_invoice_label_is_auto_verified_and_queued_for_slm(): void
+    {
+        Storage::fake('local');
+        Queue::fake();
+        config([
+            'cctv.ingest_token' => str_repeat('a', 64),
+            'cctv.auto_sync_packing' => true,
+            'cctv.slm_base_url' => 'https://mkr.lrmslm.com',
+            'cctv.slm_lookup_path' => '/api/cctv/labels/lookup',
+            'cctv.slm_sync_path' => '/api/cctv/labels/sync',
+            'cctv.slm_token' => 'test-token',
+        ]);
+        Http::fake([
+            'mkr.lrmslm.com/api/cctv/labels/lookup' => Http::response([
+                'matched' => true, 'reference' => 'sale-mj-1', 'customer_name' => 'Almira',
+            ], 200),
+        ]);
+
+        $camera = $this->camera();
+        $this->post("/api/ingest/cameras/{$camera->id}/labels", [
+            'field_one' => 'MJ-20261117-0005',
+            'field_two' => 'ALMIRA',
+            'field_three' => 'MJ',
+            'confidence' => 1.0,
+            'raw_ocr' => 'QR: INVOICE: MJ-20261117-0005',
+            'observed_at' => '2026-11-17T03:00:00Z',
+            'snapshot' => $this->snapshot(),
+        ], ['X-CCTV-Ingest-Token' => str_repeat('a', 64)])->assertCreated();
+
+        $label = LabelRecord::first();
+        $this->assertSame('auto_verified', $label->review_status);
+        $label = $this->runMatchJob($label);
+        $this->assertSame('matched', $label->slm_status);
+        $this->assertSame('queued', $label->slm_sync_status);
+        Http::assertSent(fn ($request) => $request['invoice_number'] === 'MJ-20261117-0005');
+        Queue::assertPushed(SyncMatchedLabelToSlm::class);
+    }
+
     /**
      * UNHAPPY PATH 2: ERP SLM Mengalami HTTP 500 / Network Error saat Lookup
      * Sistem harus menangani kegagalan jaringan secara aman tanpa crash.
