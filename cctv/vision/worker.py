@@ -164,6 +164,25 @@ def scan_with_gemini(frame, api_key: str, model: str = None) -> dict | None:
     return None
 
 
+# Ringkasan pembacaan label (dicatat tiap 5 menit oleh kamera pembaca label), untuk melihat apakah
+# kamera tidak melihat QR sama sekali, melihat tapi gagal membaca, atau membaca tapi isinya bukan invoice.
+QR_STATS = {"dipindai": 0, "qr_terlihat": 0, "terbaca": 0, "invoice": 0}
+QR_STATS_LOCK = threading.Lock()
+
+
+def _count_qr(key: str):
+    with QR_STATS_LOCK:
+        QR_STATS[key] += 1
+
+
+def qr_stats_snapshot_and_reset() -> dict:
+    with QR_STATS_LOCK:
+        snapshot = dict(QR_STATS)
+        for key in QR_STATS:
+            QR_STATS[key] = 0
+    return snapshot
+
+
 def ocr(frame) -> dict | None:
     crop = os.getenv("CCTV_LABEL_ROI")
     if crop:
@@ -173,12 +192,18 @@ def ocr(frame) -> dict | None:
     if frame.size == 0:
         return None
     # Model 1: Local High-Speed OpenCV QR Detector
+    _count_qr("dipindai")
     detector = cv2.QRCodeDetector()
     found, values, _, _ = detector.detectAndDecodeMulti(frame)
     if not found:
-        value, _, _ = detector.detectAndDecode(frame)
+        value, points, _ = detector.detectAndDecode(frame)
         values = [value] if value else []
+        found = points is not None
+    if found:
+        _count_qr("qr_terlihat")
     detected = [v.strip() for v in values if v and v.strip()]
+    if detected:
+        _count_qr("terbaca")
     parsed_candidates = []
     if detected:
         for v in detected:
@@ -188,6 +213,8 @@ def ocr(frame) -> dict | None:
             else:
                 LOG.info("[AI QR - Model 1 OpenCV] QR Code terdeteksi tetapi bukan format invoice SLM: %s", v[:80])
     unique_invoices = {c["field_one"] for c in parsed_candidates}
+    if unique_invoices:
+        _count_qr("invoice")
     if len(unique_invoices) == 1:
         best = max(parsed_candidates, key=lambda c: (bool(c["field_two"]), bool(c["field_three"])))
         LOG.info("[AI QR - Model 1 OpenCV] QR Code invoice SLM terbaca: Invoice=%s, Customer=%s, Toko=%s",
@@ -298,7 +325,7 @@ class Worker:
         self.source = self._source_from_env()
         if not self.source:
             LOG.warning("Variabel stream %s untuk kamera %d belum diset di environment", stream_key, self.camera_id)
-        self.last_heartbeat = self.last_ocr = self.last_frame = 0.0
+        self.last_heartbeat = self.last_ocr = self.last_frame = self.last_qr_stats = 0.0
         self.process_fps = max(1, min(10, float(os.getenv("CCTV_PROCESS_FPS", "5"))))
         self.label_enabled = self._label_enabled()
         # Resolusi kerja: kamera label butuh piksel cukup untuk QR; kamera lain cukup kecil.
@@ -708,6 +735,14 @@ class Worker:
             self.ocr_frame = frame
             self.ocr_future = self.ocr_executor.submit(ocr, self.ocr_frame)
             self.last_ocr = now
+        if self.label_enabled and now - self.last_qr_stats >= 300:
+            if self.last_qr_stats:
+                stats = qr_stats_snapshot_and_reset()
+                LOG.info("[QR 5 menit] kamera %d: %d frame dipindai, QR terlihat di %d, terbaca %d, berisi invoice %d",
+                         self.camera_id, stats["dipindai"], stats["qr_terlihat"], stats["terbaca"], stats["invoice"])
+            else:
+                qr_stats_snapshot_and_reset()
+            self.last_qr_stats = now
         detections = self.detect(frame)
         if self.live_video and not self.live_video.source and (self.live_future is None or self.live_future.done()):
             image, _ = self.draw_tracks(frame, detections)
