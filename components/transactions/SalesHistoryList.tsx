@@ -23,7 +23,13 @@ type Props = {
   dayTotals?: Record<string, { count: number; total: number }>;
   /** Halaman Draft: pembuat penjualan boleh melanjutkan draft walau tanpa hak kelola penjualan. */
   canContinueDraft?: boolean;
+  /** Tombol Salin: buka Input Penjualan berisi barang transaksi ini (perlu izin input penjualan). */
+  canCopy?: boolean;
 };
+
+function copyHref(sale: Sale) {
+  return `/penjualan/input?copyFrom=${encodeURIComponent(sale.id)}`;
+}
 
 /** "TF BCA - Hery", "Cash + TF BCA" untuk Split, atau nama metode saja. */
 export function paymentLabel(sale: Pick<Sale, "paymentMethod" | "rekeningNameSnapshot" | "transferAccount" | "paymentSplits">) {
@@ -461,6 +467,7 @@ export function SalesHistoryList({
   dayTotals,
   stockShortage = {},
   canContinueDraft = false,
+  canCopy = false,
 }: Props) {
   const [expandedSaleId, setExpandedSaleId] = useState<string | null>(null);
   const columnCount = canViewTransactionNumber ? 9 : 8;
@@ -529,35 +536,40 @@ export function SalesHistoryList({
                   <SalesItemsDetail sale={sale} className="mt-1.5" productNames={productNames} shortage={stockShortage[sale.id]} />
                 </div>
               )}
-              <div className="mt-2 flex items-center gap-1.5">
+              <div className="mt-2 grid grid-cols-4 gap-1.5">
                 <button
                   type="button"
                   aria-expanded={expanded}
                   aria-label={`${expanded ? "Tutup" : "Lihat"} item transaksi ${sale.customerName}`}
                   onClick={() => toggle(sale.id)}
-                  className="flex h-9 shrink-0 items-center gap-1 rounded-md border border-slate-200 px-2 text-xs font-semibold text-slate-700"
+                  className="flex h-9 min-w-0 items-center justify-center gap-1 whitespace-nowrap rounded-md border border-slate-200 px-1 text-xs font-semibold text-slate-700"
                 >
                   {expanded ? "Tutup" : `${sale.items.length} item`}
                   <span aria-hidden="true" className={`inline-block transition-transform ${expanded ? "rotate-180" : ""}`}>⌄</span>
                 </button>
-                <Link className="grid h-9 min-w-0 flex-1 place-items-center rounded-md bg-brand-600 text-xs font-semibold text-white" href={`/penjualan/${sale.id}`}>
+                <Link className="grid h-9 min-w-0 place-items-center rounded-md bg-brand-600 text-xs font-semibold text-white" href={`/penjualan/${sale.id}`}>
                   Detail
                 </Link>
-                <Link className="grid h-9 min-w-0 flex-1 place-items-center rounded-md border border-brand-300 bg-brand-50 text-xs font-bold text-brand-800" href={`/print/sales/${sale.id}/continuous`}>
+                <Link className="grid h-9 min-w-0 place-items-center rounded-md border border-brand-300 bg-brand-50 text-xs font-bold text-brand-800" href={`/print/sales/${sale.id}/continuous`}>
                   Cetak
                 </Link>
                 {waNumber(sale.customerPhone) && (
-                  <a className="grid h-9 min-w-0 flex-1 place-items-center rounded-md border border-slate-300 bg-white text-xs font-bold text-slate-700" href={`https://wa.me/${waNumber(sale.customerPhone)}`} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp ${sale.customerName}`}>
-                    WhatsApp
+                  <a className="grid h-9 min-w-0 place-items-center rounded-md border border-slate-300 bg-white text-xs font-bold text-slate-700" href={`https://wa.me/${waNumber(sale.customerPhone)}`} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp ${sale.customerName}`}>
+                    WA
                   </a>
+                )}
+                {canCopy && sale.approvalStatus !== "draft" && (
+                  <Link className="grid h-9 min-w-0 place-items-center rounded-md border border-slate-300 bg-white text-xs font-bold text-slate-700" href={copyHref(sale)} title="Buat transaksi baru dengan barang yang sama">
+                    Salin
+                  </Link>
                 )}
                 {(canManage || (canContinueDraft && sale.approvalStatus === "draft")) && sale.approvalStatus !== "cancelled" && (
                   <>
                     {/* Transaksi MJ hanya bisa dibatalkan di SLM; isinya diubah dari MJ. Draft: Lanjutkan menggantikan Edit. */}
-                    {sale.source !== "MJ" && <Link className="grid h-9 min-w-0 flex-1 place-items-center rounded-md border border-slate-300 bg-white text-xs font-bold text-slate-700" href={`/penjualan/${sale.id}/edit`}>
+                    {sale.source !== "MJ" && <Link className="grid h-9 min-w-0 place-items-center rounded-md border border-slate-300 bg-white text-xs font-bold text-slate-700" href={`/penjualan/${sale.id}/edit`}>
                       {sale.approvalStatus === "draft" ? "Lanjutkan" : "Edit"}
                     </Link>}
-                    {canManage && <div className="flex-1">
+                    {canManage && <div className="min-w-0">
                       <TransactionCancelButton
                         id={sale.id}
                         kind="sales"
@@ -646,6 +658,11 @@ export function SalesHistoryList({
                           <a className={rowLink} href={`https://wa.me/${waNumber(sale.customerPhone)}`} target="_blank" rel="noopener noreferrer" aria-label={`WhatsApp ${sale.customerName}`}>
                             WA
                           </a>
+                        )}
+                        {canCopy && sale.approvalStatus !== "draft" && (
+                          <Link className={rowLink} href={copyHref(sale)} title="Buat transaksi baru dengan barang yang sama">
+                            Salin
+                          </Link>
                         )}
                         {editable && (
                           <Link className={rowLink} href={`/penjualan/${sale.id}/edit`}>

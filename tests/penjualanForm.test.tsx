@@ -100,5 +100,27 @@ describe("PenjualanForm Cash rekening defaults", () => {
     expect(html).toContain('placeholder="08xxx"');
   });
 
-});
 
+  it("copies items, type and payment method but leaves customer, phone, address and notes for the new sale", () => {
+    const source: Sale = {
+      ...sale,
+      customerName: "Toko Almira",
+      customerPhone: "081234567890",
+      customerLocation: "Jl. Mawar 5, Bogor",
+      paymentMethod: "TF",
+      rekeningId: "dummy-bca-w",
+      rekeningNameSnapshot: "BCA Operasional",
+      notes: "Titip di satpam",
+      items: [{ productRef: "AJMJ-12", productId: "12", quantity: 7, unitPrice: 15_000, discount: 0 }],
+    };
+    const html = renderToStaticMarkup(<PenjualanForm tipes={tipes} rekenings={rekenings} copiedSale={source} />);
+
+    expect(html).toContain("Salinan dari transaksi Toko Almira");
+    expect(html).not.toContain("081234567890");
+    expect(html).not.toContain("Jl. Mawar 5, Bogor");
+    expect(html).not.toContain("Titip di satpam");
+    // Rekening transfer transaksi asal tetap tersedia karena metode bayar TF ikut tersalin.
+    expect(html).toContain('<option value="dummy-bca-w">BCA Operasional</option>');
+    expect(html).toContain("AJMJ-12");
+  });
+});

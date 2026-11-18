@@ -149,6 +149,9 @@ export default async function SalesDetailPage({ params }: { params: Promise<{ id
               }))}
             />
           )}
+          {can(role, "penjualan.create") && sale.approvalStatus !== "draft" && (
+            <Link href={`/penjualan/input?copyFrom=${encodeURIComponent(sale.id)}`} title="Buat transaksi baru dengan barang yang sama" className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">Salin</Link>
+          )}
           {canManage && sale.source !== "MJ" && sale.approvalStatus !== "cancelled" && (
             <Link href={`/penjualan/${sale.id}/edit`} className="rounded-xl border border-slate-300 px-4 py-2.5 text-sm font-bold text-slate-700 hover:bg-slate-50">Edit</Link>
           )}

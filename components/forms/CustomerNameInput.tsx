@@ -14,7 +14,7 @@ export type CustomerOption = {
 };
 
 /** Nama customer dengan saran dari customer yang pernah belanja; memilih mengisi HP, lokasi, dan ekspedisi. */
-export function CustomerNameInput({ registration, value, onPick }: { registration: UseFormRegisterReturn; value: string; onPick: (customer: CustomerOption) => void }) {
+export function CustomerNameInput({ registration, value, onPick, autoFocus = false }: { registration: UseFormRegisterReturn; value: string; onPick: (customer: CustomerOption) => void; autoFocus?: boolean }) {
   const listId = useId();
   const [open, setOpen] = useState(false);
   const [options, setOptions] = useState<CustomerOption[]>([]);
@@ -58,6 +58,7 @@ export function CustomerNameInput({ registration, value, onPick }: { registratio
         aria-controls={listId}
         aria-autocomplete="list"
         autoComplete="off"
+        autoFocus={autoFocus}
         placeholder="Ketik nama atau No. HP"
         onFocus={(event) => {
           if (event.currentTarget.value.trim().toLowerCase() === "walk in") event.currentTarget.select();

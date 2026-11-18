@@ -111,6 +111,8 @@ type Props = {
   allowTestTransaction?: boolean;
   erpTypeCodes?: string[];
   sale?: Sale;
+  /** Tombol Salin di Riwayat Penjualan: barang, tipe, dan pembayaran ikut; customer, tanggal, DP, dan catatan diisi baru. */
+  copiedSale?: Sale;
   /** true: barang & barang baru memakai Master Barang SLM, bukan ERP. */
   localCatalog?: boolean;
 };
@@ -184,11 +186,15 @@ export function PenjualanForm({
   allowTestTransaction = false,
   erpTypeCodes = ["AJ"],
   sale,
+  copiedSale,
   localCatalog = false,
 }: Props) {
   const brand = useBrand();
   const router = useRouter();
   const isEdit = Boolean(sale);
+  const isCopy = !sale && Boolean(copiedSale);
+  // Sumber barang, tipe, dan pembayaran: transaksi yang diedit, atau transaksi yang disalin.
+  const source = sale || copiedSale;
   const erpTypeCodeSet = useMemo(
     () =>
       new Set(
@@ -201,10 +207,10 @@ export function PenjualanForm({
     () => tipes.filter((t) => t.isActive && (!RETIRED_TIPE_CODES.includes(t.code.toUpperCase()) || t.id === sale?.tipeId)),
     [tipes, sale?.tipeId],
   );
-  const defaultTipe = sale
+  const defaultTipe = source
     ? activeTipes.find(
       (tipe) =>
-        tipe.id === sale.tipeId || tipe.code === sale.tipeCodeSnapshot,
+        tipe.id === source.tipeId || tipe.code === source.tipeCodeSnapshot,
     ) || activeTipes[0]
     : activeTipes[0];
   const rekeningForTipe = useCallback(
@@ -218,10 +224,10 @@ export function PenjualanForm({
     [rekenings],
   );
   const defaultRekening = useMemo(() => {
-    if (sale?.rekeningId && defaultTipe) {
+    if (source?.rekeningId && defaultTipe) {
       const saleRekening = rekenings.find(
         (rekening) =>
-          rekening.id === sale.rekeningId &&
+          rekening.id === source.rekeningId &&
           rekening.tipeIds.includes(defaultTipe.id),
       );
       if (saleRekening) return saleRekening;
@@ -235,10 +241,10 @@ export function PenjualanForm({
     rekeningForTipe,
     rekenings,
     sale,
-    sale?.rekeningId,
+    source?.rekeningId,
   ]);
   const initialTipeRef = useRef(sale?.tipeId || defaultTipe?.id || "");
-  const previousPaymentMethodRef = useRef(sale?.paymentMethod || "Cash");
+  const previousPaymentMethodRef = useRef(source?.paymentMethod || "Cash");
   const deliveryTouchedRef = useRef(Boolean(sale));
 
   const [notice, setNotice] = useState<{
@@ -315,11 +321,11 @@ export function PenjualanForm({
       rekeningNameSnapshot: sale
         ? (sale.rekeningNameSnapshot || "")
         : (defaultRekening?.name || ""),
-      customerName: sale?.customerName || "Walk In",
+      customerName: isCopy ? "" : sale?.customerName || "Walk In",
       customerPhone: sale?.customerPhone || "",
       customerLocation: sale?.customerLocation || "Toko",
-      shippingMethod: sale?.shippingMethod || "di Tempat",
-      paymentMethod: sale?.paymentMethod || "Cash",
+      shippingMethod: source?.shippingMethod || "di Tempat",
+      paymentMethod: source?.paymentMethod || "Cash",
       splitCashAmount: sale?.paymentSplits?.find((part) => part.method === "Cash")?.amount ?? 0,
       orderDiscount: 0,
       orderDiscountType: "amount",
@@ -331,8 +337,8 @@ export function PenjualanForm({
       initialPaymentNotes: sale?.initialPaymentNotes,
       transferAccount: sale?.transferAccount,
       notes: sale?.notes,
-      items: sale?.items?.length
-        ? sale.items.map((item) => ({
+      items: source?.items?.length
+        ? source.items.map((item) => ({
           productRef: item.productRef,
           productId: item.productId,
           productInputMode:
@@ -619,6 +625,8 @@ export function PenjualanForm({
       return;
     }
     const data = getValues();
+    // Salinan baru disimpan sebagai draft setelah nama customer diisi; buka lalu batal tidak meninggalkan draft.
+    if (isCopy && !String(data.customerName ?? "").trim()) return;
     const items = serverItems(data).filter((item) =>
       item.productRef?.trim() && Number(item.quantity) > 0 &&
       (item.productInputMode !== "manual" || (item.manualProduct?.sku?.trim() && item.manualProduct?.name?.trim())));
@@ -889,7 +897,8 @@ export function PenjualanForm({
   }, [getValues, setValue, transactionAt]);
 
   useEffect(() => {
-    if (isEdit) return;
+    // Salinan tidak ditimpa draf lama yang tersimpan di HP.
+    if (isEdit || isCopy) return;
     const saved = localStorage.getItem(draftKey);
     if (saved) {
       try {
@@ -904,7 +913,7 @@ export function PenjualanForm({
         localStorage.removeItem(draftKey);
       }
     }
-  }, [isEdit, reset]);
+  }, [isCopy, isEdit, reset]);
 
   useEffect(() => {
     const tipe = activeTipes.find((t) => t.id === tipeId) ?? activeTipes[0];
@@ -916,7 +925,7 @@ export function PenjualanForm({
     const currentRekening = reks.find(
       (rekening) => rekening.id === getValues("rekeningId"),
     );
-    if (isEdit && initialTipeRef.current === tipe.id && currentRekening) {
+    if ((isEdit || isCopy) && initialTipeRef.current === tipe.id && currentRekening) {
       setValue("rekeningNameSnapshot", currentRekening.name);
       return;
     }
@@ -929,6 +938,7 @@ export function PenjualanForm({
   }, [
     activeTipes,
     getValues,
+    isCopy,
     isEdit,
     paymentMethod,
     rekeningForTipe,
@@ -997,6 +1007,14 @@ export function PenjualanForm({
     try {
       setNotice(undefined);
       setCreatedSale(undefined);
+      // Nama kosong otomatis jadi "Walk In"; pada salinan nama customer harus diisi sendiri.
+      if (isCopy && !String(getValues("customerName") ?? "").trim()) {
+        setError("customerName", { type: "manual", message: "Isi nama customer untuk transaksi salinan ini." });
+        const field = document.querySelector<HTMLInputElement>('input[name="customerName"]');
+        field?.scrollIntoView({ behavior: "smooth", block: "center" });
+        field?.focus({ preventScroll: true });
+        return;
+      }
       if (!dependenciesReady) {
         setNotice({
           type: "error",
@@ -1235,6 +1253,15 @@ export function PenjualanForm({
 
   return (
     <form onSubmit={handleSubmit(submit, onInvalid)} className="space-y-5">
+      {isCopy && copiedSale && (
+        <div className="rounded-lg border border-brand-200 bg-brand-50 px-4 py-3 text-sm text-brand-900">
+          <p className="font-bold">Salinan dari transaksi {copiedSale.customerName}</p>
+          <p className="mt-1 text-xs">
+            Barang, jumlah, tipe, dan metode bayar sudah terisi. Harga dan satuan mengikuti Master Barang hari ini.
+            Isi nama, nomor HP, dan alamat customer, lalu simpan sebagai transaksi baru.
+          </p>
+        </div>
+      )}
       {notice && <Toast {...notice} />}
       {createdSale && (
         <div
@@ -1371,6 +1398,7 @@ export function PenjualanForm({
               </Field>
               <Field label="Nama customer" error={errors.customerName?.message}>
                 <CustomerNameInput
+                  autoFocus={isCopy}
                   registration={register("customerName")}
                   value={customerName || ""}
                   onPick={(customer) => {
