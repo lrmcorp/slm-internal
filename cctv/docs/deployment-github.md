@@ -1,5 +1,10 @@
 # Deployment otomatis CCTV dari GitHub
 
+> **Catatan:** dokumen ini ditulis untuk susunan lama (repo CCTV terpisah di `/opt/cctvslm`, kunci terbatas
+> `slm_cctv_actions`). Sejak CCTV masuk repo `slm-internal`, workflow deploy membaca repository secrets
+> `VPS_HOST`, `VPS_PORT`, `VPS_USER`, `VPS_SSH_KEY`, dan `VPS_KNOWN_HOSTS` (satu kunci SSH untuk deploy SLM dan
+> CCTV). Kunci lama `slm_cctv_actions` hanya bisa menjalankan receiver lama dan tidak dipakai lagi.
+
 Workflow `Deploy CCTV to VPS` menguji backend sebelum mengirim commit ke server. Pengiriman memakai Git bundle melalui SSH; VPS tidak perlu mengunduh kode dari GitHub. Jika Composer lockfile berubah, pemasangan dependensi masih memerlukan koneksi internet VPS. Perubahan dependensi Python dihentikan untuk pemasangan dan pengujian terpisah.
 
 ## Persiapan satu kali di VPS

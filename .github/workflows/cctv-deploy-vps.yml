@@ -38,11 +38,11 @@ jobs:
     steps:
       - name: Tarik kode dan bangun ulang stack CCTV di VPS
         env:
-          VPS_HOST: ${{ secrets.CCTV_VPS_HOST }}
-          VPS_PORT: ${{ secrets.CCTV_VPS_PORT }}
-          VPS_USER: ${{ secrets.CCTV_VPS_USER }}
-          VPS_KEY: ${{ secrets.CCTV_VPS_SSH_KEY }}
-          VPS_KNOWN_HOSTS: ${{ secrets.CCTV_VPS_KNOWN_HOSTS }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
         shell: bash
         run: |
           set -euo pipefail
