@@ -35,5 +35,7 @@ describe("Kurs tampilan Master Barang", () => {
     expect(displayRateSchema.safeParse({ currency: "SGD", rate: 12150 }).success).toBe(true);
     expect(displayRateSchema.safeParse({ currency: "RMB", rate: 2750 }).success).toBe(false);
     expect(displayRateSchema.safeParse({ currency: "MYR", rate: 0 }).success).toBe(false);
+    // null menghapus kurs, sehingga negaranya hilang dari pilihan.
+    expect(displayRateSchema.safeParse({ currency: "THB", rate: null }).data).toEqual({ currency: "THB", rate: null });
   });
 });

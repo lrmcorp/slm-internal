@@ -2,7 +2,7 @@ import { authenticateMjRequest } from "@/lib/integrations/mj/auth";
 import { mjErrorResponse } from "@/lib/integrations/mj/errors";
 import { listManualRates } from "@/lib/currency/displayRates";
 
-/** Kurs tampilan (Rupiah per 1 unit) untuk MJ, diteruskan ke Katalog. Mata uang tanpa kurs tidak dikirim. */
+/** Kurs tampilan (Rupiah per 1 unit) untuk MJ, diteruskan ke Katalog (dipakai menurut lokasi pengunjung). Mata uang tanpa kurs tidak dikirim. */
 export async function GET(request: Request) {
   try {
     await authenticateMjRequest(request, "read");

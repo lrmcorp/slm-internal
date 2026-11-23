@@ -964,7 +964,7 @@ paths:
       summary: Ganti satu kurs tampilan.
       description: Permission inventory.master. Hanya untuk menampilkan harga di Master Barang dan Katalog; harga modal, harga jual, dan nilai stok tidak berubah.
       security: [{ localSessionCookie: [] }, { mjBearer: [] }]
-      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [currency, rate], properties: { currency: { type: string, enum: [SGD, MYR, THB] }, rate: { type: number, example: 12150 } } } } } }
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [currency, rate], properties: { currency: { type: string, enum: [SGD, MYR, THB] }, rate: { type: number, nullable: true, example: 12150, description: "null = hapus kurs" } } } } } }
       responses: { "200": { description: "{ currency, rate, previousRate }" }, "400": { $ref: "#/components/responses/BadRequest" } }
   /api/accounting/inventory-reconciliation:
     get:

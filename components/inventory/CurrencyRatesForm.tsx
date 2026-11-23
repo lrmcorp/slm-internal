@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import { ConfirmationModal } from "@/components/ui/ConfirmationModal";
 import { useToast } from "@/components/ui/ToastProvider";
 import { displayCurrency, type ManualRateCurrency } from "@/lib/currency/displayCurrencies";
 
@@ -23,6 +24,22 @@ export function CurrencyRatesForm({ rates, canManage }: { rates: ManualRateRow[]
   const { showToast } = useToast();
   const [values, setValues] = useState<Record<string, string>>(() => Object.fromEntries(rates.map((row) => [row.currency, shown(row.rate)])));
   const [busy, setBusy] = useState<string | null>(null);
+  const [removing, setRemoving] = useState<ManualRateCurrency | null>(null);
+
+  async function remove(currency: ManualRateCurrency) {
+    setBusy(currency);
+    try {
+      const res = await fetch("/api/inventory/settings/currency-rates", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ currency, rate: null }) });
+      const json = await res.json().catch(() => null);
+      if (!json?.success) return showToast(json?.message || "Kurs gagal dihapus.", "error");
+      setValues((current) => ({ ...current, [currency]: "" }));
+      showToast(`Kurs ${currency} dihapus.`, "success");
+      router.refresh();
+    } finally {
+      setBusy(null);
+      setRemoving(null);
+    }
+  }
 
   async function save(currency: ManualRateCurrency) {
     const rate = parseRateInput(values[currency] ?? "");
@@ -43,7 +60,7 @@ export function CurrencyRatesForm({ rates, canManage }: { rates: ManualRateRow[]
     <div className="p-4">
       <h3 className="font-bold text-slate-800">Kurs Singapura, Malaysia, dan Thailand</h3>
       <p className="mt-1 text-sm text-slate-600">
-        Dipakai untuk menampilkan harga dalam mata uang lain di tabel Master Barang dan di Katalog. Harga modal, harga jual, dan pesanan tetap dicatat dalam Rupiah.
+        Dipakai untuk menampilkan harga dalam mata uang lain di tabel Master Barang. Di Katalog, pengunjung dari negara itu otomatis melihat harga dalam mata uangnya. Harga modal, harga jual, dan pesanan tetap dicatat dalam Rupiah.
       </p>
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
         {rates.map((row) => {
@@ -70,10 +87,21 @@ export function CurrencyRatesForm({ rates, canManage }: { rates: ManualRateRow[]
               <p className="mt-1 text-xs text-slate-600">
                 {row.rate ? <>Aktif: <b>Rp {shown(row.rate)}</b>{row.updatedAt ? ` · diubah ${new Date(row.updatedAt).toLocaleDateString("id-ID")}${row.updatedBy ? ` oleh ${row.updatedBy}` : ""}` : ""}</> : "Belum diatur, jadi belum bisa dipilih."}
               </p>
+              {canManage && row.rate ? <button type="button" className="mt-1 inline-flex min-h-11 items-center text-sm font-semibold text-red-800 underline disabled:opacity-50" disabled={busy !== null} onClick={() => setRemoving(row.currency)}>Hapus kurs {row.currency}</button> : null}
             </div>
           );
         })}
       </div>
+      <ConfirmationModal
+        isOpen={removing !== null}
+        onClose={() => busy === null && setRemoving(null)}
+        onConfirm={() => { if (removing) void remove(removing); }}
+        isLoading={busy !== null}
+        variant="warning"
+        title={`Hapus kurs ${removing ?? ""}?`}
+        description={`${removing ? displayCurrency(removing).country : "Negara ini"} tidak bisa dipilih lagi di Master Barang, dan pengunjung Katalog dari negara itu kembali melihat Rupiah, sampai kursnya diisi kembali. Harga dan pesanan tidak berubah.`}
+        confirmText="Ya, hapus kurs"
+      />
     </div>
   );
 }

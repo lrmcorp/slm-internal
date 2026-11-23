@@ -27,10 +27,14 @@ export async function getDisplayRates(): Promise<DisplayRates> {
   return { RMB: rmb.rate, SGD: rateOf("SGD"), MYR: rateOf("MYR"), THB: rateOf("THB") };
 }
 
-/** Simpan kurs tampilan. Tidak mengubah harga modal, harga jual, atau nilai stok. */
-export async function setManualRate(currency: ManualRateCurrency, rate: number, actor?: { id?: string; name?: string }) {
-  if (!Number.isFinite(rate) || rate <= 0) throw new InventoryError("VALIDATION", "Kurs harus lebih dari 0.");
+/** Simpan kurs tampilan, atau hapus bila rate null. Tidak mengubah harga modal, harga jual, atau nilai stok. */
+export async function setManualRate(currency: ManualRateCurrency, rate: number | null, actor?: { id?: string; name?: string }) {
   const previous = (await listManualRates()).find((item) => item.currency === currency)?.rate ?? null;
+  if (rate === null) {
+    await prisma.appSetting.deleteMany({ where: { key: keyFor(currency) } });
+    return { currency, rate: null, previousRate: previous };
+  }
+  if (!Number.isFinite(rate) || rate <= 0) throw new InventoryError("VALIDATION", "Kurs harus lebih dari 0.");
   await prisma.appSetting.upsert({
     where: { key: keyFor(currency) },
     create: { key: keyFor(currency), value: String(rate), description: `Kurs ${currency}→IDR untuk tampilan harga (Master Barang dan Katalog)`, updatedByUserId: actor?.id, updatedByNameSnapshot: actor?.name },

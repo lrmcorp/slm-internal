@@ -155,7 +155,8 @@ export const rmbRateSchema = z.object({ rate: z.coerce.number().positive("Kurs R
 /** Kurs tampilan: Rupiah per 1 SGD / MYR / THB. */
 export const displayRateSchema = z.object({
   currency: z.enum(["SGD", "MYR", "THB"]),
-  rate: z.coerce.number().positive("Kurs harus lebih dari 0").max(1_000_000, "Kurs maksimal Rp 1.000.000 per 1 unit")
+  /** null = hapus kurs; mata uang itu tidak bisa dipilih lagi di Master Barang dan Katalog. */
+  rate: z.union([z.null(), z.coerce.number().positive("Kurs harus lebih dari 0").max(1_000_000, "Kurs maksimal Rp 1.000.000 per 1 unit")])
 });
 /** Tarif ongkir laut per CBM dalam rupiah (jutaan rupiah per CBM). */
 export const cbmRateSchema = z.object({ rate: z.coerce.number().positive("Tarif CBM harus lebih dari 0").max(1_000_000_000, "Tarif CBM maksimal Rp 1.000.000.000") });

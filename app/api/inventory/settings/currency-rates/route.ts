@@ -5,10 +5,10 @@ import { displayRateSchema } from "@/lib/inventory/validation";
 /** Kurs SGD, MYR, dan THB untuk tampilan harga di Master Barang dan Katalog. */
 export const GET = inventoryRoute("inventory.master", async () => listManualRates());
 
-/** Ganti satu kurs tampilan. Harga yang tersimpan (Rupiah) tidak berubah. */
+/** Ganti atau hapus (rate null) satu kurs tampilan. Harga yang tersimpan (Rupiah) tidak berubah. */
 export const PUT = inventoryRoute("inventory.master", async (request, ctx) => {
   const { currency, rate } = await parseBody(request, displayRateSchema);
   const result = await setManualRate(currency, rate, ctx.actor);
-  await auditInventory(ctx, "currency-rate", `Kurs ${currency} ${result.previousRate ?? "-"} → ${rate}`, result);
+  await auditInventory(ctx, "currency-rate", rate === null ? `Kurs ${currency} dihapus (sebelumnya ${result.previousRate ?? "-"})` : `Kurs ${currency} ${result.previousRate ?? "-"} → ${rate}`, result);
   return result;
 });
