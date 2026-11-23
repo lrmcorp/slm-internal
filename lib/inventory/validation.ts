@@ -152,5 +152,10 @@ export type AdjustmentInput = z.infer<typeof adjustmentSchema>;
 export type StockInInput = z.infer<typeof stockInSchema>;
 
 export const rmbRateSchema = z.object({ rate: z.coerce.number().positive("Kurs RMB harus lebih dari 0").max(100000, "Kurs RMB maksimal Rp 100.000 per 1 RMB") });
+/** Kurs tampilan: Rupiah per 1 SGD / MYR / THB. */
+export const displayRateSchema = z.object({
+  currency: z.enum(["SGD", "MYR", "THB"]),
+  rate: z.coerce.number().positive("Kurs harus lebih dari 0").max(1_000_000, "Kurs maksimal Rp 1.000.000 per 1 unit")
+});
 /** Tarif ongkir laut per CBM dalam rupiah (jutaan rupiah per CBM). */
 export const cbmRateSchema = z.object({ rate: z.coerce.number().positive("Tarif CBM harus lebih dari 0").max(1_000_000_000, "Tarif CBM maksimal Rp 1.000.000.000") });

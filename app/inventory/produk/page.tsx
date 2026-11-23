@@ -1,9 +1,12 @@
+import { Fragment } from "react";
 import { redirect } from "next/navigation";
 import { AppShell } from "@/components/layout/AppShell";
 import { ProductCreateForm } from "@/components/inventory/ProductCreateForm";
 import { ProductTable } from "@/components/inventory/ProductTable";
 import { RmbRateForm } from "@/components/inventory/RmbRateForm";
 import { CbmRateForm } from "@/components/inventory/CbmRateForm";
+import { CurrencyRatesForm } from "@/components/inventory/CurrencyRatesForm";
+import { listManualRates } from "@/lib/currency/displayRates";
 import Link from "next/link";
 import { BulkUnitForm } from "@/components/inventory/BulkUnitForm";
 import { AddPanel, SettingsPanel } from "@/components/inventory/AddPanel";
@@ -23,29 +26,33 @@ export default async function InventoryProductPage({ searchParams }: { searchPar
   const p = await searchParams;
   const canManage = can(access, "inventory.master");
   const canCosting = can(access, "inventory.costing");
-  const [locations, result, rmb, rmbProducts, units, cbm, categories] = await Promise.all([
+  const [locations, result, rmb, rmbProducts, units, cbm, categories, manualRates] = await Promise.all([
     listLocations(),
     listProducts({ keyword: p.keyword, page: Number(p.page) || 1, pageSize: 50 }),
     getRmbRate(),
     prisma.inventoryProduct.count({ where: { priceRmb: { not: null } } }),
     listUnitUsage(),
     getCbmRate(),
-    listProductCategories()
+    listProductCategories(),
+    listManualRates()
   ]);
+  const rateOf = (currency: "SGD" | "MYR" | "THB") => manualRates.find((item) => item.currency === currency)?.rate ?? null;
+  const displayRates = { RMB: rmb.rate, SGD: rateOf("SGD"), MYR: rateOf("MYR"), THB: rateOf("THB") };
   return (
     <AppShell>
       <InventoryHeader title="Master Barang" description={<>Atur isi per koli, harga RMB, modal, dan harga jual tiap barang.{canCosting && <> Barang dari supplier bisa masuk lewat <Link className="text-brand-800 underline" href="/inventory/packing-list">Import Packing List</Link>. Hitung modal cepat di <Link className="text-brand-800 underline" href="/inventory/kalkulator">Kalkulator</Link>.</>}</>} />
       {canManage && <AddPanel label="Tambah Barang"><ProductCreateForm locations={locations} /></AddPanel>}
-      <SettingsPanel summary={<><span className="whitespace-nowrap">Kurs RMB</span> <b className="whitespace-nowrap">{rmb.rate ? `Rp ${rmb.rate.toLocaleString("id-ID")}` : "belum diatur"}</b> · <span className="whitespace-nowrap">Tarif CBM</span> <b className="whitespace-nowrap">{cbm.rate ? `Rp ${cbm.rate.toLocaleString("id-ID")}` : "belum diatur"}</b></>}>
+      <SettingsPanel summary={<><span className="whitespace-nowrap">Kurs RMB</span> <b className="whitespace-nowrap">{rmb.rate ? `Rp ${rmb.rate.toLocaleString("id-ID")}` : "belum diatur"}</b> · <span className="whitespace-nowrap">Tarif CBM</span> <b className="whitespace-nowrap">{cbm.rate ? `Rp ${cbm.rate.toLocaleString("id-ID")}` : "belum diatur"}</b>{manualRates.filter((item) => item.rate).map((item) => <Fragment key={item.currency}> · <span className="whitespace-nowrap">Kurs {item.currency}</span> <b className="whitespace-nowrap">Rp {item.rate!.toLocaleString("id-ID", { maximumFractionDigits: 4 })}</b></Fragment>)}</>}>
         <RmbRateForm rate={rmb.rate} updatedAt={rmb.updatedAt} updatedBy={rmb.updatedBy} rmbProducts={rmbProducts} canManage={canManage} />
         <CbmRateForm rate={cbm.rate} updatedAt={cbm.updatedAt} updatedBy={cbm.updatedBy} canManage={canManage} />
+        <CurrencyRatesForm rates={manualRates} canManage={canManage} />
         {canManage && units.length > 0 && <BulkUnitForm units={units} />}
       </SettingsPanel>
       <form className="mb-4 flex gap-2">
         <input name="keyword" defaultValue={p.keyword} placeholder="Cari SKU / nama / barcode" className={`${filterInput} w-full sm:w-72`} />
         <button className={filterButton}>Cari</button>
       </form>
-      <ProductTable rows={result.data} rate={rmb.rate} cbmRate={cbm.rate} canManage={canManage} initialEditingId={p.edit} categories={categories} />
+      <ProductTable rows={result.data} rate={rmb.rate} cbmRate={cbm.rate} displayRates={displayRates} canManage={canManage} initialEditingId={p.edit} categories={categories} />
       <Pager basePath="/inventory/produk" params={{ keyword: p.keyword }} page={result.meta.page} totalPages={result.meta.totalPages} />
     </AppShell>
   );

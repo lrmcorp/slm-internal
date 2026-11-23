@@ -1,12 +1,30 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { useToast } from "@/components/ui/ToastProvider";
 import { markupPercent } from "@/lib/inventory/shipmentCore";
 import { defaultPcsPerUnit } from "@/lib/inventory/costCalculator";
+import { DISPLAY_CURRENCIES, convertFromIdr, formatDisplayMoney, type DisplayCurrencyCode, type DisplayRates } from "@/lib/currency/displayCurrencies";
+
+const DISPLAY_CURRENCY_KEY = "slm-master-barang-mata-uang";
+const DISPLAY_CURRENCY_EVENT = "slm-mata-uang-tampilan";
+const NO_RATES: DisplayRates = { RMB: null, SGD: null, MYR: null, THB: null };
+
+function subscribeDisplayCurrency(onChange: () => void) {
+  window.addEventListener(DISPLAY_CURRENCY_EVENT, onChange);
+  window.addEventListener("storage", onChange);
+  return () => {
+    window.removeEventListener(DISPLAY_CURRENCY_EVENT, onChange);
+    window.removeEventListener("storage", onChange);
+  };
+}
+
+function readDisplayCurrency() {
+  try { return localStorage.getItem(DISPLAY_CURRENCY_KEY) || "IDR"; } catch { return "IDR"; }
+}
 
 export type ProductRow = {
   id: string; sku: string; name: string; category: string | null; brand: string | null; unit: string;
@@ -18,8 +36,23 @@ export type ProductRow = {
 
 const fmt = (n: number | null | undefined, d = 2) => (n == null ? "-" : n.toLocaleString("id-ID", { maximumFractionDigits: d }));
 
-export function ProductTable({ rows, rate, cbmRate = null, canManage, initialEditingId, categories = [] }: { rows: ProductRow[]; rate: number | null; cbmRate?: number | null; canManage: boolean; initialEditingId?: string; categories?: string[] }) {
+export function ProductTable({ rows, rate, cbmRate = null, canManage, initialEditingId, categories = [], displayRates = NO_RATES }: { rows: ProductRow[]; rate: number | null; cbmRate?: number | null; canManage: boolean; initialEditingId?: string; categories?: string[]; displayRates?: DisplayRates }) {
   const [editing, setEditing] = useState<string | null>(canManage && initialEditingId ? initialEditingId : null);
+  // Pilihan mata uang hanya mengubah tampilan kolom Modal dan Harga Jual; diingat per perangkat.
+  const savedCurrency = useSyncExternalStore(subscribeDisplayCurrency, readDisplayCurrency, () => "IDR");
+  const known = DISPLAY_CURRENCIES.find((item) => item.code === savedCurrency)?.code ?? "IDR";
+  // Kurs yang dihapus atau belum diatur: kembali ke Rupiah.
+  const currency: DisplayCurrencyCode = known !== "IDR" && displayRates[known] ? known : "IDR";
+  const chooseCurrency = (next: DisplayCurrencyCode) => {
+    try { localStorage.setItem(DISPLAY_CURRENCY_KEY, next); } catch { /* penyimpanan browser tidak tersedia */ }
+    window.dispatchEvent(new Event(DISPLAY_CURRENCY_EVENT));
+  };
+  const activeRate = currency === "IDR" ? null : displayRates[currency];
+  const money = (amountIdr: number) => {
+    const converted = currency === "IDR" ? null : convertFromIdr(amountIdr, currency, displayRates);
+    if (converted == null) return fmt(amountIdr);
+    return <>{formatDisplayMoney(converted, currency)}<div className="text-xs font-normal text-slate-600">Rp {fmt(amountIdr)}</div></>;
+  };
   const editorRef = useRef<HTMLDivElement>(null);
   const editingRow = rows.find((x) => x.id === editing);
   useEffect(() => {
@@ -34,6 +67,16 @@ export function ProductTable({ rows, rate, cbmRate = null, canManage, initialEdi
           <ProductEditor key={editingRow.id} row={editingRow} rate={rate} cbmRate={cbmRate} categories={categories} onDone={() => setEditing(null)} />
         </div>
       )}
+    <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm">
+      <label htmlFor="mata-uang-tampilan" className="font-semibold text-slate-800">Tampilkan harga dalam</label>
+      <select id="mata-uang-tampilan" value={currency} onChange={(event) => chooseCurrency(event.target.value as DisplayCurrencyCode)} className="min-h-11 rounded-lg border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 focus:border-brand-600 focus:outline-none">
+        {DISPLAY_CURRENCIES.map((item) => {
+          const missing = item.code !== "IDR" && !displayRates[item.code];
+          return <option key={item.code} value={item.code} disabled={missing}>{item.code} · {item.label}{missing ? " (kurs belum diatur)" : ""}</option>;
+        })}
+      </select>
+      {activeRate ? <span className="text-slate-600">1 {currency} = Rp {activeRate.toLocaleString("id-ID", { maximumFractionDigits: 4 })}. Hanya tampilan; harga tersimpan tetap Rupiah.</span> : null}
+    </div>
     <div className="aj-surface mb-8 overflow-x-auto">
       <table className="min-w-full text-sm">
         <thead className="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-600">
@@ -51,8 +94,8 @@ export function ProductTable({ rows, rate, cbmRate = null, canManage, initialEdi
                 <td className="px-3 py-2">{x.unit}</td>
                 <td className="px-3 py-2 text-right tabular-nums">{x.unitsPerKoli ? `${fmt(x.unitsPerKoli)} ${x.unit}` : "-"}</td>
                 <td className="px-3 py-2 text-right tabular-nums">{x.priceRmb != null ? (defaultPcsPerUnit(x.unit, x.pcsPerUnit) ? <>¥ {fmt(x.priceRmb / defaultPcsPerUnit(x.unit, x.pcsPerUnit)!, 4)}<span className="text-xs text-slate-500">/pcs</span><div className="text-xs text-slate-600">¥ {fmt(x.priceRmb, 4)}/{x.unit}</div></> : `¥ ${fmt(x.priceRmb, 4)}`) : "-"}{x.priceRmb != null && x.cbmPerUnit ? <div className="text-xs text-slate-600">{fmt(x.cbmPerUnit, 6)} CBM</div> : null}{x.priceRmb != null && x.extraCostIdr ? <div className="text-xs text-slate-600">+ Rp {fmt(x.extraCostIdr)}</div> : null}</td>
-                <td className="px-3 py-2 text-right tabular-nums">{fmt(x.costPrice)}</td>
-                <td className="px-3 py-2 text-right tabular-nums">{fmt(x.sellingPrice)}</td>
+                <td className="px-3 py-2 text-right tabular-nums">{money(x.costPrice)}</td>
+                <td className="px-3 py-2 text-right tabular-nums">{money(x.sellingPrice)}</td>
                 <MarkupCell cost={x.costPrice} sell={x.sellingPrice} />
                 <td className={`whitespace-nowrap px-3 py-2 text-right font-semibold tabular-nums ${x.minimumStock > 0 && x.totalQuantity <= x.minimumStock ? "text-red-800" : ""}`}>
                   {x.totalKoliText}{x.unitsPerKoli && x.totalQuantity ? <div className="text-xs font-normal text-slate-600">{fmt(x.totalQuantity)} {x.unit}</div> : null}

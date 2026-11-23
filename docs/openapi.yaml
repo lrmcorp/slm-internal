@@ -953,6 +953,19 @@ paths:
       security: [{ localSessionCookie: [] }, { mjBearer: [] }]
       requestBody: { required: true, content: { application/json: { schema: { type: object, required: [rate], properties: { rate: { type: number, example: 2750 } } } } } }
       responses: { "200": { description: "{ rate, previousRate, updatedProducts }" }, "400": { $ref: "#/components/responses/BadRequest" } }
+  /api/inventory/settings/currency-rates:
+    get:
+      tags: [Inventory]
+      summary: Kurs tampilan SGD, MYR, dan THB (Rupiah per 1 unit).
+      security: [{ localSessionCookie: [] }, { mjBearer: [] }]
+      responses: { "200": { description: "[{ currency, rate, updatedAt, updatedBy }]; rate null bila belum diatur." } }
+    put:
+      tags: [Inventory]
+      summary: Ganti satu kurs tampilan.
+      description: Permission inventory.master. Hanya untuk menampilkan harga di Master Barang dan Katalog; harga modal, harga jual, dan nilai stok tidak berubah.
+      security: [{ localSessionCookie: [] }, { mjBearer: [] }]
+      requestBody: { required: true, content: { application/json: { schema: { type: object, required: [currency, rate], properties: { currency: { type: string, enum: [SGD, MYR, THB] }, rate: { type: number, example: 12150 } } } } } }
+      responses: { "200": { description: "{ currency, rate, previousRate }" }, "400": { $ref: "#/components/responses/BadRequest" } }
   /api/accounting/inventory-reconciliation:
     get:
       tags: [Accounting]
@@ -1191,6 +1204,16 @@ paths:
       responses:
         "200":
           description: "{ success: true, data: { rekening_id, bank_name, account_number, account_holder } | null }; rekening_id = ID rekening SLM (dipetakan ke rekening MJ lewat slmRekeningId)."
+        "401":
+          description: AUTH_INVALID
+  /api/integrations/mj/currency-rates:
+    get:
+      summary: Kurs tampilan untuk pilihan negara di Katalog.
+      description: Diatur di Master Barang, bagian kurs. Mata uang yang kursnya belum diatur tidak dikirim.
+      security: [{ mjBearer: [] }]
+      responses:
+        "200":
+          description: "{ success: true, data: [{ currency: SGD | MYR | THB, rate_idr, updated_at }] }; rate_idr = Rupiah per 1 unit."
         "401":
           description: AUTH_INVALID
   /api/integrations/mj/products/{id}/photo:
