@@ -19,7 +19,7 @@ jobs:
       - name: Tes backend CCTV (Laravel)
         working-directory: cctv/backend
         run: |
-          cp .env.example .env
+          printf 'APP_ENV=testing\nAPP_KEY=\n' > .env
           composer install --prefer-dist --no-interaction --no-progress --no-scripts
           php artisan key:generate
           php artisan test

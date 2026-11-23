@@ -1,0 +1,61 @@
+name: SLM · Deploy ke VPS
+# Membangun ulang aplikasi SLM (container slm-app) di VPS dari branch main. Database tidak disentuh selain
+# migrasi Prisma. Stack CCTV punya workflow sendiri (cctv-deploy-vps.yml), jadi perubahan cctv/ dilewati di sini.
+on:
+  push:
+    branches: [main]
+    paths-ignore: ['cctv/**', '.github/workflows/cctv-*.yml', 'docs/**', '**.md']
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: slm-production-deploy
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-24.04
+    # Kunci SSH yang sama dengan deploy CCTV (secret di environment cctv-production).
+    environment: cctv-production
+    timeout-minutes: 30
+    steps:
+      - name: Tarik kode dan bangun ulang aplikasi SLM di VPS
+        env:
+          VPS_HOST: ${{ secrets.CCTV_VPS_HOST }}
+          VPS_PORT: ${{ secrets.CCTV_VPS_PORT }}
+          VPS_USER: ${{ secrets.CCTV_VPS_USER }}
+          VPS_KEY: ${{ secrets.CCTV_VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.CCTV_VPS_KNOWN_HOSTS }}
+          TARGET_SHA: ${{ github.sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for variable in VPS_HOST VPS_PORT VPS_USER VPS_KEY VPS_KNOWN_HOSTS; do
+            [ -n "${!variable}" ] || { echo "Setelan belum ada: $variable"; exit 1; }
+          done
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$VPS_KEY" > ~/.ssh/slm_deploy && chmod 600 ~/.ssh/slm_deploy
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/slm_deploy -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" TARGET_SHA="$TARGET_SHA" bash -s <<'REMOTE'
+          set -euo pipefail
+          # Kunci yang sama dengan timer slm-autodeploy, supaya dua deploy tidak membangun image bersamaan.
+          exec 9>/var/lock/slm-deploy.lock
+          flock -w 1200 9 || { echo "Deploy lain masih berjalan lebih dari 20 menit"; exit 1; }
+          container=slm-app
+          workdir=$(docker inspect -f '{{index .Config.Labels "com.docker.compose.project.working_dir"}}' "$container")
+          service=$(docker inspect -f '{{index .Config.Labels "com.docker.compose.service"}}' "$container")
+          [ -n "$workdir" ] && [ -n "$service" ] || { echo "Container $container tidak ditemukan atau bukan dari docker compose"; exit 1; }
+          cd "$workdir"
+          git fetch --quiet origin main
+          git merge --ff-only --quiet origin/main
+          echo "Kode di server: $(git log --oneline -1)"
+          docker compose build "$service"
+          docker compose run --rm --no-deps -T "$service" npm run db:migrate:deploy
+          docker compose up -d "$service"
+          for attempt in $(seq 1 45); do
+            status=$(docker exec "$container" node -e "fetch('http://127.0.0.1:'+(process.env.PORT||3000)+'/api/health').then(r=>process.stdout.write(String(r.status))).catch(()=>process.stdout.write('000'))" 2>/dev/null || true)
+            [ "$status" = "200" ] && { echo "SLM sehat pada commit ${TARGET_SHA:0:7}"; exit 0; }
+            sleep 2
+          done
+          echo "SLM belum sehat (HTTP ${status:-?}); cek: docker logs --tail=80 $container"
+          exit 1
+          REMOTE
