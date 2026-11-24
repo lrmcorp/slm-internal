@@ -15,13 +15,14 @@ class SlmWebhookDispatcher
 
         $type = $incident->type;
         $severity = match ($type) {
-            'anomaly' => 'critical',
+            'anomaly', 'restricted_entry' => 'critical',
             'camera_offline', 'person_absent' => 'warning',
             default => 'info',
         };
 
         $title = match ($type) {
             'anomaly' => "Dugaan Anomali Meja Packing ({$cameraName})",
+            'restricted_entry' => "Ada Orang di Area Terlarang ({$cameraName})",
             'camera_offline' => "Kamera CCTV Offline ({$cameraName})",
             'person_absent' => "Meja Packing Kosong ({$cameraName})",
             default => "Pemberitahuan CCTV ({$cameraName})",
@@ -29,6 +30,7 @@ class SlmWebhookDispatcher
 
         $message = match ($type) {
             'anomaly' => "Barang dikeluarkan dari area meja packing tanpa melalui rute packing resmi pada {$cameraName}.",
+            'restricted_entry' => ($incident->reason ?: 'Orang terlihat di area terlarang.')." Kamera {$cameraName}, ".($incident->occurred_at ?? now())->timezone('Asia/Jakarta')->format('H:i').' WIB.',
             'camera_offline' => "Kamera {$cameraName} terputus atau tidak merespons stream video.",
             'person_absent' => "Petugas tidak terdeteksi di {$cameraName} melebihi batas waktu toleransi.",
             default => $incident->reason ?: "Pemberitahuan operasional dari {$cameraName}.",

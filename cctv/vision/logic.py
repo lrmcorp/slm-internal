@@ -101,6 +101,21 @@ def parse_label(text: str, confidence: float) -> dict | None:
     }
 
 
+def people_in_zone(people: list[dict], zone: list[list[float]] | None, min_height: float = 0.05) -> list[dict]:
+    """Orang yang kakinya (tengah sisi bawah kotak) ada di dalam zona. Kotak sangat kecil (< min_height
+    tinggi frame) diabaikan karena biasanya salah deteksi atau orang yang jauh di luar area."""
+    if not zone or len(zone) < 3:
+        return []
+    hits = []
+    for person in people:
+        x1, y1, x2, y2 = person["box"]
+        if y2 - y1 < min_height:
+            continue
+        if inside(((x1 + x2) / 2, y2), zone):
+            hits.append(person)
+    return hits
+
+
 def inside(point: tuple[float, float], polygon: list[list[float]]) -> bool:
     if len(polygon) < 3:
         return False

@@ -167,6 +167,11 @@ export function CctvDetectionsTable({ items }: { items: DetectionItem[] }) {
                         <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
                         Anomali
                       </span>
+                    ) : item.eventType === "restricted_entry" ? (
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-50 px-2.5 py-1 text-xs font-bold text-rose-700 border border-rose-200">
+                        <span className="h-1.5 w-1.5 rounded-full bg-rose-500" />
+                        Area terlarang
+                      </span>
                     ) : item.eventType === "camera_offline" ? (
                       <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700 border border-amber-200">
                         <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />

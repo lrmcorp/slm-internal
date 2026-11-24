@@ -8,6 +8,8 @@ use App\Jobs\VerifyLabelWithAi;
 use App\Models\Camera;
 use App\Models\Incident;
 use App\Models\LabelRecord;
+use App\Jobs\SpeakGuardWarning;
+use App\Services\GuardSchedule;
 use App\Services\IncidentNotifier;
 use App\Services\SlmMatcher;
 use Illuminate\Http\Request;
@@ -18,7 +20,8 @@ class IngestController extends Controller
     public function config(Camera $camera)
     {
         return response()->json(['stream_env_key' => $camera->stream_env_key,
-            'zones' => $camera->zones, 'zones_approved' => $camera->zones_approved_at !== null]);
+            'zones' => $camera->zones, 'zones_approved' => $camera->zones_approved_at !== null,
+            'guard' => GuardSchedule::forWorker($camera)]);
     }
 
     public function heartbeat(Request $request, Camera $camera)
@@ -30,7 +33,7 @@ class IngestController extends Controller
                 ->whereNull('resolved_at')->update(['resolved_at' => now()]);
         }
         return response()->json(['ok' => true, 'zones' => $camera->zones,
-            'zones_approved' => $camera->zones_approved_at !== null]);
+            'zones_approved' => $camera->zones_approved_at !== null, 'guard' => GuardSchedule::forWorker($camera)]);
     }
 
     public function label(Request $request, Camera $camera, SlmMatcher $matcher)
@@ -194,6 +197,42 @@ class IngestController extends Controller
                 'passed_packing_route' => false],
         ]);
         $notifier->queue($incident);
+        return response()->json($incident, 201);
+    }
+
+    /**
+     * Orang terlihat di area terlarang saat jam jaga. Dicatat sebagai kejadian, diteruskan ke SLM, dan
+     * (bila speaker aktif) kalimat peringatan diputar di kamera. Jeda per kamera mencegah peringatan beruntun.
+     */
+    public function guard(Request $request, Camera $camera, IncidentNotifier $notifier)
+    {
+        $data = $request->validate([
+            'observed_at' => 'required|date', 'person_count' => 'required|integer|between:1,50',
+            'confidence' => 'required|numeric|between:0,1', 'snapshot' => 'required|image|max:4096',
+        ]);
+        if (!GuardSchedule::isActive($camera)) {
+            return response()->json(['message' => 'Jaga area terlarang sedang tidak aktif untuk kamera ini.', 'accepted' => false], 202);
+        }
+        $cooldown = max(10, (int) ($camera->guard_cooldown_seconds ?: 60));
+        $recent = Incident::where('camera_id', $camera->id)->where('type', 'restricted_entry')
+            ->where('occurred_at', '>=', now()->subSeconds($cooldown))->exists();
+        if ($recent) {
+            return response()->json(['message' => 'Masih dalam jeda peringatan.', 'accepted' => false], 202);
+        }
+        $occurredAt = \Carbon\Carbon::parse($data['observed_at']);
+        $count = (int) $data['person_count'];
+        $incident = Incident::create([
+            'camera_id' => $camera->id, 'type' => 'restricted_entry', 'status' => 'needs_review',
+            'reason' => ($count > 1 ? "{$count} orang" : 'Orang').' terlihat di area terlarang saat jam jaga.',
+            'confidence' => $data['confidence'], 'occurred_at' => $occurredAt,
+            'snapshot_path' => $request->file('snapshot')->store('cctv/incidents', 'local'),
+            'dedupe_key' => hash('sha256', 'restricted:'.$camera->id.':'.$occurredAt->toIso8601String()),
+            'metadata' => ['person_count' => $count, 'speaker' => $camera->speaker_enabled ? 'queued' : 'off'],
+        ]);
+        $notifier->queue($incident);
+        if ($camera->speaker_enabled) {
+            SpeakGuardWarning::dispatch($camera->id, $incident->id)->onQueue('alerts');
+        }
         return response()->json($incident, 201);
     }
 

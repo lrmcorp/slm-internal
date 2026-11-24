@@ -14,6 +14,7 @@ Route::prefix('ingest')->middleware('cctv.ingest')->group(function () {
     Route::post('/cameras/{camera}/heartbeat', [IngestController::class, 'heartbeat']);
     Route::post('/cameras/{camera}/labels', [IngestController::class, 'label']);
     Route::post('/cameras/{camera}/incidents', [IngestController::class, 'incident']);
+    Route::post('/cameras/{camera}/guard', [IngestController::class, 'guard']);
     Route::post('/cameras/{camera}/incidents/{sourceEventId}/clip', [IngestController::class, 'clip']);
 });
 

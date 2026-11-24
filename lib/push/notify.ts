@@ -214,3 +214,19 @@ export async function notifyWarehouseShortage(requestId: string) {
     console.error("[push] notifikasi selisih gudang gagal:", error instanceof Error ? error.message : error);
   }
 }
+
+/** Kejadian CCTV yang perlu segera dilihat pemilik (area terlarang, anomali meja packing). Tidak pernah melempar error. */
+export async function notifyCctvAlert(alert: { eventId?: string | null; title?: string | null; message?: string | null; cameraName?: string | null }) {
+  if (!pushConfig().enabled) return;
+  try {
+    await sendPushToRoles(PUSH_AUDIENCE.cctvAlert, {
+      title: alert.title?.trim() || `Peringatan CCTV${alert.cameraName ? ` (${alert.cameraName})` : ""}`,
+      body: alert.message?.trim() || "Ada kejadian di CCTV yang perlu diperiksa.",
+      url: "/cctv-monitoring",
+      // Pengiriman ulang dari CCTV (retry) memakai event_id yang sama, jadi tidak menumpuk di HP.
+      tag: `cctv-${alert.eventId || Date.now()}`,
+    });
+  } catch (error) {
+    console.error("[push] notifikasi CCTV gagal:", error instanceof Error ? error.message : error);
+  }
+}

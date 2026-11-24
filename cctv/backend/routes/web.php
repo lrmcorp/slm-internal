@@ -96,6 +96,35 @@ Route::middleware('auth')->group(function () {
         }
         return back();
     });
+    Route::post('/cameras/{camera}/guard-settings', function (Request $request, Camera $camera) {
+        abort_unless($request->user()->is_admin, 403);
+        $data = $request->validate([
+            'guard_enabled' => 'nullable|boolean', 'speaker_enabled' => 'nullable|boolean',
+            'guard_days' => 'nullable|array', 'guard_days.*' => 'integer|between:1,7',
+            'guard_start' => ['required', 'regex:/^([01]\d|2[0-3]):[0-5]\d$/'], 'guard_end' => ['required', 'regex:/^([01]\d|2[0-3]):[0-5]\d$/'],
+            'guard_message' => 'nullable|string|max:300', 'guard_cooldown_seconds' => 'required|integer|between:10,3600',
+            'speaker_channel' => 'required|integer|between:1,64',
+        ]);
+        $camera->update([
+            'guard_enabled' => $request->boolean('guard_enabled'), 'speaker_enabled' => $request->boolean('speaker_enabled'),
+            'guard_days' => array_values(array_map('intval', $data['guard_days'] ?? [])),
+            'guard_start' => $data['guard_start'], 'guard_end' => $data['guard_end'],
+            'guard_message' => trim((string) ($data['guard_message'] ?? '')) ?: null,
+            'guard_cooldown_seconds' => $data['guard_cooldown_seconds'], 'speaker_channel' => $data['speaker_channel'],
+        ]);
+        return back()->with('status', 'Pengaturan jaga area terlarang disimpan.');
+    })->name('dashboard.camera.guard');
+    Route::post('/cameras/{camera}/speaker-test', function (Request $request, Camera $camera,
+        \App\Services\TextToSpeech $tts, \App\Services\CameraSpeaker $speaker) {
+        abort_unless($request->user()->is_admin, 403);
+        $text = trim((string) $request->input('text')) ?: \App\Services\GuardSchedule::message($camera);
+        try {
+            $speaker->play($camera, $tts->ulaw(mb_substr($text, 0, 300)));
+        } catch (\Throwable $e) {
+            return back()->with('speaker_error', 'Suara belum bisa diputar: '.$e->getMessage());
+        }
+        return back()->with('status', 'Suara uji sudah dikirim ke speaker kamera.');
+    })->name('dashboard.camera.speaker-test');
     Route::post('/cameras/{camera}/zones/apply-full-frame', function (Request $request, Camera $camera) {
         abort_unless($request->user()->is_admin, 403);
         $camera->applyFullFrameZones(true);

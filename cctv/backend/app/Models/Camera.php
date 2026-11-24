@@ -41,12 +41,15 @@ class Camera extends Model
     protected function casts(): array
     {
         return ['object_tracks' => 'array', 'zones' => 'array', 'zones_approved_at' => 'datetime', 'last_seen_at' => 'datetime', 'frame_at' => 'datetime',
-            'presence_alerts_enabled' => 'boolean', 'detector_ready' => 'boolean'];
+            'presence_alerts_enabled' => 'boolean', 'detector_ready' => 'boolean',
+            'guard_enabled' => 'boolean', 'guard_days' => 'array', 'speaker_enabled' => 'boolean'];
     }
 
     public function applyFullFrameZones(bool $autoApprove = true): self
     {
-        $this->zones = self::DEFAULT_FULL_FRAME_ZONES;
+        // Area terlarang tetap dipertahankan; full-frame hanya mengganti zona deteksi paket.
+        $restricted = array_values(array_filter((array) $this->zones, fn ($zone) => ($zone['type'] ?? null) === 'restricted_zone'));
+        $this->zones = array_merge(self::DEFAULT_FULL_FRAME_ZONES, $restricted);
         if ($autoApprove) {
             $this->zones_approved_at = now();
             $this->status = 'active';

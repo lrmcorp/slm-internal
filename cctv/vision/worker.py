@@ -27,11 +27,13 @@ os.environ.setdefault('OPENCV_FFMPEG_LOGLEVEL', '-8')
 # RTSP lewat TCP: UDP tidak bisa melewati penerus port di komputer toko dan Tailscale.
 os.environ.setdefault('OPENCV_FFMPEG_CAPTURE_OPTIONS', 'rtsp_transport;tcp')
 import cv2
+import numpy as np
 import requests
 
 from evidence_spool import EvidenceSpool
 from live_video import LiveVideo
-from logic import CODE, ZoneTracker, clip_playback_fps, normalize_store, parse_label, parse_qr_payload
+from logic import CODE, ZoneTracker, clip_playback_fps, normalize_store, parse_label, parse_qr_payload, people_in_zone
+from person_detector import PersonDetector
 from runtime import DropOldestExecutor, redact
 
 # Satu thread decode per proses: tiga kamera tidak berebut CPU dengan aplikasi lain di VPS.
@@ -276,6 +278,9 @@ class Shared:
         self.ocr = DropOldestExecutor("ocr", workers=1, max_queue=int(os.getenv("CCTV_OCR_QUEUE", "2")))
         self.upload = DropOldestExecutor("upload", workers=2, max_queue=int(os.getenv("CCTV_UPLOAD_QUEUE", "8")))
         self.live = DropOldestExecutor("live", workers=1, max_queue=int(os.getenv("CCTV_LIVE_QUEUE", "6")))
+        # Jaga area terlarang: satu detektor orang untuk semua kamera, dimuat saat jaga pertama kali aktif.
+        self.guard = DropOldestExecutor("guard", workers=1, max_queue=2)
+        self.person = PersonDetector()
         self._model_lock = threading.Lock()
         self._yolo = None
 
@@ -289,7 +294,7 @@ class Shared:
             return self._yolo(model_path)
 
     def shutdown(self):
-        for executor in (self.live, self.ocr, self.upload):
+        for executor in (self.live, self.ocr, self.upload, self.guard):
             executor.shutdown(wait=True)
 
 
@@ -348,6 +353,13 @@ class Worker:
         self.spool_jitter = random.uniform(0, 20)  # tiga kamera tidak mengunggah bersamaan
         self.ocr_future = None
         self.ocr_frame = None
+        # Jaga area terlarang (jadwal dan zona dari backend lewat heartbeat).
+        self.guard = {"active": False, "zone": None, "cooldown_seconds": 60}
+        self.guard_interval = 1.0 / max(0.2, min(5.0, float(os.getenv("CCTV_GUARD_FPS", "2"))))
+        self.guard_future = None
+        self.last_guard_check = 0.0
+        self.last_guard_alert = 0.0
+        self.guard_streak = 0
         self.model = None
         self.tracking_session = str(uuid.uuid4())
         self.last_observation = 0.0
@@ -411,6 +423,12 @@ class Worker:
             result.raise_for_status()
             data = result.json()
             self.approved = bool(data["zones_approved"])
+            guard = data.get("guard") or {}
+            active = bool(guard.get("active")) and bool(guard.get("zone"))
+            if active != self.guard["active"]:
+                LOG.info("Jaga area terlarang kamera %d %s", self.camera_id, "aktif" if active else "berhenti")
+                self.guard_streak = 0
+            self.guard = {"active": active, "zone": guard.get("zone"), "cooldown_seconds": float(guard.get("cooldown_seconds") or 60)}
             if data["zones"] != self.zones:
                 self.zones = data["zones"] or []
                 self.tracker = ZoneTracker(self.zones)
@@ -466,6 +484,35 @@ class Worker:
             result.raise_for_status()
         except requests.RequestException as exc:
             LOG.warning('Observation upload failed: %s', type(exc).__name__)
+
+    def check_guard(self, frame, now: float):
+        """Orang di area terlarang dua pemeriksaan berturut-turut = peringatan (sekali per jeda)."""
+        zone = self.guard["zone"]
+        hits = people_in_zone(self.shared.person.detect(frame), zone)
+        self.guard_streak = self.guard_streak + 1 if hits else 0
+        if self.guard_streak < 2 or now - self.last_guard_alert < self.guard["cooldown_seconds"]:
+            return
+        image = frame.copy()
+        height, width = image.shape[:2]
+        polygon = np.array([[int(x * width), int(y * height)] for x, y in zone], np.int32)
+        cv2.polylines(image, [polygon], True, (0, 109, 255), 3)
+        for person in hits:
+            x1, y1, x2, y2 = person["box"]
+            cv2.rectangle(image, (int(x1 * width), int(y1 * height)), (int(x2 * width), int(y2 * height)), (0, 0, 255), 3)
+            cv2.putText(image, f"Orang {person['score']:.0%}", (int(x1 * width), max(22, int(y1 * height) - 6)),
+                        cv2.FONT_HERSHEY_SIMPLEX, .7, (0, 0, 255), 2)
+        try:
+            result = self.post("guard", data={"observed_at": datetime.now(timezone.utc).isoformat(), "person_count": len(hits),
+                                              "confidence": round(max(person["score"] for person in hits), 4)},
+                               files={"snapshot": ("guard.jpg", jpeg(downscale(image, 960), "80"), "image/jpeg")})
+            if result.status_code in (201, 202):
+                self.last_guard_alert = now
+                if result.status_code == 201:
+                    LOG.info("Kamera %d: %d orang di area terlarang, peringatan dikirim", self.camera_id, len(hits))
+            else:
+                LOG.warning("Peringatan area terlarang kamera %d ditolak: HTTP %d", self.camera_id, result.status_code)
+        except requests.RequestException as exc:
+            LOG.warning("Peringatan area terlarang kamera %d gagal dikirim: %s", self.camera_id, type(exc).__name__)
 
     def send_label(self, frame, label):
         now = time.monotonic()
@@ -743,6 +790,10 @@ class Worker:
             else:
                 qr_stats_snapshot_and_reset()
             self.last_qr_stats = now
+        if (self.guard["active"] and now - self.last_guard_check >= self.guard_interval
+                and (self.guard_future is None or self.guard_future.done())):
+            self.guard_future = self.shared.guard.submit(self.check_guard, frame, now)
+            self.last_guard_check = now
         detections = self.detect(frame)
         if self.live_video and not self.live_video.source and (self.live_future is None or self.live_future.done()):
             image, _ = self.draw_tracks(frame, detections)

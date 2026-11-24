@@ -3,6 +3,7 @@ import { findRepeatDetection } from "@/lib/cctv/repeatDetection";
 import { prisma } from "@/lib/db/prisma";
 import crypto from "node:crypto";
 import { CCTV_TOKEN, fetchSnapshotCaptureDate, matchesToken } from "@/lib/cctv/client";
+import { notifyCctvAlert } from "@/lib/push/notify";
 
 function verifyToken(request: Request, rawBody?: string): boolean {
   // 1. Cek Header X-CCTV-Token
@@ -260,7 +261,8 @@ export async function POST(request: Request) {
         break;
       }
 
-      case "anomaly": {
+      case "anomaly":
+      case "restricted_entry": {
         const resolvedEvidenceUrl =
           data?.evidence_url ? String(data.evidence_url) :
           payload.evidence_url ? String(payload.evidence_url) : null;
@@ -274,11 +276,11 @@ export async function POST(request: Request) {
             id: crypto.randomUUID(),
             entityType: "cctv_incident",
             entityId: event_id || `anomaly-${Date.now()}`,
-            action: "cctv_anomaly_alert",
+            action: event_type === "restricted_entry" ? "cctv_restricted_entry" : "cctv_anomaly_alert",
             userId: "integration:cctv",
             userNameSnapshot: "CCTV Security AI",
             userRoleSnapshot: "OWNER",
-            reason: title ? `${title}: ${message || ""}` : (message || "Anomali terdeteksi di area packing CCTV"),
+            reason: title ? `${title}: ${message || ""}` : (message || (event_type === "restricted_entry" ? "Ada orang di area terlarang CCTV" : "Anomali terdeteksi di area packing CCTV")),
             afterValue: {
               event_id,
               severity: severity || "critical",
@@ -303,9 +305,9 @@ export async function POST(request: Request) {
             cameraId: camera?.id ? Number(camera.id) : null,
             cameraName: camera?.name || null,
             cameraLocation: camera?.location || null,
-            eventType: "anomaly",
+            eventType: event_type,
             severity: severity || "critical",
-            packingStatus: "anomaly",
+            packingStatus: event_type,
             matchStatus: "review",
             firstSeenAt: safePhysicalTime,
             packingCompletedAt: safePhysicalTime,
@@ -314,6 +316,7 @@ export async function POST(request: Request) {
             notes: (data?.reason as string) || message || title || "Anomali terdeteksi di area packing CCTV",
           },
         });
+        void notifyCctvAlert({ eventId: event_id, title, message, cameraName: camera?.name });
         break;
       }
 

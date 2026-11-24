@@ -61,6 +61,91 @@
     <p class="text-sm text-muted mt-2">Model pelacak: <strong>{{ $camera->detector_ready ? 'Tersedia' : 'Belum tersedia' }}</strong>. Track tidak mengidentifikasi wajah. Klasifikasi dilakukan oleh pemeriksa.</p>
 </section>
 
+@php($guardDays = \App\Services\GuardSchedule::days($camera))
+@php($guardZone = \App\Services\GuardSchedule::zone($camera))
+@php($speakerReady = \App\Services\CameraSpeaker::endpoint($camera) !== null)
+<section class="card">
+    <div class="card-header">
+        <div>
+            <h2>Jaga Area Terlarang</h2>
+            <p>Peringatan ke SLM dan suara di speaker kamera saat ada orang di area terlarang</p>
+        </div>
+        <span class="badge {{ \App\Services\GuardSchedule::isActive($camera) ? 'good' : 'warn' }}">{{ \App\Services\GuardSchedule::isActive($camera) ? 'Sedang berjaga' : 'Tidak berjaga sekarang' }}</span>
+    </div>
+    <p class="text-sm text-muted">
+        Zona: <strong>{{ $guardZone ? 'sudah digambar' : 'belum digambar' }}</strong>{{ $guardZone ? '' : ' (pilih "Area terlarang" di Kalibrasi Zona di bawah)' }}.
+        Speaker: <strong>{{ $speakerReady ? 'alamat sudah diatur' : 'alamat belum diatur' }}</strong>{{ $speakerReady ? '' : ' (isi '.\App\Services\CameraSpeaker::envKey($camera).' di cctv/.env)' }}.
+        Suara Google: <strong>{{ config('cctv.tts_api_key') ? 'kunci sudah diatur' : 'kunci belum diatur (GOOGLE_TTS_API_KEY)' }}</strong>.
+    </p>
+    @if(session('speaker_error'))
+        <div class="notice error" role="alert">{{ session('speaker_error') }}</div>
+    @endif
+    @if(auth()->user()->is_admin)
+    <form method="post" action="{{ route('dashboard.camera.guard', $camera) }}" class="mt-4">
+        @csrf
+        <div class="form-row">
+            <div>
+                <label for="guard_enabled">Jaga</label>
+                <select id="guard_enabled" name="guard_enabled">
+                    <option value="0" @selected(!$camera->guard_enabled)>Mati</option>
+                    <option value="1" @selected($camera->guard_enabled)>Aktif</option>
+                </select>
+            </div>
+            <div>
+                <label for="guard_start">Mulai (WIB)</label>
+                <input id="guard_start" name="guard_start" type="time" value="{{ $camera->guard_start ?: '12:00' }}" required>
+            </div>
+            <div>
+                <label for="guard_end">Selesai (WIB)</label>
+                <input id="guard_end" name="guard_end" type="time" value="{{ $camera->guard_end ?: '15:00' }}" required>
+            </div>
+            <div>
+                <label for="guard_cooldown_seconds">Jeda antar peringatan (detik)</label>
+                <input id="guard_cooldown_seconds" name="guard_cooldown_seconds" type="number" min="10" max="3600" value="{{ $camera->guard_cooldown_seconds ?: 60 }}" required>
+            </div>
+        </div>
+        <fieldset class="mt-4">
+            <legend>Hari jaga</legend>
+            @foreach([1 => 'Senin', 2 => 'Selasa', 3 => 'Rabu', 4 => 'Kamis', 5 => 'Jumat', 6 => 'Sabtu', 7 => 'Minggu'] as $day => $name)
+                <label style="display:inline-flex;align-items:center;gap:.35rem;margin-right:1rem;min-height:44px">
+                    <input type="checkbox" name="guard_days[]" value="{{ $day }}" @checked(in_array($day, $guardDays, true))> {{ $name }}
+                </label>
+            @endforeach
+        </fieldset>
+        <div class="mt-4">
+            <label for="guard_message">Kalimat peringatan</label>
+            <textarea id="guard_message" name="guard_message" rows="2" maxlength="300" placeholder="{{ \App\Services\GuardSchedule::DEFAULT_MESSAGE }}">{{ $camera->guard_message }}</textarea>
+        </div>
+        <div class="form-row mt-4">
+            <div>
+                <label for="speaker_enabled">Suara di speaker kamera</label>
+                <select id="speaker_enabled" name="speaker_enabled">
+                    <option value="0" @selected(!$camera->speaker_enabled)>Mati</option>
+                    <option value="1" @selected($camera->speaker_enabled)>Aktif</option>
+                </select>
+            </div>
+            <div>
+                <label for="speaker_channel">Kanal audio (ISAPI)</label>
+                <input id="speaker_channel" name="speaker_channel" type="number" min="1" max="64" value="{{ $camera->speaker_channel ?: 1 }}" required>
+            </div>
+            <div>
+                <button type="submit">Simpan Pengaturan Jaga</button>
+            </div>
+        </div>
+    </form>
+    <form method="post" action="{{ route('dashboard.camera.speaker-test', $camera) }}" class="form-row mt-4">
+        @csrf
+        <div style="flex:1">
+            <label for="speaker_test_text">Tes suara (kosong = kalimat peringatan)</label>
+            <input id="speaker_test_text" name="text" type="text" maxlength="300" placeholder="Tes speaker kamera">
+        </div>
+        <div>
+            <button type="submit" class="secondary">Putar di Speaker</button>
+        </div>
+    </form>
+    @endif
+</section>
+
 <div class="grid">
     <section class="card">
         <div class="card-header">
@@ -95,6 +180,7 @@
                 <div>
                     <label for="zone-type">Zona yang digambar</label>
                     <select id="zone-type">
+                        <option value="restricted_zone">Area terlarang (jaga jam tertentu)</option>
                         <option value="store_boundary">Batas toko / area dalam</option>
                         <option value="danger_zone">Danger zone</option>
                         <option value="packing_area">Area packing yang terlihat</option>
@@ -172,9 +258,10 @@
         danger_zone: '#f44336',
         packing_area: '#16b977',
         box_area: '#ffbf00',
-        packing_route: '#9063df'
+        packing_route: '#9063df',
+        restricted_zone: '#ff6d00'
     };
-    const zones = {store_boundary:[], danger_zone:[], packing_area:[], box_area:[], packing_route:[]};
+    const zones = {restricted_zone:[], store_boundary:[], danger_zone:[], packing_area:[], box_area:[], packing_route:[]};
     for (const zone of @json($camera->zones ?? [])) {
         zones[zone.type] = zone.points;
     }

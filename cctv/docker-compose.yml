@@ -108,6 +108,8 @@ services:
       CCTV_WORK_MAX_WIDTH: ${CCTV_WORK_MAX_WIDTH:-640}
       CCTV_LABEL_WORK_MAX_WIDTH: ${CCTV_LABEL_WORK_MAX_WIDTH:-1280}
       CCTV_OBSERVATION_MAX_WIDTH: ${CCTV_OBSERVATION_MAX_WIDTH:-640}
+      CCTV_GUARD_FPS: ${CCTV_GUARD_FPS:-2}
+      CCTV_PERSON_MIN_CONFIDENCE: ${CCTV_PERSON_MIN_CONFIDENCE:-0.45}
       CCTV_AI_MODEL: ${CCTV_AI_MODEL:-gemini-3.5-flash-lite}
       CCTV_AI_API_KEY: ${CCTV_AI_API_KEY:-${GEMINI_API_KEY:-}}
       OMP_NUM_THREADS: "1"
@@ -120,8 +122,8 @@ services:
       - cctv_storage:/app/storage
     depends_on:
       - web
-    mem_limit: ${CCTV_VISION_MEM_LIMIT:-192m}
-    memswap_limit: ${CCTV_VISION_MEM_LIMIT:-192m}
+    mem_limit: ${CCTV_VISION_MEM_LIMIT:-256m}
+    memswap_limit: ${CCTV_VISION_MEM_LIMIT:-256m}
     cpus: ${CCTV_VISION_CPUS:-1.00}
 
 # Nama volume tetap sama dengan stack lama (cctvslm_cctv_*), jadi data dan bukti lama ikut terbawa.

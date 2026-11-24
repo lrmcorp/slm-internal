@@ -36,7 +36,7 @@ class CctvController extends Controller
         abort_unless($request->user()->is_admin, 403);
         $data = $request->validate([
             'zones' => 'required|array|min:1|max:20',
-            'zones.*.type' => ['required', Rule::in(['store_boundary', 'box_area', 'packing_route', 'danger_zone', 'packing_area'])],
+            'zones.*.type' => ['required', Rule::in(['store_boundary', 'box_area', 'packing_route', 'danger_zone', 'packing_area', 'restricted_zone'])],
             'zones.*.points' => 'required|array|min:3|max:30',
             'zones.*.points.*' => 'required|array|size:2',
             'zones.*.points.*.0' => 'required|numeric|between:0,1',
@@ -46,7 +46,10 @@ class CctvController extends Controller
         if (max($types) > 1) {
             return response()->json(['message' => 'Setiap jenis zona hanya boleh digambar sekali.'], 422);
         }
-        $camera->update(['zones' => $data['zones'], 'zones_approved_at' => null, 'zones_approved_by' => null]);
+        // Area terlarang tidak dipakai deteksi anomali paket: mengubah zona itu saja tidak membatalkan persetujuan.
+        $others = fn ($zones) => array_values(array_filter((array) $zones, fn ($zone) => ($zone['type'] ?? null) !== 'restricted_zone'));
+        $sameOthers = json_encode($others($camera->zones)) === json_encode($others($data['zones']));
+        $camera->update(['zones' => $data['zones']] + ($sameOthers ? [] : ['zones_approved_at' => null, 'zones_approved_by' => null]));
         return $camera;
     }
 

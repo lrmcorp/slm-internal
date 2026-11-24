@@ -29,5 +29,9 @@ return [
     'retention_incident_days' => (int) env('CCTV_INCIDENT_RETENTION_DAYS', 90),
     'retention_presence_days' => (int) env('CCTV_PRESENCE_RETENTION_DAYS', 14),
     'min_free_disk_percent' => (float) env('CCTV_MIN_FREE_DISK_PERCENT', env('APP_ENV') === 'testing' ? 0.0 : 15.0),
+    // Suara peringatan: Google Cloud Text-to-Speech (Bahasa Indonesia).
+    'tts_api_key' => env('GOOGLE_TTS_API_KEY'),
+    'tts_voice' => env('GOOGLE_TTS_VOICE', 'id-ID-Standard-A'),
+    'tts_speaking_rate' => (float) env('GOOGLE_TTS_SPEAKING_RATE', 0.95),
     'min_free_disk_gb' => (float) env('CCTV_MIN_FREE_DISK_GB', env('APP_ENV') === 'testing' ? 0.0 : 2.0),
 ];

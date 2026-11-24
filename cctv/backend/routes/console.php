@@ -148,6 +148,38 @@ Artisan::command('cctv:check-presence', function (\App\Services\PresenceMonitor 
 })->purpose('Periksa track anonim yang tidak terlihat ketika kamera tetap aktif');
 Schedule::command('cctv:check-presence')->everyMinute()->withoutOverlapping();
 
+// Pemeriksaan pemasangan speaker: php artisan cctv:speaker-check 1
+Artisan::command('cctv:speaker-check {camera}', function (string $camera, \App\Services\CameraSpeaker $speaker) {
+    $model = \App\Models\Camera::findOrFail($camera);
+    $this->info("Kamera #{$model->id} {$model->name}: variabel ".\App\Services\CameraSpeaker::envKey($model).', kanal '.($model->speaker_channel ?: 1));
+    try {
+        $body = $speaker->describe($model);
+    } catch (\Throwable $e) {
+        $this->error($e->getMessage());
+        return 1;
+    }
+    preg_match_all('/<id>(\d+)<\/id>|<audioCompressionType>([^<]+)<\/audioCompressionType>|<enabled>([^<]+)<\/enabled>/', $body, $m);
+    $this->line(trim(preg_replace('/\s+/', ' ', strip_tags(str_replace('><', '> <', $body)))));
+    $this->info(str_contains(strtolower($body), 'g.711ulaw') ? 'Format G.711ulaw tersedia: cocok dengan suara yang dikirim.' : 'G.711ulaw tidak terlihat: ubah Audio Encoding kamera ke G.711ulaw di pengaturan Audio.');
+    return 0;
+})->purpose('Periksa two-way audio speaker kamera');
+
+// Putar kalimat di speaker kamera: php artisan cctv:speak 1 "Tes speaker"
+Artisan::command('cctv:speak {camera} {text?}', function (string $camera, \App\Services\TextToSpeech $tts, \App\Services\CameraSpeaker $speaker) {
+    $model = \App\Models\Camera::findOrFail($camera);
+    $sentence = $this->argument('text') ?: \App\Services\GuardSchedule::message($model);
+    try {
+        $audio = $tts->ulaw($sentence);
+        $this->info('Suara Google siap: '.round(strlen($audio) / \App\Services\TextToSpeech::SAMPLE_RATE, 1).' detik.');
+        $speaker->play($model, $audio);
+    } catch (\Throwable $e) {
+        $this->error($e->getMessage());
+        return 1;
+    }
+    $this->info('Terkirim ke speaker kamera #'.$model->id.'.');
+    return 0;
+})->purpose('Putar kalimat di speaker kamera');
+
 Artisan::command('cctv:auto-sync', function () {
     if (!config('cctv.slm_auto_sync') || !config('cctv.slm_token')
         || !str_starts_with(config('cctv.slm_base_url') ?? '', 'https://') || !config('cctv.slm_sync_path')) return 0;

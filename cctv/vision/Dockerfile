@@ -20,5 +20,7 @@ RUN --mount=type=secret,id=proxy_ca,required=false \
     pip install --no-cache-dir -r requirements.txt && \
     if [ "$WITH_TESSERACT" = "1" ]; then pip install --no-cache-dir -r requirements-ocr.txt; fi && \
     if [ "$WITH_MODEL" = "1" ]; then pip install --no-cache-dir -r requirements-model.txt; fi
-COPY runtime.py logic.py evidence_spool.py live_video.py worker.py ./
+COPY runtime.py logic.py evidence_spool.py live_video.py person_detector.py worker.py ./
+# YOLOX-Nano (Apache-2.0) untuk jaga area terlarang; dijalankan OpenCV DNN, tanpa PyTorch.
+COPY models/yolox_nano.onnx ./models/yolox_nano.onnx
 CMD ["python", "worker.py"]

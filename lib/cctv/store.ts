@@ -5,6 +5,9 @@ import { prisma } from "@/lib/db/prisma";
 import { getCctvSystemStatus } from "@/lib/cctv/client";
 import { jakartaDateKey } from "@/lib/date/jakarta";
 
+/** Kejadian yang dihitung sebagai anomali di dashboard dan laporan: anomali meja packing dan orang di area terlarang. */
+const CCTV_ALERT_EVENT_TYPES = ["anomaly", "restricted_entry"];
+
 export function sanitizeCctvEvidenceUrl(url: string | null | undefined): string | null {
   if (!url || typeof url !== "string") return null;
   const trimmed = url.trim();
@@ -197,7 +200,7 @@ export async function getCctvStats() {
       }),
       prisma.cctvDetectionLog.count({
         where: {
-          eventType: "anomaly",
+          eventType: { in: CCTV_ALERT_EVENT_TYPES },
           ...todayActivityCond,
         },
       }),
@@ -465,7 +468,7 @@ export async function getCctvDashboardSummary() {
       prisma.cctvDetectionLog.count({
         where: {
           OR: [
-            { eventType: "anomaly" },
+            { eventType: { in: CCTV_ALERT_EVENT_TYPES } },
             { matchStatus: "unmatched" },
             { matchStatus: "review" },
           ],
@@ -582,7 +585,7 @@ export async function getCctvAnomaliesReport(filter: CctvAnomaliesFilter) {
 
   const where: any = {
     OR: [
-      { eventType: "anomaly" },
+      { eventType: { in: CCTV_ALERT_EVENT_TYPES } },
       { matchStatus: "unmatched" },
       { matchStatus: "review" },
     ],
