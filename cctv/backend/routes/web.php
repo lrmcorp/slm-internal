@@ -196,6 +196,7 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware('stream.auth')->group(function () {
     Route::get('/cameras/{camera}/live/{file}', [\App\Http\Controllers\Api\PresenceController::class, 'video']);
+    Route::get('/cameras/{camera}/realtime', [\App\Http\Controllers\Api\PresenceController::class, 'realtime']);
     Route::get('/cameras/{camera}/live-frame', [\App\Http\Controllers\Api\PresenceController::class, 'live']);
     Route::get('/cameras/{camera}/stream', [\App\Http\Controllers\Api\PresenceController::class, 'stream']);
 });

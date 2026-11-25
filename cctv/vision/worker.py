@@ -34,7 +34,7 @@ from evidence_spool import EvidenceSpool
 from live_video import LiveVideo
 from logic import CODE, ZoneTracker, clip_playback_fps, normalize_store, parse_label, parse_qr_payload, people_in_zone
 from person_detector import PersonDetector
-from runtime import DropOldestExecutor, redact
+from runtime import DropOldestExecutor, redact, via_relay
 
 # Satu thread decode per proses: tiga kamera tidak berebut CPU dengan aplikasi lain di VPS.
 cv2.setNumThreads(1)
@@ -685,7 +685,17 @@ class Worker:
             LOG.info("Live kamera %d dihentikan: tidak ada penonton %ds", self.camera_id, int(self.live_idle_seconds))
 
     def _open_capture(self):
-        source = self.detect_source()
+        direct = self.detect_source()
+        relayed = via_relay(direct)
+        if relayed != direct:
+            capture = self._capture(relayed)
+            if capture.isOpened():
+                return capture
+            capture.release()
+            LOG.warning("Relay go2rtc kamera %d belum siap; membaca langsung dari DVR", self.camera_id)
+        return self._capture(direct)
+
+    def _capture(self, source):
         params = [cv2.CAP_PROP_OPEN_TIMEOUT_MSEC, int(os.getenv("CCTV_OPEN_TIMEOUT_MS", "10000")),
                   cv2.CAP_PROP_READ_TIMEOUT_MSEC, int(os.getenv("CCTV_READ_TIMEOUT_MS", "10000"))]
         capture = cv2.VideoCapture(source, cv2.CAP_FFMPEG, params)

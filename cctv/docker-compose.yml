@@ -28,6 +28,9 @@ x-backend-env: &backend-env
   CACHE_STORE: file
   LOG_STACK: daily
   LOG_DAILY_DAYS: 7
+  # Live realtime: Laravel mengizinkan, proxy nginx mengalirkan MP4 dari go2rtc (lihat docs/video-live.md).
+  CCTV_REALTIME_RELAY: ${CCTV_REALTIME_RELAY:-true}
+  CCTV_REALTIME_SUBSTREAM: ${CCTV_REALTIME_SUBSTREAM:-true}
 
 x-backend: &backend
   logging: *default-logging
@@ -54,12 +57,46 @@ services:
     environment:
       <<: *backend-env
       PHP_CLI_SERVER_WORKERS: ${PHP_CLI_SERVER_WORKERS:-4}
-    # Nginx host meneruskan cctv.lrmslm.com ke 127.0.0.1:8095.
-    ports:
-      - "127.0.0.1:${CCTV_WEB_PORT:-8095}:8000"
+    # Tidak dibuka ke host: nginx host -> 127.0.0.1:8095 -> proxy (di bawah) -> web:8000.
     mem_limit: ${CCTV_WEB_MEM_LIMIT:-256m}
     memswap_limit: ${CCTV_WEB_MEM_LIMIT:-256m}
     cpus: ${CCTV_WEB_CPUS:-0.50}
+
+  # Pintu masuk dashboard: meneruskan semua ke web, dan mengalirkan live realtime dari go2rtc
+  # setelah Laravel memeriksa login/token (X-Accel-Redirect). Nginx host tetap ke 127.0.0.1:8095.
+  proxy:
+    logging: *default-logging
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    volumes:
+      - ./proxy/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "127.0.0.1:${CCTV_WEB_PORT:-8095}:8080"
+    depends_on:
+      - web
+      - go2rtc
+    mem_limit: ${CCTV_PROXY_MEM_LIMIT:-48m}
+    memswap_limit: ${CCTV_PROXY_MEM_LIMIT:-48m}
+    cpus: ${CCTV_PROXY_CPUS:-0.25}
+
+  # Relay RTSP: satu sambungan ke DVR per stream, dipakai bersama pembaca QR dan live realtime.
+  # Paket diteruskan apa adanya (tanpa decode); hanya terhubung ke DVR selama ada yang membaca.
+  # Tidak ada port yang dibuka ke host.
+  go2rtc:
+    logging: *default-logging
+    image: alexxit/go2rtc:1.9.9
+    restart: unless-stopped
+    command: ["sh", "/cctv-go2rtc/start.sh"]
+    volumes:
+      - ./go2rtc/start.sh:/cctv-go2rtc/start.sh:ro
+    environment:
+      CCTV_CAMERA_14_URL: ${CCTV_CAMERA_14_URL:-${CCTV_RTSP_14:-}}
+      CCTV_CAMERA_13_URL: ${CCTV_CAMERA_13_URL:-${CCTV_RTSP_13:-}}
+      CCTV_CAMERA_12_URL: ${CCTV_CAMERA_12_URL:-${CCTV_RTSP_12:-}}
+      GO2RTC_LOG_LEVEL: ${GO2RTC_LOG_LEVEL:-warn}
+    mem_limit: ${CCTV_GO2RTC_MEM_LIMIT:-96m}
+    memswap_limit: ${CCTV_GO2RTC_MEM_LIMIT:-96m}
+    cpus: ${CCTV_GO2RTC_CPUS:-0.50}
 
   # Antrian dan penjadwal dalam satu container (docker/worker.sh).
   worker:
@@ -96,6 +133,8 @@ services:
       CCTV_CAMERA_14_URL: ${CCTV_CAMERA_14_URL:-${CCTV_RTSP_14:-}}
       CCTV_CAMERA_13_URL: ${CCTV_CAMERA_13_URL:-${CCTV_RTSP_13:-}}
       CCTV_CAMERA_12_URL: ${CCTV_CAMERA_12_URL:-${CCTV_RTSP_12:-}}
+      # Baca lewat relay go2rtc; kosongkan (CCTV_RTSP_RELAY=) untuk langsung ke DVR seperti dulu.
+      CCTV_RTSP_RELAY: ${CCTV_RTSP_RELAY-rtsp://go2rtc:8554}
       CCTV_PROCESS_FPS: ${CCTV_PROCESS_FPS:-3}
       CCTV_HLS_DIRECTORY: /app/storage/app/private/cctv/live-video
       CCTV_LIVE_ON_DEMAND: ${CCTV_LIVE_ON_DEMAND:-true}
@@ -122,6 +161,7 @@ services:
       - cctv_storage:/app/storage
     depends_on:
       - web
+      - go2rtc
     mem_limit: ${CCTV_VISION_MEM_LIMIT:-256m}
     memswap_limit: ${CCTV_VISION_MEM_LIMIT:-256m}
     cpus: ${CCTV_VISION_CPUS:-1.00}

@@ -1,5 +1,31 @@
 # Video live dan pemrosesan QR/AI
 
+## Live realtime (go2rtc)
+
+Sejak November 2026 stack memuat dua container kecil:
+
+- **go2rtc** (relay RTSP, ±20 MB RAM): satu sambungan ke DVR per stream, dipakai bersama oleh pembaca
+  QR/AI (`ch1401`, stream utama) dan live dashboard (`ch1402`, sub-stream). Paket diteruskan apa adanya,
+  tanpa decode ulang, jadi resolusi dan ketajaman untuk QR tidak berubah. Sambungan ke DVR hanya dibuka
+  selama ada pembaca. Konfigurasi dibuat dari `CCTV_CAMERA_<n>_URL` oleh `go2rtc/start.sh`; tidak ada port
+  yang dibuka ke host.
+- **proxy** (nginx, ±7 MB RAM) di `127.0.0.1:8095`: meneruskan semua ke Laravel. Untuk
+  `GET /cameras/{id}/realtime` Laravel memeriksa login/token lalu menjawab `X-Accel-Redirect`, dan nginx
+  mengalirkan MP4 bertahap dari go2rtc. PHP tidak menahan sambungan video.
+
+Dashboard SLM (`/api/cctv/stream/{id}/realtime`) memutar MP4 itu lewat Media Source Extensions: gambar
+muncul ±0,3 detik setelah dibuka dan jedanya ±1 detik. Bila browser tidak mendukung codec sub-stream
+(mis. H.265 di Chrome tanpa dukungan perangkat) atau relay belum ada, pemutar otomatis memakai HLS di bawah.
+**Sub-stream DVR sebaiknya H.264** (DVR: Record → Parameters → Sub-stream → Video Encoding).
+
+| Nama | Default | Fungsi |
+|---|---|---|
+| `CCTV_RTSP_RELAY` | `rtsp://go2rtc:8554` | Vision membaca lewat relay; kosongkan untuk langsung ke DVR. Relay gagal → langsung ke DVR |
+| `CCTV_REALTIME_RELAY` | `true` | Endpoint `/cameras/{id}/realtime` aktif |
+| `CCTV_REALTIME_SUBSTREAM` | `true` | Live realtime memakai sub-stream (`…02`); `false` = stream utama |
+
+## HLS (cadangan)
+
 Tampilan video mengambil aliran langsung dari DVR melalui proses FFmpeg terpisah. Video tidak lagi menunggu frame hasil inferensi. Pekerja QR/AI tetap membaca sumber semula dan menyimpan foto serta cuplikan bukti seperti sebelumnya.
 
 Untuk Hikvision, aliran `.../Streaming/Channels/1402` diprioritaskan bagi tampilan A14, sedangkan QR tetap memakai `1401`. Jika sub-stream tidak dapat dibaca, pemutar memakai main-stream. Mekanisme yang sama berlaku pada A12/A13. Tidak ada perubahan kata sandi atau pengaturan DVR.

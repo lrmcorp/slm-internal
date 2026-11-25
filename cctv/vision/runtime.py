@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import deque
 from concurrent.futures import Future
 import logging
+import os
 import re
 import threading
 
@@ -15,6 +16,23 @@ _CREDENTIALS = re.compile(r"(rtsps?://)[^/@\s]+@", re.IGNORECASE)
 def redact(text) -> str:
     """Hapus user:password dari URL RTSP sebelum ditulis ke log."""
     return _CREDENTIALS.sub(r"\1***@", str(text))
+
+
+_DVR_CHANNEL = re.compile(r"/Streaming/Channels/([0-9]+)(?:[?].*)?$")
+
+
+def via_relay(url: str) -> str:
+    """Alamat yang sama lewat relay go2rtc di stack (CCTV_RTSP_RELAY, mis. rtsp://go2rtc:8554).
+
+    Satu sambungan ke DVR per stream dipakai bersama oleh pembaca QR dan live dashboard; relay meneruskan
+    paket apa adanya (tanpa decode ulang), jadi resolusi dan ketajaman untuk QR tidak berubah. Tanpa relay,
+    atau untuk alamat yang bukan kanal Hikvision, alamat asli dikembalikan.
+    """
+    relay = os.getenv("CCTV_RTSP_RELAY", "").strip().rstrip("/")
+    match = _DVR_CHANNEL.search(str(url or ""))
+    if not relay or not match or not str(url).startswith("rtsp"):
+        return url
+    return f"{relay}/ch{match.group(1)}"
 
 
 class DropOldestExecutor:

@@ -3452,6 +3452,24 @@ paths:
           description: Bukan Super Admin
         "503":
           description: Encoder live sedang menyala atau kamera offline; coba lagi sesuai Retry-After
+  /api/cctv/stream/{cameraId}/realtime:
+    get:
+      summary: Live realtime kamera CCTV (MP4 bertahap dari relay go2rtc di server CCTV, jeda ±1 detik) untuk Media Source Extensions. Khusus Super Admin atau token CCTV. Tanpa relay, pemutar memakai HLS.
+      parameters:
+        - name: cameraId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Aliran video/mp4 bertahap (codecs di Content-Type)
+        "403":
+          description: Bukan Super Admin
+        "404":
+          description: Server CCTV belum punya relay realtime
+        "503":
+          description: Kamera atau relay belum tersedia
   /api/cctv/evidence:
     get:
       summary: Ambil bukti foto/video CCTV berdasarkan transaksi atau packing

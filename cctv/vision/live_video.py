@@ -14,6 +14,8 @@ import json
 import time
 from urllib.parse import urlsplit, urlunsplit
 
+from runtime import via_relay
+
 
 def _ffmpeg_binary() -> str:
     found = shutil.which('ffmpeg')
@@ -128,6 +130,9 @@ class LiveVideo:
                 substream = re.sub(r'(/Streaming/Channels/[0-9]+)01$', r'\g<1>02', self.source)
                 if substream != self.source:
                     candidates.insert(0, substream)
+            # Lewat relay go2rtc dulu (berbagi sambungan DVR dengan live realtime), lalu langsung ke DVR.
+            candidates = [option for candidate in candidates
+                          for option in dict.fromkeys([via_relay(candidate), candidate])]
             for candidate in candidates:
                 try:
                     codec = self._probe(candidate)

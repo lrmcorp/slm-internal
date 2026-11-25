@@ -2,9 +2,12 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import type { CctvCameraStream } from "@/lib/cctv/streams";
+import { RealtimeMp4Player, realtimeSupported, realtimeUrlFor } from "@/lib/cctv/realtimePlayer";
 
 /** Percobaan ulang otomatis sebelum kamera dinyatakan offline (encoder live bisa butuh beberapa detik). */
 const LIVE_MAX_RETRIES = 4;
+/** Live realtime yang gagal sekian kali berturut-turut diganti HLS untuk sisa kunjungan halaman. */
+const REALTIME_MAX_FAILURES = 2;
 
 interface CameraCellProps {
   camera: CctvCameraStream;
@@ -32,6 +35,8 @@ export function CameraCell({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
   const hlsRef = useRef<any>(null);
+  const realtimeRef = useRef<RealtimeMp4Player | null>(null);
+  const realtimeFailuresRef = useRef<number>(0);
   const retryCountRef = useRef<number>(0);
   const retryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startStreamRef = useRef<(() => void) | null>(null);
@@ -41,6 +46,10 @@ export function CameraCell({
     if (retryTimerRef.current) {
       clearTimeout(retryTimerRef.current);
       retryTimerRef.current = null;
+    }
+    if (realtimeRef.current) {
+      realtimeRef.current.stop();
+      realtimeRef.current = null;
     }
     if (hlsRef.current) {
       try {
@@ -85,6 +94,36 @@ export function CameraCell({
     videoEl.defaultMuted = true;
     videoEl.setAttribute("muted", "");
     videoEl.setAttribute("playsinline", "");
+
+    // Realtime dulu (MP4 dari relay go2rtc, jeda ±1 detik); gagal atau tidak didukung: HLS seperti biasa.
+    const realtimeUrl = realtimeUrlFor(streamUrl);
+    if (realtimeUrl && realtimeSupported() && realtimeFailuresRef.current < REALTIME_MAX_FAILURES) {
+      const startedAt = Date.now();
+      const player = new RealtimeMp4Player(videoEl, realtimeUrl, {
+        onEnded: () => {
+          if (realtimeRef.current !== player) return;
+          realtimeRef.current = null;
+          // Putus cepat setelah mulai dihitung gagal; putus setelah lama ditonton cukup disambung ulang.
+          if (Date.now() - startedAt < 15000) realtimeFailuresRef.current += 1;
+          setConnectionStatus("connecting");
+          if (retryTimerRef.current) clearTimeout(retryTimerRef.current);
+          retryTimerRef.current = setTimeout(() => startStreamRef.current?.(), 1500);
+        },
+      });
+      realtimeRef.current = player;
+      try {
+        await player.start();
+        if (realtimeRef.current !== player) return;
+        retryCountRef.current = 0;
+        realtimeFailuresRef.current = 0;
+        setConnectionStatus("live");
+        return;
+      } catch {
+        if (realtimeRef.current !== player) return;
+        realtimeRef.current = null;
+        realtimeFailuresRef.current += 1;
+      }
+    }
 
     try {
       if (streamType === "hls" || streamUrl.includes(".m3u8")) {
@@ -193,8 +232,17 @@ export function CameraCell({
     const pause = () => {
       if (videoRef.current) videoRef.current.pause();
       hlsRef.current?.stopLoad?.();
+      // Realtime tidak bisa dijeda tanpa terus mengunduh: putus, lalu sambung lagi saat terlihat.
+      if (realtimeRef.current) {
+        realtimeRef.current.stop();
+        realtimeRef.current = null;
+      }
     };
     const resume = () => {
+      if (!hlsRef.current && realtimeUrlFor(camera.streamUrl) && !realtimeRef.current) {
+        startStreamRef.current?.();
+        return;
+      }
       hlsRef.current?.startLoad?.(-1);
       if (videoRef.current && videoRef.current.paused) {
         videoRef.current.play().catch(() => {});
@@ -226,7 +274,7 @@ export function CameraCell({
       observer.disconnect();
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [isPlaying]);
+  }, [isPlaying, camera.streamUrl]);
 
   const togglePlay = () => {
     setIsPlaying((prev) => !prev);
