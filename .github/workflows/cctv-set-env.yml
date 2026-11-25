@@ -12,23 +12,28 @@ jobs:
   set-env:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
+    # Secret boleh di tingkat repo atau di environment cctv-production (dipakai workflow deploy CCTV), dengan nama baru
+    # (VPS_*) atau nama lama (CCTV_VPS_*).
+    environment: cctv-production
     steps:
       - name: Tulis secret ke cctv/.env di VPS
         env:
-          VPS_HOST: ${{ secrets.VPS_HOST }}
-          VPS_PORT: ${{ secrets.VPS_PORT }}
-          VPS_USER: ${{ secrets.VPS_USER }}
-          VPS_KEY: ${{ secrets.VPS_SSH_KEY }}
-          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+          VPS_HOST: ${{ secrets.VPS_HOST || secrets.CCTV_VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT || secrets.CCTV_VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER || secrets.CCTV_VPS_USER }}
+          VPS_KEY: ${{ secrets.VPS_SSH_KEY || secrets.CCTV_VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS || secrets.CCTV_VPS_KNOWN_HOSTS }}
           GOOGLE_TTS_API_KEY: ${{ secrets.GOOGLE_TTS_API_KEY }}
           CCTV_CAMERA_14_SPEAKER_URL: ${{ secrets.CCTV_CAMERA_14_SPEAKER_URL }}
           CCTV_CAMERA_13_SPEAKER_URL: ${{ secrets.CCTV_CAMERA_13_SPEAKER_URL }}
         shell: bash
         run: |
           set -euo pipefail
+          missing=""
           for variable in VPS_HOST VPS_PORT VPS_USER VPS_KEY VPS_KNOWN_HOSTS; do
-            [ -n "${!variable}" ] || { echo "Secret belum diisi: ${variable/VPS_KEY/VPS_SSH_KEY}"; exit 1; }
+            if [ -n "${!variable}" ]; then echo "Ada: ${variable/VPS_KEY/VPS_SSH_KEY}"; else missing+=" ${variable/VPS_KEY/VPS_SSH_KEY}"; fi
           done
+          [ -z "$missing" ] || { echo "Secret belum diisi:$missing"; exit 1; }
 
           # Baris "NAMA base64" untuk tiap secret yang terisi; dikirim lewat stdin SSH, bukan argumen perintah.
           payload=""
