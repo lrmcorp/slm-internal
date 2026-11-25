@@ -13,8 +13,12 @@ use RuntimeException;
  */
 class CameraSpeaker
 {
-    /** 0,3 detik hening di awal supaya suku kata pertama tidak terpotong saat speaker baru menyala. */
-    private const LEAD_IN = 2400;
+    /** Hening di awal (bawaan 0,8 detik): speaker/DVR yang baru menyala sering tersendat sebentar; kalimat mulai setelahnya. */
+    public static function leadIn(): string
+    {
+        $ms = max(0, min(3000, (int) config('cctv.speaker_lead_in_ms', 800)));
+        return str_repeat("\xFF", intdiv($ms * TextToSpeech::SAMPLE_RATE, 1000));
+    }
 
     public function __construct(private IsapiTalkSocket $talk) {}
 
@@ -52,7 +56,7 @@ class CameraSpeaker
         }
         // Seperti aplikasi Hikvision dan go2rtc: audioData tanpa sessionId, suara mentah lewat sambungan yang sama.
         try {
-            $this->talk->stream($endpoint['base'], $endpoint['user'], $endpoint['pass'], "{$path}/audioData", str_repeat("\xFF", self::LEAD_IN).$ulaw, TextToSpeech::SAMPLE_RATE);
+            $this->talk->stream($endpoint['base'], $endpoint['user'], $endpoint['pass'], "{$path}/audioData", self::leadIn().$ulaw, TextToSpeech::SAMPLE_RATE);
         } finally {
             $this->closeQuietly($client, $path);
         }

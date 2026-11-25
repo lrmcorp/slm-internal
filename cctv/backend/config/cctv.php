@@ -39,6 +39,8 @@ return [
     'tts_volume_gain_db' => (float) env('GOOGLE_TTS_VOLUME_GAIN_DB', 4),
     // Suara yang dikirim di depan ke speaker (milidetik) untuk menahan jaringan yang tersendat; terlalu besar bisa
     // membuat DVR membuang suara bila penyangganya penuh.
+    // Hening di awal setiap peringatan (ms) supaya sendatan saat speaker baru menyala tidak memotong kalimat.
+    'speaker_lead_in_ms' => (int) env('CCTV_SPEAKER_LEAD_IN_MS', 800),
     'speaker_prefill_ms' => (int) env('CCTV_SPEAKER_PREFILL_MS', 600),
     'min_free_disk_gb' => (float) env('CCTV_MIN_FREE_DISK_GB', env('APP_ENV') === 'testing' ? 0.0 : 2.0),
 ];

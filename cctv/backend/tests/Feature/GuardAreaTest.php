@@ -175,7 +175,7 @@ class GuardAreaTest extends TestCase
             'PUT http://100.118.114.23:8081/ISAPI/System/TwoWayAudio/channels/2/open',
             'PUT http://100.118.114.23:8081/ISAPI/System/TwoWayAudio/channels/2/close',
         ], $urls);
-        $this->assertSame([['http://100.118.114.23:8081', 'admin', 'p@ss', '/ISAPI/System/TwoWayAudio/channels/2/audioData', 2400 + 1600]], $talk->calls);
+        $this->assertSame([['http://100.118.114.23:8081', 'admin', 'p@ss', '/ISAPI/System/TwoWayAudio/channels/2/audioData', 6400 + 1600]], $talk->calls);
         $this->assertSame(['base' => 'http://100.118.114.23:8081', 'user' => 'admin', 'pass' => 'p@ss'], CameraSpeaker::endpoint($camera));
     }
 
