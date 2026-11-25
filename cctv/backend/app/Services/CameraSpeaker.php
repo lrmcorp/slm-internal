@@ -3,7 +3,6 @@
 namespace App\Services;
 
 use App\Models\Camera;
-use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -16,6 +15,8 @@ class CameraSpeaker
 {
     /** 0,3 detik hening di awal supaya suku kata pertama tidak terpotong saat speaker baru menyala. */
     private const LEAD_IN = 2400;
+
+    public function __construct(private IsapiTalkSocket $talk) {}
 
     public static function envKey(Camera $camera): string
     {
@@ -44,41 +45,26 @@ class CameraSpeaker
         $client = fn (int $timeout) => Http::timeout($timeout)->withDigestAuth($endpoint['user'], $endpoint['pass'])->baseUrl($endpoint['base']);
 
         // Sesi lama (mis. dari aplikasi) membuat open ditolak; tutup dulu, abaikan hasilnya.
-        $client(5)->withBody('', 'application/xml')->put("{$path}/close");
+        $this->closeQuietly($client, $path);
         $open = $client(5)->withBody('', 'application/xml')->put("{$path}/open");
         if (!$open->successful()) {
             throw new RuntimeException("Speaker menolak membuka sesi (HTTP {$open->status()}). Periksa login, kanal {$channel}, dan fitur two-way audio.");
         }
-        $session = preg_match('/<sessionId>([^<]+)<\/sessionId>/', $open->body(), $m) ? $m[1] : null;
-
-        $audio = str_repeat("\xFF", self::LEAD_IN).$ulaw;
-        $stream = self::paced($audio);
+        // Seperti aplikasi Hikvision dan go2rtc: audioData tanpa sessionId, suara mentah lewat sambungan yang sama.
         try {
-            $sent = $client((int) ceil(strlen($audio) / TextToSpeech::SAMPLE_RATE) + 4)
-                ->withBody($stream, 'application/octet-stream')
-                // Panjang tetap (bukan chunked): speaker membaca soket apa adanya, potongan chunked jadi bunyi derau.
-                ->withOptions(['curl' => [
-                    CURLOPT_INFILESIZE => $stream->length(),
-                    CURLOPT_HTTPHEADER => ['Content-Type: application/octet-stream', 'Expect:'],
-                ]])
-                ->put("{$path}/audioData".($session ? '?sessionId='.rawurlencode($session) : ''));
-            if (!$sent->successful()) {
-                throw new RuntimeException("Speaker menolak suara (HTTP {$sent->status()}).");
-            }
-        } catch (ConnectionException $e) {
-            // DVR Hikvision tidak menjawab audioData selama sesi masih terbuka; habis waktu setelah semua suara
-            // terkirim berarti suara sudah diputar. Yang gagal hanya bila suara belum habis terkirim.
-            if (!$stream->eof()) {
-                throw $e;
-            }
+            $this->talk->stream($endpoint['base'], $endpoint['user'], $endpoint['pass'], "{$path}/audioData", str_repeat("\xFF", self::LEAD_IN).$ulaw, TextToSpeech::SAMPLE_RATE);
         } finally {
-            $client(5)->withBody('', 'application/xml')->put("{$path}/close".($session ? '?sessionId='.rawurlencode($session) : ''));
+            $this->closeQuietly($client, $path);
         }
     }
 
-    public static function paced(string $audio): PacedAudioStream
+    /** Tutup sesi; DVR yang lambat menjawab tidak boleh membuat suara yang sudah diputar dianggap gagal. */
+    private function closeQuietly(\Closure $client, string $path): void
     {
-        return new PacedAudioStream($audio, TextToSpeech::SAMPLE_RATE);
+        try {
+            $client(5)->withBody('', 'application/xml')->put("{$path}/close");
+        } catch (\Throwable) {
+        }
     }
 
     /** Status two-way audio di kamera (untuk pemeriksaan pemasangan). */

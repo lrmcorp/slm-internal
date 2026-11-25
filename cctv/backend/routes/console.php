@@ -164,9 +164,12 @@ Artisan::command('cctv:speaker-check {camera}', function (string $camera, \App\S
     return 0;
 })->purpose('Periksa two-way audio speaker kamera');
 
-// Putar kalimat di speaker kamera: php artisan cctv:speak 1 "Tes speaker"
-Artisan::command('cctv:speak {camera} {text?}', function (string $camera, \App\Services\TextToSpeech $tts, \App\Services\CameraSpeaker $speaker) {
+// Putar kalimat di speaker kamera: php artisan cctv:speak 1 "Tes speaker" (--channel=13 mencoba kanal lain tanpa menyimpannya)
+Artisan::command('cctv:speak {camera} {text?} {--channel= : Kanal two-way audio untuk tes ini saja}', function (string $camera, \App\Services\TextToSpeech $tts, \App\Services\CameraSpeaker $speaker) {
     $model = \App\Models\Camera::findOrFail($camera);
+    if ($this->option('channel')) {
+        $model->speaker_channel = (int) $this->option('channel');
+    }
     $sentence = $this->argument('text') ?: \App\Services\GuardSchedule::message($model);
     try {
         $audio = $tts->ulaw($sentence);
@@ -176,7 +179,7 @@ Artisan::command('cctv:speak {camera} {text?}', function (string $camera, \App\S
         $this->error($e->getMessage());
         return 1;
     }
-    $this->info('Terkirim ke speaker kamera #'.$model->id.'.');
+    $this->info('Terkirim ke speaker kamera #'.$model->id.', kanal '.($model->speaker_channel ?: 1).'.');
     return 0;
 })->purpose('Putar kalimat di speaker kamera');
 

@@ -8,6 +8,7 @@ use App\Models\Camera;
 use App\Models\Incident;
 use App\Models\User;
 use App\Services\CameraSpeaker;
+use App\Services\IsapiTalkSocket;
 use App\Services\GuardSchedule;
 use App\Services\TextToSpeech;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -158,47 +159,67 @@ class GuardAreaTest extends TestCase
             '*/open' => Http::response('<TwoWayAudioSession><sessionId>abc123</sessionId></TwoWayAudioSession>'),
             '*' => Http::response('<ResponseStatus><statusCode>1</statusCode></ResponseStatus>'),
         ]);
+        $talk = new class extends IsapiTalkSocket {
+            public array $calls = [];
+            public function stream(string $base, string $user, string $pass, string $uri, string $audio, int $bytesPerSecond = 8000): void
+            {
+                $this->calls[] = [$base, $user, $pass, $uri, strlen($audio)];
+            }
+        };
+        $this->app->instance(IsapiTalkSocket::class, $talk);
         app(CameraSpeaker::class)->play($camera, str_repeat("\xFF", 1600));
         $urls = [];
         Http::assertSent(function (ClientRequest $r) use (&$urls) { $urls[] = $r->method().' '.$r->url(); return true; });
         $this->assertSame([
             'PUT http://100.118.114.23:8081/ISAPI/System/TwoWayAudio/channels/2/close',
             'PUT http://100.118.114.23:8081/ISAPI/System/TwoWayAudio/channels/2/open',
-            'PUT http://100.118.114.23:8081/ISAPI/System/TwoWayAudio/channels/2/audioData?sessionId=abc123',
-            'PUT http://100.118.114.23:8081/ISAPI/System/TwoWayAudio/channels/2/close?sessionId=abc123',
+            'PUT http://100.118.114.23:8081/ISAPI/System/TwoWayAudio/channels/2/close',
         ], $urls);
+        $this->assertSame([['http://100.118.114.23:8081', 'admin', 'p@ss', '/ISAPI/System/TwoWayAudio/channels/2/audioData', 2400 + 1600]], $talk->calls);
         $this->assertSame(['base' => 'http://100.118.114.23:8081', 'user' => 'admin', 'pass' => 'p@ss'], CameraSpeaker::endpoint($camera));
     }
 
-    public function test_dvr_that_keeps_audio_data_open_counts_as_played_once_audio_is_sent(): void
+    public function test_digest_header_matches_rfc_2617_example(): void
     {
-        putenv('CCTV_CAMERA_14_SPEAKER_URL=http://admin:x@100.118.114.23:8080');
-        $camera = $this->camera(['speaker_channel' => 1, 'stream_env_key' => 'CCTV_CAMERA_14_URL']);
-        $received = 0;
-        Http::fake([
-            '*/open' => Http::response('<TwoWayAudioSession><sessionId>s9</sessionId></TwoWayAudioSession>'),
-            '*/audioData*' => function (ClientRequest $r) use (&$received) {
-                $received = strlen($r->toPsrRequest()->getBody()->getContents());
-                throw new \Illuminate\Http\Client\ConnectionException('cURL error 28: Operation timed out with 0 bytes received');
-            },
-            '*' => Http::response('<ResponseStatus><statusCode>1</statusCode></ResponseStatus>'),
-        ]);
-        app(CameraSpeaker::class)->play($camera, str_repeat("\x7F", 800));
-        $this->assertSame(2400 + 800, $received);
-        Http::assertSent(fn (ClientRequest $r) => str_ends_with($r->url(), '/close?sessionId=s9'));
+        $header = IsapiTalkSocket::digest('Digest realm="testrealm@host.com", qop="auth,auth-int", nonce="dcd98b7102dd2f0e8b11d0f600bfb0c093", opaque="5ccc069c403ebaf9f0171e9517f40e41"',
+            'Mufasa', 'Circle Of Life', 'GET', '/dir/index.html', '0a4f113b');
+        $this->assertStringContainsString('response="6629fae49393a05397450978507c4ef1"', $header);
+        $this->assertStringContainsString('opaque="5ccc069c403ebaf9f0171e9517f40e41"', $header);
     }
 
-    public function test_audio_not_fully_sent_before_a_timeout_is_a_failure(): void
+    public function test_talk_socket_logs_in_with_digest_and_streams_raw_audio_after_the_answer(): void
     {
-        putenv('CCTV_CAMERA_14_SPEAKER_URL=http://admin:x@100.118.114.23:8080');
-        $camera = $this->camera(['speaker_channel' => 1, 'stream_env_key' => 'CCTV_CAMERA_14_URL']);
-        Http::fake([
-            '*/open' => Http::response('<TwoWayAudioSession><sessionId>s9</sessionId></TwoWayAudioSession>'),
-            '*/audioData*' => fn () => throw new \Illuminate\Http\Client\ConnectionException('cURL error 7: Failed to connect'),
-            '*' => Http::response(''),
-        ]);
-        $this->expectException(\Illuminate\Http\Client\ConnectionException::class);
-        app(CameraSpeaker::class)->play($camera, str_repeat("\x7F", 800));
+        $port = random_int(20000, 40000);
+        $log = tempnam(sys_get_temp_dir(), 'talk');
+        // DVR tiruan: tolak tanpa login (401 Digest), jawab 200 tanpa panjang, lalu terima suara mentah sampai ditutup.
+        $server = <<<'PHP'
+$srv = stream_socket_server("tcp://127.0.0.1:" . $argv[1]); $out = [];
+for ($i = 0; $i < 2; $i++) {
+    $c = stream_socket_accept($srv, 10); $head = '';
+    while (!str_contains($head, "\r\n\r\n")) { $head .= fread($c, 1); }
+    if (!str_contains($head, 'Authorization: Digest')) {
+        fwrite($c, "HTTP/1.1 401 Unauthorized\r\n" . 'WWW-Authenticate: Digest realm="DVR", nonce="n1", qop="auth"' . "\r\nContent-Length: 0\r\n\r\n"); fclose($c); continue;
+    }
+    fwrite($c, "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\n\r\n");
+    $t = microtime(true); $n = 0; while (!feof($c)) { $n += strlen((string) fread($c, 4096)); }
+    $out = ['head' => $head, 'bytes' => $n, 'seconds' => microtime(true) - $t];
+}
+file_put_contents($argv[2], json_encode($out));
+PHP;
+        $proc = proc_open([PHP_BINARY, '-r', $server, '--', (string) $port, $log], [], $pipes);
+        usleep(300_000);
+        try {
+            (new IsapiTalkSocket)->stream("http://127.0.0.1:{$port}", 'admin', 'pw', '/ISAPI/System/TwoWayAudio/channels/1/audioData', str_repeat("\x7F", 4000));
+        } finally {
+            proc_close($proc);
+        }
+        $result = json_decode((string) file_get_contents($log), true);
+        $this->assertSame(4000, $result['bytes']);
+        $this->assertStringContainsString("PUT /ISAPI/System/TwoWayAudio/channels/1/audioData HTTP/1.1\r\n", $result['head']);
+        $this->assertStringContainsString('Content-Length: 0', $result['head']);
+        $this->assertStringContainsString('uri="/ISAPI/System/TwoWayAudio/channels/1/audioData", qop=auth', $result['head']);
+        // 0,5 detik suara: 0,2 detik dikirim di depan, sisanya mengikuti kecepatan putar.
+        $this->assertGreaterThan(0.25, $result['seconds']);
     }
 
     public function test_failed_speech_is_recorded_on_the_incident(): void
