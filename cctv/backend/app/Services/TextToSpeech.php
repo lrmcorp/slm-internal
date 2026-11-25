@@ -21,7 +21,12 @@ class TextToSpeech
             throw new RuntimeException('Kalimat kosong.');
         }
         $voice = (string) config('cctv.tts_voice');
-        $path = 'cctv/tts/'.sha1($voice.'|'.config('cctv.tts_speaking_rate').'|'.$text).'.ulaw';
+        $audioConfig = ['audioEncoding' => 'MULAW', 'sampleRateHertz' => self::SAMPLE_RATE,
+            'speakingRate' => (float) config('cctv.tts_speaking_rate'), 'volumeGainDb' => (float) config('cctv.tts_volume_gain_db', 0)];
+        if ($profile = (string) config('cctv.tts_effects_profile')) {
+            $audioConfig['effectsProfileId'] = [$profile];
+        }
+        $path = 'cctv/tts/'.sha1($voice.'|'.json_encode($audioConfig).'|'.$text).'.ulaw';
         $disk = Storage::disk('local');
         if ($disk->exists($path)) {
             return $disk->get($path);
@@ -30,13 +35,18 @@ class TextToSpeech
         if ($key === '') {
             throw new RuntimeException('GOOGLE_TTS_API_KEY belum diisi di cctv/.env.');
         }
-        $response = Http::timeout(15)->withHeaders(['X-Goog-Api-Key' => $key])
+        $synthesize = fn (array $config) => Http::timeout(15)->withHeaders(['X-Goog-Api-Key' => $key])
             ->post('https://texttospeech.googleapis.com/v1/text:synthesize', [
                 'input' => ['text' => $text],
                 'voice' => ['languageCode' => 'id-ID', 'name' => $voice],
-                'audioConfig' => ['audioEncoding' => 'MULAW', 'sampleRateHertz' => self::SAMPLE_RATE,
-                    'speakingRate' => (float) config('cctv.tts_speaking_rate')],
+                'audioConfig' => $config,
             ]);
+        $response = $synthesize($audioConfig);
+        if ($response->status() === 400 && isset($audioConfig['effectsProfileId'])) {
+            // Profil speaker tidak diterima untuk suara ini: tetap bicara tanpa profil.
+            unset($audioConfig['effectsProfileId']);
+            $response = $synthesize($audioConfig);
+        }
         if (!$response->successful()) {
             $reason = $response->json('error.message') ?: 'HTTP '.$response->status();
             throw new RuntimeException("Google Text-to-Speech menolak permintaan: {$reason}");

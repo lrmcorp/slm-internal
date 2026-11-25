@@ -33,6 +33,10 @@ return [
     'tts_api_key' => env('GOOGLE_TTS_API_KEY'),
     'tts_voice' => env('GOOGLE_TTS_VOICE', 'id-ID-Standard-A'),
     'tts_speaking_rate' => (float) env('GOOGLE_TTS_SPEAKING_RATE', 0.95),
+    // Google menyesuaikan suara untuk speaker kecil (lebih jelas di speaker kamera); kosongkan untuk mematikan.
+    'tts_effects_profile' => env('GOOGLE_TTS_EFFECTS_PROFILE', 'small-bluetooth-speaker-class-device'),
+    // Penguatan volume dalam dB (-96 s.d. 16); 0 = asli.
+    'tts_volume_gain_db' => (float) env('GOOGLE_TTS_VOLUME_GAIN_DB', 4),
     // Suara yang dikirim di depan ke speaker (milidetik) untuk menahan jaringan yang tersendat; terlalu besar bisa
     // membuat DVR membuang suara bila penyangganya penuh.
     'speaker_prefill_ms' => (int) env('CCTV_SPEAKER_PREFILL_MS', 600),

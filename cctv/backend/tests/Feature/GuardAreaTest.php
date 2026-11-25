@@ -148,7 +148,7 @@ class GuardAreaTest extends TestCase
         $this->assertSame($samples, $tts->ulaw('Perhatian'));
         Http::assertSentCount(1);
         Http::assertSent(fn (ClientRequest $r) => $r['voice']['languageCode'] === 'id-ID' && $r['audioConfig']['audioEncoding'] === 'MULAW'
-            && $r['audioConfig']['sampleRateHertz'] === 8000 && $r->hasHeader('X-Goog-Api-Key', 'k'));
+            && $r['audioConfig']['sampleRateHertz'] === 8000 && $r['audioConfig']['effectsProfileId'] === ['small-bluetooth-speaker-class-device'] && $r['audioConfig']['volumeGainDb'] == 4 && $r->hasHeader('X-Goog-Api-Key', 'k'));
     }
 
     public function test_speaker_opens_session_streams_audio_and_closes(): void
