@@ -1,0 +1,69 @@
+name: CCTV · Setel env
+# Dijalankan manual dari tab Actions. Menyalin secret repo di bawah ke cctv/.env di VPS (hanya baris yang secret-nya
+# terisi; baris lain tidak disentuh), lalu menyalakan ulang container CCTV saja. Nilai secret tidak dicetak ke log.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: cctv-production-deploy
+  cancel-in-progress: false
+jobs:
+  set-env:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Tulis secret ke cctv/.env di VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+          VPS_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS }}
+          GOOGLE_TTS_API_KEY: ${{ secrets.GOOGLE_TTS_API_KEY }}
+          CCTV_CAMERA_14_SPEAKER_URL: ${{ secrets.CCTV_CAMERA_14_SPEAKER_URL }}
+          CCTV_CAMERA_13_SPEAKER_URL: ${{ secrets.CCTV_CAMERA_13_SPEAKER_URL }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for variable in VPS_HOST VPS_PORT VPS_USER VPS_KEY VPS_KNOWN_HOSTS; do
+            [ -n "${!variable}" ] || { echo "Secret belum diisi: ${variable/VPS_KEY/VPS_SSH_KEY}"; exit 1; }
+          done
+
+          # Baris "NAMA base64" untuk tiap secret yang terisi; dikirim lewat stdin SSH, bukan argumen perintah.
+          payload=""
+          for name in GOOGLE_TTS_API_KEY CCTV_CAMERA_14_SPEAKER_URL CCTV_CAMERA_13_SPEAKER_URL; do
+            value="${!name}"
+            if [ -z "$value" ]; then echo "Dilewati (secret kosong): $name"; continue; fi
+            case "$value" in *$'\n'*|*"'"*) echo "Secret $name berisi baris baru atau tanda petik tunggal; perbaiki isinya."; exit 1;; esac
+            payload+="$name $(printf '%s' "$value" | base64 -w0)"$'\n'
+            echo "Akan ditulis: $name"
+          done
+          [ -n "$payload" ] || { echo "Tidak ada secret aplikasi yang terisi."; exit 1; }
+
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$VPS_KEY" > ~/.ssh/cctv_deploy && chmod 600 ~/.ssh/cctv_deploy
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          { cat <<'REMOTE'
+          set -euo pipefail
+          cd /opt/slm/cctv
+          [ -f .env ] || { echo "cctv/.env belum ada di server; lihat cctv/docs/pemasangan-vps.md"; exit 1; }
+          backup=".env.bak-$(date +%Y%m%d-%H%M%S)" && cp -p .env "$backup" && chmod 600 "$backup"
+          while read -r name encoded; do
+            [ -n "$name" ] || continue
+            value=$(printf '%s' "$encoded" | base64 -d)
+            grep -v -E "^(export )?${name}=" .env > .env.next || true
+            printf "%s='%s'\n" "$name" "$value" >> .env.next
+            cat .env.next > .env && rm -f .env.next
+            echo "Ditulis ke cctv/.env: $name"
+          done <<'DATA'
+          REMOTE
+            printf '%s' "$payload"
+            echo 'DATA'
+            cat <<'REMOTE'
+          chmod 600 .env
+          # Hanya stack CCTV; container dengan setelan berubah dibuat ulang.
+          docker compose up -d
+          docker compose ps
+          REMOTE
+          } | ssh -i ~/.ssh/cctv_deploy -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" bash -s
