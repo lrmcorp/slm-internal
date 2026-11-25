@@ -29,6 +29,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          for variable in VPS_HOST VPS_PORT VPS_USER; do
+            printf -v "$variable" '%s' "$(printf '%s' "${!variable}" | tr -d '[:space:]')"
+          done
           for variable in VPS_HOST VPS_PORT VPS_USER VPS_KEY VPS_KNOWN_HOSTS; do
             [ -n "${!variable}" ] || { echo "Setelan belum ada: $variable"; exit 1; }
           done

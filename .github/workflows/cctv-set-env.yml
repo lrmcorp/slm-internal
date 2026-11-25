@@ -29,6 +29,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # Spasi/tab/baris baru yang ikut tersalin saat mengisi secret dibuang.
+          for variable in VPS_HOST VPS_PORT VPS_USER; do
+            printf -v "$variable" '%s' "$(printf '%s' "${!variable}" | tr -d '[:space:]')"
+          done
           missing=""
           for variable in VPS_HOST VPS_PORT VPS_USER VPS_KEY VPS_KNOWN_HOSTS; do
             if [ -n "${!variable}" ]; then echo "Ada: ${variable/VPS_KEY/VPS_SSH_KEY}"; else missing+=" ${variable/VPS_KEY/VPS_SSH_KEY}"; fi
