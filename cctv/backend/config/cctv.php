@@ -33,5 +33,8 @@ return [
     'tts_api_key' => env('GOOGLE_TTS_API_KEY'),
     'tts_voice' => env('GOOGLE_TTS_VOICE', 'id-ID-Standard-A'),
     'tts_speaking_rate' => (float) env('GOOGLE_TTS_SPEAKING_RATE', 0.95),
+    // Suara yang dikirim di depan ke speaker (milidetik) untuk menahan jaringan yang tersendat; terlalu besar bisa
+    // membuat DVR membuang suara bila penyangganya penuh.
+    'speaker_prefill_ms' => (int) env('CCTV_SPEAKER_PREFILL_MS', 600),
     'min_free_disk_gb' => (float) env('CCTV_MIN_FREE_DISK_GB', env('APP_ENV') === 'testing' ? 0.0 : 2.0),
 ];

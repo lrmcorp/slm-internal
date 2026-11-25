@@ -209,7 +209,7 @@ PHP;
         $proc = proc_open([PHP_BINARY, '-r', $server, '--', (string) $port, $log], [], $pipes);
         usleep(300_000);
         try {
-            (new IsapiTalkSocket)->stream("http://127.0.0.1:{$port}", 'admin', 'pw', '/ISAPI/System/TwoWayAudio/channels/1/audioData', str_repeat("\x7F", 4000));
+            (new IsapiTalkSocket(200))->stream("http://127.0.0.1:{$port}", 'admin', 'pw', '/ISAPI/System/TwoWayAudio/channels/1/audioData', str_repeat("\x7F", 4000));
         } finally {
             proc_close($proc);
         }

@@ -13,8 +13,10 @@ class IsapiTalkSocket
 {
     /** 20 ms per potongan, sama dengan paket RTP G.711. */
     private const CHUNK = 160;
-    /** Potongan pertama dikirim sekaligus (0,2 detik) supaya penyangga DVR tidak kosong. */
-    private const PREFILL = 10;
+    /** Bawaan suara yang dikirim di depan (ms) supaya penyangga DVR tidak kosong saat jaringan tersendat. */
+    private const PREFILL_MS = 600;
+
+    public function __construct(private ?int $prefillMs = null) {}
 
     public function stream(string $base, string $user, string $pass, string $uri, string $audio, int $bytesPerSecond = 8000): void
     {
@@ -129,8 +131,10 @@ class IsapiTalkSocket
         stream_set_timeout($socket, 5);
         $started = microtime(true);
         $length = strlen($audio);
+        $prefillMs = $this->prefillMs ?? (int) (function_exists('config') ? config('cctv.speaker_prefill_ms', self::PREFILL_MS) : self::PREFILL_MS);
+        $prefill = intdiv(max(0, $prefillMs) * $bytesPerSecond, 1000 * self::CHUNK);
         for ($offset = 0, $index = 0; $offset < $length; $offset += self::CHUNK, $index++) {
-            $due = $started + max(0, $index - self::PREFILL) * self::CHUNK / $bytesPerSecond;
+            $due = $started + max(0, $index - $prefill) * self::CHUNK / $bytesPerSecond;
             $wait = $due - microtime(true);
             if ($wait > 0) {
                 usleep((int) ($wait * 1_000_000));
