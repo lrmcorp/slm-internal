@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Camera;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -51,9 +52,10 @@ class CameraSpeaker
         $session = preg_match('/<sessionId>([^<]+)<\/sessionId>/', $open->body(), $m) ? $m[1] : null;
 
         $audio = str_repeat("\xFF", self::LEAD_IN).$ulaw;
+        $stream = self::paced($audio);
         try {
-            $sent = $client((int) ceil(strlen($audio) / TextToSpeech::SAMPLE_RATE) + 10)
-                ->withBody($stream = self::paced($audio), 'application/octet-stream')
+            $sent = $client((int) ceil(strlen($audio) / TextToSpeech::SAMPLE_RATE) + 4)
+                ->withBody($stream, 'application/octet-stream')
                 // Panjang tetap (bukan chunked): speaker membaca soket apa adanya, potongan chunked jadi bunyi derau.
                 ->withOptions(['curl' => [
                     CURLOPT_INFILESIZE => $stream->length(),
@@ -62,6 +64,12 @@ class CameraSpeaker
                 ->put("{$path}/audioData".($session ? '?sessionId='.rawurlencode($session) : ''));
             if (!$sent->successful()) {
                 throw new RuntimeException("Speaker menolak suara (HTTP {$sent->status()}).");
+            }
+        } catch (ConnectionException $e) {
+            // DVR Hikvision tidak menjawab audioData selama sesi masih terbuka; habis waktu setelah semua suara
+            // terkirim berarti suara sudah diputar. Yang gagal hanya bila suara belum habis terkirim.
+            if (!$stream->eof()) {
+                throw $e;
             }
         } finally {
             $client(5)->withBody('', 'application/xml')->put("{$path}/close".($session ? '?sessionId='.rawurlencode($session) : ''));

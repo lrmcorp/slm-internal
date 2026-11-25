@@ -170,6 +170,37 @@ class GuardAreaTest extends TestCase
         $this->assertSame(['base' => 'http://100.118.114.23:8081', 'user' => 'admin', 'pass' => 'p@ss'], CameraSpeaker::endpoint($camera));
     }
 
+    public function test_dvr_that_keeps_audio_data_open_counts_as_played_once_audio_is_sent(): void
+    {
+        putenv('CCTV_CAMERA_14_SPEAKER_URL=http://admin:x@100.118.114.23:8080');
+        $camera = $this->camera(['speaker_channel' => 1, 'stream_env_key' => 'CCTV_CAMERA_14_URL']);
+        $received = 0;
+        Http::fake([
+            '*/open' => Http::response('<TwoWayAudioSession><sessionId>s9</sessionId></TwoWayAudioSession>'),
+            '*/audioData*' => function (ClientRequest $r) use (&$received) {
+                $received = strlen($r->toPsrRequest()->getBody()->getContents());
+                throw new \Illuminate\Http\Client\ConnectionException('cURL error 28: Operation timed out with 0 bytes received');
+            },
+            '*' => Http::response('<ResponseStatus><statusCode>1</statusCode></ResponseStatus>'),
+        ]);
+        app(CameraSpeaker::class)->play($camera, str_repeat("\x7F", 800));
+        $this->assertSame(2400 + 800, $received);
+        Http::assertSent(fn (ClientRequest $r) => str_ends_with($r->url(), '/close?sessionId=s9'));
+    }
+
+    public function test_audio_not_fully_sent_before_a_timeout_is_a_failure(): void
+    {
+        putenv('CCTV_CAMERA_14_SPEAKER_URL=http://admin:x@100.118.114.23:8080');
+        $camera = $this->camera(['speaker_channel' => 1, 'stream_env_key' => 'CCTV_CAMERA_14_URL']);
+        Http::fake([
+            '*/open' => Http::response('<TwoWayAudioSession><sessionId>s9</sessionId></TwoWayAudioSession>'),
+            '*/audioData*' => fn () => throw new \Illuminate\Http\Client\ConnectionException('cURL error 7: Failed to connect'),
+            '*' => Http::response(''),
+        ]);
+        $this->expectException(\Illuminate\Http\Client\ConnectionException::class);
+        app(CameraSpeaker::class)->play($camera, str_repeat("\x7F", 800));
+    }
+
     public function test_failed_speech_is_recorded_on_the_incident(): void
     {
         Storage::fake('local');
