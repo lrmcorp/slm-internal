@@ -29,8 +29,25 @@ jobs:
           printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
           ssh -i ~/.ssh/cctv_deploy -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" bash -s <<'REMOTE'
           set -uo pipefail
-          echo "== Stream utama kamera meja packing (ch1401) lewat relay"
-          docker exec cctvslm-vision-1 sh -c 'command -v ffprobe >/dev/null && ffprobe -v error -rtsp_transport tcp -select_streams v:0 -show_entries stream=codec_name,width,height,sample_aspect_ratio,display_aspect_ratio,r_frame_rate -of compact rtsp://go2rtc:8554/ch1401 || echo "ffprobe tidak ada di image"' 2>&1 | tail -2
+          echo "== Stream di relay go2rtc: nama, jumlah sumber aktif, jumlah pembaca (alamat DVR tidak dicetak)"
+          docker exec cctvslm-vision-1 python -c "
+          import json, urllib.request
+          data = json.load(urllib.request.urlopen('http://go2rtc:1984/api/streams', timeout=5))
+          for name, info in sorted(data.items()):
+              info = info or {}
+              live = sum(1 for p in (info.get('producers') or []) if p.get('medias') or p.get('receivers'))
+              print(f'{name}: sumber aktif {live}, pembaca {len(info.get(\"consumers\") or [])}')
+          " 2>&1 | tail -20 || true
+          # Stream kamera label yang sedang dibaca pemroses video (nama relay saja, mis. ch1401).
+          QR_STREAM=$(docker exec cctvslm-vision-1 python -c "
+          import json, urllib.request
+          data = json.load(urllib.request.urlopen('http://go2rtc:1984/api/streams', timeout=5))
+          used = [n for n, i in sorted(data.items()) if (i or {}).get('consumers') and not n.endswith('h264')]
+          print((used or ['ch1401'])[0])
+          " 2>/dev/null || echo ch1401)
+          echo "stream untuk uji QR: $QR_STREAM"
+          echo "== Stream kamera meja packing ($QR_STREAM) lewat relay"
+          docker exec cctvslm-vision-1 sh -c 'command -v ffprobe >/dev/null && ffprobe -v error -rtsp_transport tcp -select_streams v:0 -show_entries stream=codec_name,width,height,sample_aspect_ratio,display_aspect_ratio,r_frame_rate -of compact rtsp://go2rtc:8554/'"$QR_STREAM"' || echo "ffprobe tidak ada di image"' 2>&1 | tail -2
           echo "== Variabel pembacaan label (nama saja)"
           docker exec cctvslm-vision-1 sh -c 'env | grep -E "^CCTV_(LABEL|WORK|RTSP_RELAY|PROCESS_FPS|AI_API_KEY)" | sed -E "s/^(CCTV_AI_API_KEY)=.+/\1=(ada)/"'
           echo "== Cadangan Gemini: uji model dan kunci yang dipakai pembaca label"
@@ -53,13 +70,13 @@ jobs:
           # Tidak di dalam container pemroses video: kalau uji ini kehabisan memori, hanya uji ini yang berhenti.
           # Membaca lewat relay go2rtc, jadi tidak membuka sambungan tambahan ke DVR.
           docker run --rm -i --network cctvslm_default --memory 384m --memory-swap 384m --cpus 0.5 --cpu-shares 128 \
-            --pids-limit 64 --entrypoint nice cctvslm-vision:latest -n 15 python - <<'PY'
+            --pids-limit 64 -e QR_STREAM="$QR_STREAM" --entrypoint nice cctvslm-vision:latest -n 15 python - <<'PY'
           import os, re, time, statistics, resource, cv2
           # Hemat memori: decoder satu thread (buffer frame per thread), OpenCV satu thread.
           os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;tcp|threads;1"
           cv2.setNumThreads(1)
           INVOICE = re.compile(r"(MJ-\d{8}-\d{4}|(?<!\d)\d{6}-\d{2})(?!\d)")
-          cap = cv2.VideoCapture("rtsp://go2rtc:8554/ch1401", cv2.CAP_FFMPEG)
+          cap = cv2.VideoCapture("rtsp://go2rtc:8554/" + os.environ.get("QR_STREAM", "ch1401"), cv2.CAP_FFMPEG)
           det = cv2.QRCodeDetector()
           wechat = None
           try:
