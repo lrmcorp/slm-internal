@@ -40,7 +40,7 @@ class Camera extends Model
 
     protected function casts(): array
     {
-        return ['object_tracks' => 'array', 'zones' => 'array', 'zones_approved_at' => 'datetime', 'last_seen_at' => 'datetime', 'frame_at' => 'datetime',
+        return ['object_tracks' => 'array', 'zones' => 'array', 'zones_approved_at' => 'datetime', 'last_seen_at' => 'datetime', 'status_changed_at' => 'datetime', 'frame_at' => 'datetime',
             'presence_alerts_enabled' => 'boolean', 'detector_ready' => 'boolean',
             'guard_enabled' => 'boolean', 'guard_days' => 'array', 'speaker_enabled' => 'boolean'];
     }

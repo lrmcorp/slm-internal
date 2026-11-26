@@ -44,6 +44,8 @@ return [
     'realtime_relay' => filter_var(env('CCTV_REALTIME_RELAY', false), FILTER_VALIDATE_BOOL),
     'realtime_substream' => filter_var(env('CCTV_REALTIME_SUBSTREAM', true), FILTER_VALIDATE_BOOL),
     // Pengumuman dari SLM (laporan pesanan belum diproses): speaker kamera ini, kanal bawaan bila SLM tidak menyebut.
+    // Kamera/worker baru dianggap offline (kejadian + notifikasi) bila putus lebih lama dari ini (detik).
+    'offline_grace_seconds' => (int) env('CCTV_OFFLINE_GRACE_SECONDS', 180),
     'announce_camera_id' => (int) env('CCTV_ANNOUNCE_CAMERA_ID', 1),
     'announce_channel' => (int) env('CCTV_ANNOUNCE_CHANNEL', 12),
     'speaker_lead_in_ms' => (int) env('CCTV_SPEAKER_LEAD_IN_MS', 800),

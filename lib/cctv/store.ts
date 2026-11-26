@@ -8,6 +8,12 @@ import { jakartaDateKey } from "@/lib/date/jakarta";
 /** Kejadian yang dihitung sebagai anomali di dashboard dan laporan: anomali meja packing dan orang di area terlarang. */
 const CCTV_ALERT_EVENT_TYPES = ["anomaly", "restricted_entry"];
 
+/**
+ * Kejadian kesehatan sistem (kamera/worker terputus, disk). Bukan hasil pencocokan paket, jadi tidak tampil
+ * di tabel packing dan tidak dihitung "perlu ditinjau"; tetap bisa dilihat lewat filter Event.
+ */
+export const CCTV_SYSTEM_EVENT_TYPES = ["camera_offline", "worker_offline", "disk_space_warning"];
+
 export function sanitizeCctvEvidenceUrl(url: string | null | undefined): string | null {
   if (!url || typeof url !== "string") return null;
   const trimmed = url.trim();
@@ -111,6 +117,8 @@ export async function listCctvDetectionsPaginated(filter: ListCctvFilter) {
 
   if (filter.eventType && filter.eventType !== "all") {
     where.eventType = filter.eventType;
+  } else {
+    where.eventType = { notIn: CCTV_SYSTEM_EVENT_TYPES };
   }
 
   if (filter.matchStatus && filter.matchStatus !== "all") {
@@ -472,6 +480,7 @@ export async function getCctvDashboardSummary() {
             { matchStatus: "unmatched" },
             { matchStatus: "review" },
           ],
+          NOT: { eventType: { in: CCTV_SYSTEM_EVENT_TYPES } },
           AND: [todayActivityCond],
         },
       }),
@@ -589,6 +598,7 @@ export async function getCctvAnomaliesReport(filter: CctvAnomaliesFilter) {
       { matchStatus: "unmatched" },
       { matchStatus: "review" },
     ],
+    NOT: { eventType: { in: CCTV_SYSTEM_EVENT_TYPES } },
   };
 
   if (filter.cameraName && filter.cameraName !== "all") {

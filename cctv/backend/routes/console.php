@@ -63,17 +63,21 @@ Artisan::command('cctv:create-user {email}', function (string $email) {
 })->purpose('Buat penerima notifikasi tanpa menyimpan kata sandi di shell history');
 
 Artisan::command('cctv:check-health', function (IncidentNotifier $notifier) {
+    // Masa tenggang: restart pemroses video (deploy, ganti setelan) atau Wi-Fi toko yang tersendat sebentar
+    // tidak dicatat sebagai kamera/worker offline; hanya putus yang berlangsung lebih lama dari ini.
+    $grace = max(60, (int) config('cctv.offline_grace_seconds', 180));
     foreach (Camera::whereNotNull('last_seen_at')->get() as $camera) {
-        $type = $camera->last_seen_at->lt(now()->subSeconds(60)) ? 'worker_offline'
-            : ($camera->status === 'online' ? null : 'camera_offline');
+        $offlineSince = $camera->status_changed_at ?? $camera->last_seen_at;
+        $type = $camera->last_seen_at->lt(now()->subSeconds($grace)) ? 'worker_offline'
+            : ($camera->status === 'online' || $offlineSince->gt(now()->subSeconds($grace)) ? null : 'camera_offline');
         if (!$type || Incident::where('camera_id', $camera->id)->where('type', $type)
             ->whereNull('resolved_at')->exists()) {
             continue;
         }
         $incident = Incident::create([
             'camera_id' => $camera->id, 'type' => $type, 'status' => 'needs_review',
-            'reason' => $type === 'worker_offline' ? 'Heartbeat proses pemantauan berhenti lebih dari 60 detik.'
-                : 'Kamera atau stream tidak dapat dibaca.',
+            'reason' => $type === 'worker_offline' ? "Heartbeat proses pemantauan berhenti lebih dari {$grace} detik."
+                : "Kamera atau stream tidak dapat dibaca lebih dari {$grace} detik.",
             'occurred_at' => now(), 'dedupe_key' => hash('sha256', $camera->id.':'.$type.':'.now()->timestamp),
         ]);
         $notifier->queue($incident);

@@ -27,7 +27,9 @@ class IngestController extends Controller
     public function heartbeat(Request $request, Camera $camera)
     {
         $data = $request->validate(['status' => 'required|in:online,offline,error']);
-        $camera->update(['status' => $data['status'], 'last_seen_at' => now()]);
+        $changed = $camera->status !== $data['status'] || !$camera->status_changed_at;
+        $camera->update(['status' => $data['status'], 'last_seen_at' => now()]
+            + ($changed ? ['status_changed_at' => now()] : []));
         if ($data['status'] === 'online') {
             Incident::where('camera_id', $camera->id)->whereIn('type', ['camera_offline', 'worker_offline'])
                 ->whereNull('resolved_at')->update(['resolved_at' => now()]);
