@@ -69,6 +69,10 @@ jobs:
           docker exec slm-postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -At -F " | " -c "SELECT \"eventType\", \"matchStatus\", count(*), max(\"createdAt\") FROM \"CctvDetectionLog\" WHERE \"createdAt\" > now() - interval '"'"'30 days'"'"' GROUP BY 1,2 ORDER BY 3 DESC LIMIT 15"' 2>/dev/null || true
           echo "== Vision: status deteksi anomali (model paket)"
           docker logs --since 72h cctvslm-vision-1 2>&1 | grep -i -E "model deteksi paket|anomali" | tail -3 || true
+          echo "== Pembacaan QR 5 menit terakhir-terakhir (kamera label)"
+          docker logs --since 6h cctvslm-vision-1 2>&1 | grep -E "QR 5 menit|tersambung lagi|belum dapat diakses" | grep -v -i "rtsp://" | tail -8 || true
+          echo "== Label di server CCTV 10 hari: per hari"
+          docker exec cctvslm-web-1 php artisan tinker --execute='foreach (App\Models\LabelRecord::where("created_at", ">=", now()->subDays(10))->selectRaw("date(created_at) as d, count(*) as n")->groupBy("d")->orderBy("d")->get() as $r) echo "$r->d: $r->n\n";' 2>/dev/null || true
           echo "== go2rtc: pemakaian memori"
           docker stats --no-stream --format '{{.Name}} {{.MemUsage}}' cctvslm-go2rtc-1 cctvslm-proxy-1 2>/dev/null || true
           REMOTE
