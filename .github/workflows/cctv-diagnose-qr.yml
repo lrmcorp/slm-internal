@@ -103,12 +103,16 @@ jobs:
               x0, x1 = int(max(0, xs.min() - w)), int(min(W, xs.max() + w))
               y0, y1 = int(max(0, ys.min() - h)), int(min(H, ys.max() + h))
               crop = frame[y0:y1, x0:x1]
+              # Kotak QR lebih dari 40% frame = deteksi palsu; potongannya tidak diperbesar (hemat memori).
+              if w > W * 0.4 or h > H * 0.4:
+                  crop = crop[:0]
               trials = {
                   "asli": frame,
                   "rasio_diperbaiki": cv2.resize(frame, (W * 2, H)) if W / H < 1.2 else frame,
               }
               if crop.size:
-                  big = cv2.resize(crop, None, fx=3, fy=3, interpolation=cv2.INTER_CUBIC)
+                  scale = min(3.0, 1600 / max(crop.shape[:2]))
+                  big = cv2.resize(crop, None, fx=scale, fy=scale, interpolation=cv2.INTER_CUBIC)
                   trials["potong_qr_3x"] = big
                   gray = cv2.cvtColor(big, cv2.COLOR_BGR2GRAY)
                   sharp = cv2.addWeighted(gray, 1.8, cv2.GaussianBlur(gray, (0, 0), 3), -0.8, 0)

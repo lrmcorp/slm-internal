@@ -29,6 +29,8 @@ import { dashboardDataFrom } from "@/lib/dashboard/dataRange";
 import { CctvDashboardWidget } from "@/components/dashboard/CctvDashboardWidget";
 import { getCctvDashboardSummary } from "@/lib/cctv/store";
 import { getConfiguredCameraStreams } from "@/lib/cctv/streams";
+import { CctvAnnouncePanel } from "@/components/cctv/CctvAnnouncePanel";
+import { listSpeakers } from "@/lib/cctv/speakers";
 
 export const dynamic = "force-dynamic";
 
@@ -145,7 +147,7 @@ export default async function DashboardPage({ searchParams }: { searchParams?: P
   // Hanya data yang dipakai: grafik 6 bulan (atau rentang filter), periode pembayaran, bulan ini, dan hari ini.
   const dataFrom = dashboardDataFrom(filters, paymentPeriod.from, monthStr);
   // Semua sumber data tidak saling bergantung: diambil bersamaan supaya dashboard (halaman pembuka aplikasi) cepat tampil.
-  const [products, audit, allSales, allExpenses, allRekenings, allTempoPayments, allTempoReversals, cctvSummary, profitSetting] = await Promise.all([
+  const [products, audit, allSales, allExpenses, allRekenings, allTempoPayments, allTempoReversals, cctvSummary, profitSetting, speakers] = await Promise.all([
     listCatalogProducts(),
     listAudit({ role, limit: 5 }),
     listSalesRecords({ fromDate: dataFrom }),
@@ -155,6 +157,7 @@ export default async function DashboardPage({ searchParams }: { searchParams?: P
     listTempoPaymentReversals(),
     isOwner && showCctv ? getCctvDashboardSummary().catch(() => null) : Promise.resolve(null),
     canViewOperationalProfit ? getOperationalProfitSetting() : Promise.resolve(null),
+    isOwner && showCctv ? listSpeakers().catch(() => null) : Promise.resolve(null),
   ]);
   const activities = audit.slice(0, 5);
   const rekeningLabels = rekeningLabelMap(allRekenings);
@@ -323,6 +326,12 @@ export default async function DashboardPage({ searchParams }: { searchParams?: P
           </div>
         </section>
       </div>
+
+      {speakers && speakers.length > 0 && (
+        <div className="mt-5">
+          <CctvAnnouncePanel speakers={speakers} />
+        </div>
+      )}
     </AppShell>
   );
 }
