@@ -32,7 +32,7 @@ import requests
 
 from evidence_spool import EvidenceSpool
 from live_video import LiveVideo
-from logic import CODE, ZoneTracker, clip_playback_fps, normalize_store, parse_label, parse_qr_payload, people_in_zone
+from logic import CODE, PersonPathTracker, ZoneTracker, clip_playback_fps, normalize_store, parse_label, parse_qr_payload, people_in_zone
 from person_detector import PersonDetector
 from runtime import DropOldestExecutor, redact, via_relay
 
@@ -367,6 +367,12 @@ class Worker:
         self.last_guard_check = 0.0
         self.last_guard_alert = 0.0
         self.guard_streak = 0
+        # Jalur orang: dari area asal barang keluar batas toko tanpa jalur pengemasan (bila model paket belum ada).
+        self.person_path_enabled = env_flag("CCTV_PERSON_PATH", "true")
+        self.person_path_interval = 1.0 / max(0.2, min(5.0, float(os.getenv("CCTV_PERSON_PATH_FPS", "1"))))
+        self.person_path_cooldown = max(30.0, float(os.getenv("CCTV_PERSON_PATH_COOLDOWN_SECONDS", "120")))
+        self.person_path = PersonPathTracker([], self.person_path_cooldown)
+        self.last_person_path = 0.0
         self.model = None
         self.tracking_session = str(uuid.uuid4())
         self.last_observation = 0.0
@@ -439,6 +445,7 @@ class Worker:
             if data["zones"] != self.zones:
                 self.zones = data["zones"] or []
                 self.tracker = ZoneTracker(self.zones)
+                self.person_path = PersonPathTracker(self.zones, self.person_path_cooldown)
         except requests.RequestException as exc:
             LOG.error("Heartbeat failed: %s", type(exc).__name__)
 
@@ -492,10 +499,35 @@ class Worker:
         except requests.RequestException as exc:
             LOG.warning('Observation upload failed: %s', type(exc).__name__)
 
-    def check_guard(self, frame, now: float):
+    def check_people(self, frame, now: float, guard_due: bool, path_due: bool):
+        people = self.shared.person.detect(frame)
+        if guard_due:
+            self.check_guard(frame, now, people)
+        if path_due:
+            self.check_person_path(frame, now, people)
+
+    def check_person_path(self, frame, now: float, people: list[dict]):
+        """Orang dari area asal barang keluar batas toko tanpa jalur pengemasan: kejadian anomali (notifikasi saja)."""
+        event = self.person_path.update(people, now)
+        if not event:
+            return
+        image = frame.copy()
+        height, width = image.shape[:2]
+        colors = {"box_area": (0, 191, 255), "packing_route": (223, 99, 144), "store_boundary": (217, 184, 0)}
+        for zone in self.zones:
+            if zone.get("type") in colors:
+                polygon = np.array([[int(x * width), int(y * height)] for x, y in zone["points"]], np.int32)
+                cv2.polylines(image, [polygon], True, colors[zone["type"]], 2)
+        for person in people:
+            x1, y1, x2, y2 = person["box"]
+            cv2.rectangle(image, (int(x1 * width), int(y1 * height)), (int(x2 * width), int(y2 * height)), (0, 0, 255), 3)
+        LOG.info("Kamera %d: orang keluar batas toko tanpa jalur pengemasan; kejadian dikirim", self.camera_id)
+        self.start_incident({"event": event, "occurred_at": datetime.now(timezone.utc).isoformat(), "snapshot": image})
+
+    def check_guard(self, frame, now: float, people: list[dict] | None = None):
         """Orang di area terlarang dua pemeriksaan berturut-turut = peringatan (sekali per jeda)."""
         zone = self.guard["zone"]
-        hits = people_in_zone(self.shared.person.detect(frame), zone)
+        hits = people_in_zone(people if people is not None else self.shared.person.detect(frame), zone)
         self.guard_streak = self.guard_streak + 1 if hits else 0
         if self.guard_streak < 2 or now - self.last_guard_alert < self.guard["cooldown_seconds"]:
             return
@@ -745,6 +777,7 @@ class Worker:
             # Anonymous IDs cannot be linked across reconnects.
             self.tracking_session = str(uuid.uuid4())
             self.tracker = ZoneTracker(self.zones)
+            self.person_path = PersonPathTracker(self.zones, getattr(self, "person_path_cooldown", 120.0))
             self.heartbeat("online")
             self.last_heartbeat = time.monotonic()
             source_period = 1 / max(1, capture.get(cv2.CAP_PROP_FPS)) if file_source else 0
@@ -807,10 +840,16 @@ class Worker:
             else:
                 qr_stats_snapshot_and_reset()
             self.last_qr_stats = now
-        if (self.guard["active"] and now - self.last_guard_check >= self.guard_interval
-                and (self.guard_future is None or self.guard_future.done())):
-            self.guard_future = self.shared.guard.submit(self.check_guard, frame, now)
-            self.last_guard_check = now
+        # Satu deteksi orang dipakai bersama oleh jaga area terlarang dan jalur keluar batas.
+        guard_due = self.guard["active"] and now - self.last_guard_check >= self.guard_interval
+        path_due = (getattr(self, "person_path_enabled", False) and self.model is None and self.approved
+                    and self.person_path.ready() and now - self.last_person_path >= self.person_path_interval)
+        if (guard_due or path_due) and (self.guard_future is None or self.guard_future.done()):
+            self.guard_future = self.shared.guard.submit(self.check_people, frame, now, guard_due, path_due)
+            if guard_due:
+                self.last_guard_check = now
+            if path_due:
+                self.last_person_path = now
         detections = self.detect(frame)
         if self.live_video and not self.live_video.source and (self.live_future is None or self.live_future.done()):
             image, _ = self.draw_tracks(frame, detections)

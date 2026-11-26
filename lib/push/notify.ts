@@ -251,7 +251,8 @@ export async function notifyDeliveryOrderBacklog(now = new Date()) {
   const { deliveryOrderBacklog, backlogMessage, announcementText } = await import("@/lib/deliveryOrders/backlogReport");
   const report = await deliveryOrderBacklog();
   const speech = announcementText(report);
-  const announced = speech ? await announceOnCctv(speech) : "tidak ada pesanan tertunda";
+  const { backlogSpeakerChannels } = await import("@/lib/cctv/speakers");
+  const announced = speech ? await announceOnCctv(speech, backlogSpeakerChannels()) : "tidak ada pesanan tertunda";
   const slot = new Intl.DateTimeFormat("id-ID", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta" }).format(now);
   const message = backlogMessage(report, slot, now);
   const result = pushConfig().enabled
@@ -261,16 +262,16 @@ export async function notifyDeliveryOrderBacklog(now = new Date()) {
 }
 
 /**
- * Umumkan lewat speaker CCTV (server CCTV memutar Google TTS di kanal CCTV_ANNOUNCE_CHANNEL, bawaan 13).
+ * Umumkan lewat speaker CCTV (server CCTV memutar Google TTS di kanal yang diminta, bawaan CCTV_ANNOUNCE_CHANNEL atau 12).
  * Tidak pernah melempar error; hasilnya dicatat di jawaban job.
  */
 export async function announceOnCctv(text: string, channels?: number[]): Promise<string> {
   const { CCTV_BASE_URL, CCTV_TOKEN } = await import("@/lib/cctv/client");
   const base = CCTV_BASE_URL.replace(/\/+$/, "");
   if (!base || !CCTV_TOKEN) return "CCTV belum dikonfigurasi";
-  const fallback = Number(process.env.CCTV_ANNOUNCE_CHANNEL || 13);
+  const fallback = Number(process.env.CCTV_ANNOUNCE_CHANNEL || 12);
   const picked = (channels ?? []).filter((channel) => Number.isInteger(channel) && channel > 0 && channel <= 64);
-  const target = picked.length ? picked : [Number.isInteger(fallback) && fallback > 0 ? fallback : 13];
+  const target = picked.length ? picked : [Number.isInteger(fallback) && fallback > 0 ? fallback : 12];
   try {
     const response = await fetch(`${base}/api/v1/slm/announce`, {
       method: "POST",

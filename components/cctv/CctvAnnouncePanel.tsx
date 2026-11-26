@@ -14,7 +14,7 @@ export function CctvAnnouncePanel({ speakers: initial }: { speakers: Speaker[] }
   const { showToast } = useToast();
   const [speakers, setSpeakers] = useState(initial);
   const [text, setText] = useState("");
-  const [picked, setPicked] = useState<number[]>(() => (initial.some((s) => s.channel === 13) ? [13] : initial.slice(0, 1).map((s) => s.channel)));
+  const [picked, setPicked] = useState<number[]>([]);
   const [sending, setSending] = useState(false);
   const [renaming, setRenaming] = useState(false);
   const [names, setNames] = useState<Record<number, string>>(() => Object.fromEntries(initial.map((s) => [s.channel, s.name])));

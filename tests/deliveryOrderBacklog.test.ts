@@ -42,7 +42,7 @@ describe("laporan DO belum terproses", () => {
 });
 
 describe("pengumuman ke speaker CCTV", () => {
-  it("mengirim kalimat ke server CCTV di kanal 13 dengan token SLM, dan tidak melempar error bila gagal", async () => {
+  it("mengirim kalimat ke server CCTV (bawaan kanal 12) dengan token SLM, dan tidak melempar error bila gagal", async () => {
     vi.resetModules();
     process.env.CCTV_BASE_URL = "https://cctv.example.test/";
     vi.doMock("@/lib/db/prisma", () => ({ prisma: {} }));
@@ -54,7 +54,7 @@ describe("pengumuman ke speaker CCTV", () => {
     const { announceOnCctv } = await import("@/lib/push/notify");
     expect(await announceOnCctv("Ada 1 pesanan yang belum diproses.")).toBe("diantrekan di speaker CCTV");
     expect(calls[0].url).toBe("https://cctv.example.test/api/v1/slm/announce");
-    expect(JSON.parse(String(calls[0].init.body))).toEqual({ text: "Ada 1 pesanan yang belum diproses.", channel: 13, channels: [13] });
+    expect(JSON.parse(String(calls[0].init.body))).toEqual({ text: "Ada 1 pesanan yang belum diproses.", channel: 12, channels: [12] });
     const headers = calls[0].init.headers as Record<string, string>;
     expect(headers["X-SLM-Token"]).toBeTruthy();
     expect(headers.Authorization).toBe(`Bearer ${headers["X-SLM-Token"]}`);

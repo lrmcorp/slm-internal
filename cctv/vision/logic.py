@@ -188,3 +188,77 @@ class ZoneTracker:
                     "reason": f"Objek terlacak dari area asal barang ke luar batas toko dekat seseorang, tanpa melewati jalur pengemasan; perkiraan {count} pcs. Perlu diperiksa manusia.",
                 }
         return None
+
+
+@dataclass
+class PersonTrack:
+    foot: tuple[float, float]
+    last_seen: float
+    from_box: bool = False
+    touched_packing: bool = False
+    was_inside_store: bool = False
+    outside_streak: int = 0
+
+
+class PersonPathTracker:
+    """Orang yang berjalan dari "area asal barang" lalu keluar "batas toko" tanpa melewati "jalur pengemasan".
+
+    Pengganti deteksi berbasis barang bila model paket belum ada: yang dilacak posisi kaki orang (tengah sisi
+    bawah kotak), jadi sistem tidak tahu apakah orang itu membawa barang; alasannya menyebut hal itu.
+    Pelacakan sederhana: titik kaki dipasangkan ke jejak terdekat (< 0,25 lebar frame) antar pemeriksaan.
+    Keluar batas harus terlihat di dua pemeriksaan berturut-turut, dan ada jeda antar-kejadian per kamera.
+    """
+
+    MATCH_DISTANCE = 0.25
+    FORGET_SECONDS = 6.0
+
+    def __init__(self, zones: list[dict], cooldown_seconds: float = 120.0):
+        self.zones = {zone["type"]: zone["points"] for zone in zones}
+        self.tracks: list[PersonTrack] = []
+        self.cooldown = cooldown_seconds
+        self.last_event = float("-inf")
+
+    def ready(self) -> bool:
+        return {"store_boundary", "box_area", "packing_route"}.issubset(self.zones)
+
+    def update(self, people: list[dict], now: float | None = None, min_height: float = 0.05) -> dict | None:
+        now = now if now is not None else time.monotonic()
+        if not self.ready():
+            return None
+        feet = []
+        for person in people:
+            x1, y1, x2, y2 = person["box"]
+            if y2 - y1 >= min_height:
+                feet.append(((x1 + x2) / 2, y2))
+        unmatched = list(self.tracks)
+        current: list[PersonTrack] = []
+        for foot in feet:
+            best = min(unmatched, key=lambda t: hypot(t.foot[0] - foot[0], t.foot[1] - foot[1]), default=None)
+            if best is not None and hypot(best.foot[0] - foot[0], best.foot[1] - foot[1]) < self.MATCH_DISTANCE:
+                unmatched.remove(best)
+                track = best
+                track.foot, track.last_seen = foot, now
+            else:
+                track = PersonTrack(foot=foot, last_seen=now)
+            current.append(track)
+        exited = 0
+        for track in current:
+            track.from_box |= inside(track.foot, self.zones["box_area"])
+            track.touched_packing |= inside(track.foot, self.zones["packing_route"])
+            in_store = inside(track.foot, self.zones["store_boundary"])
+            track.was_inside_store |= in_store
+            in_danger = "danger_zone" not in self.zones or inside(track.foot, self.zones["danger_zone"])
+            track.outside_streak = track.outside_streak + 1 if (not in_store and track.was_inside_store and in_danger) else 0
+            if track.from_box and not track.touched_packing and track.outside_streak >= 2:
+                exited += 1
+                track.from_box = False  # satu jejak satu kejadian
+        self.tracks = current + [t for t in unmatched if now - t.last_seen < self.FORGET_SECONDS]
+        if not exited or now - self.last_event < self.cooldown:
+            return None
+        self.last_event = now
+        return {
+            "source_event_id": str(uuid.uuid4()), "item_count": min(3, exited), "detector": "person",
+            "exited_boundary": True, "passed_packing_route": False,
+            "reason": ("Orang terlihat dari area asal barang lalu keluar batas toko tanpa melewati jalur pengemasan. "
+                       "Deteksi berbasis orang, bukan barang: periksa rekaman apakah ada barang yang dibawa."),
+        }

@@ -3,15 +3,26 @@ import { prisma } from "@/lib/db/prisma";
 
 /**
  * Speaker yang bisa dipakai untuk pengumuman: kanal two-way audio DVR beserta nama yang diberi Owner.
- * Bawaan = kanal yang menerima sesi bicara saat diuji 25 Nov 2026 (1, 2, 5, 6, 12, 13, 15).
+ * Bawaan = kanal yang menerima sesi bicara saat diuji 25 Nov 2026, tanpa kanal 13 (titik itu tidak dipakai,
+ * keputusan pemilik 26 Nov 2026). Laporan pesanan 12.30/15.00 diputar di kanal 12 dan 15.
  */
 export type CctvSpeaker = { channel: number; name: string };
 
 const KEY = "cctv.speakers";
-export const DEFAULT_SPEAKERS: CctvSpeaker[] = [1, 2, 5, 6, 12, 13, 15].map((channel) => ({
+export const BACKLOG_SPEAKER_CHANNELS = [12, 15];
+export const DEFAULT_SPEAKERS: CctvSpeaker[] = [1, 2, 5, 6, 12, 15].map((channel) => ({
   channel,
-  name: channel === 13 ? "Kanal 13 (pengumuman pesanan)" : `Kanal ${channel}`
+  name: BACKLOG_SPEAKER_CHANNELS.includes(channel) ? `Kanal ${channel} (laporan pesanan)` : `Kanal ${channel}`
 }));
+
+/** Kanal laporan pesanan: CCTV_ANNOUNCE_CHANNELS (mis. "12,15") atau bawaan 12 dan 15. */
+export function backlogSpeakerChannels(env: Record<string, string | undefined> = process.env): number[] {
+  const parsed = String(env.CCTV_ANNOUNCE_CHANNELS || "")
+    .split(",")
+    .map((value) => Number(value.trim()))
+    .filter((channel) => Number.isInteger(channel) && channel >= 1 && channel <= 64);
+  return parsed.length ? Array.from(new Set(parsed)) : BACKLOG_SPEAKER_CHANNELS;
+}
 
 export function normalizeSpeakers(input: unknown): CctvSpeaker[] {
   if (!Array.isArray(input)) return [];

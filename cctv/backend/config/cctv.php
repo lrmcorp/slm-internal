@@ -45,7 +45,7 @@ return [
     'realtime_substream' => filter_var(env('CCTV_REALTIME_SUBSTREAM', true), FILTER_VALIDATE_BOOL),
     // Pengumuman dari SLM (laporan pesanan belum diproses): speaker kamera ini, kanal bawaan bila SLM tidak menyebut.
     'announce_camera_id' => (int) env('CCTV_ANNOUNCE_CAMERA_ID', 1),
-    'announce_channel' => (int) env('CCTV_ANNOUNCE_CHANNEL', 13),
+    'announce_channel' => (int) env('CCTV_ANNOUNCE_CHANNEL', 12),
     'speaker_lead_in_ms' => (int) env('CCTV_SPEAKER_LEAD_IN_MS', 800),
     'speaker_prefill_ms' => (int) env('CCTV_SPEAKER_PREFILL_MS', 600),
     'min_free_disk_gb' => (float) env('CCTV_MIN_FREE_DISK_GB', env('APP_ENV') === 'testing' ? 0.0 : 2.0),

@@ -175,6 +175,7 @@ class IngestController extends Controller
             'confidence' => 'nullable|numeric|between:0,1', 'item_count' => 'required|integer|between:1,3',
             'exited_boundary' => 'required|boolean', 'passed_packing_route' => 'required|boolean',
             'snapshot' => 'required|image|max:4096', 'clip' => 'nullable|mimes:mp4|max:30720',
+            'detector' => 'nullable|in:item,person',
         ]);
         if (!$camera->zones_approved_at || !$data['exited_boundary'] || $data['passed_packing_route']) {
             return response()->json(['message' => 'Zona belum disetujui atau aturan anomali tidak terpenuhi.'], 422);
@@ -193,8 +194,9 @@ class IngestController extends Controller
             'reason' => $data['reason'], 'confidence' => $data['confidence'] ?? null,
             'occurred_at' => $data['occurred_at'], 'snapshot_path' => $snapshot,
             'clip_path' => $clip, 'dedupe_key' => $key,
+            // detector "person": dilacak dari posisi orang (model paket belum ada), bukan dari barang.
             'metadata' => ['item_count' => $data['item_count'], 'exited_boundary' => true,
-                'passed_packing_route' => false],
+                'passed_packing_route' => false, 'detector' => $data['detector'] ?? 'item'],
         ]);
         $notifier->queue($incident);
         return response()->json($incident, 201);

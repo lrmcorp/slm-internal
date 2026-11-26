@@ -48,8 +48,11 @@ jobs:
           PY
           echo "== Sumber pembacaan label 30 hari (Gemini / OpenCV), per hari"
           docker exec cctvslm-web-1 php artisan tinker --execute='foreach (App\Models\LabelRecord::where("created_at", ">=", now()->subDays(30))->selectRaw("date(created_at) as d, sum(case when raw_ocr like \"Gemini%\" then 1 else 0 end) as gemini, count(*) as n")->groupBy("d")->orderBy("d")->get() as $r) echo "$r->d: total $r->n, lewat Gemini $r->gemini\n";' 2>/dev/null || true
-          echo "== Uji baca QR ±150 detik"
-          docker exec -i cctvslm-vision-1 python - <<'PY'
+          echo "== Uji baca QR ±150 detik (container sementara terpisah: 192 MB, 0,5 CPU, prioritas rendah)"
+          # Tidak di dalam container pemroses video: kalau uji ini kehabisan memori, hanya uji ini yang berhenti.
+          # Membaca lewat relay go2rtc, jadi tidak membuka sambungan tambahan ke DVR.
+          docker run --rm -i --network cctvslm_default --memory 192m --memory-swap 192m --cpus 0.5 --cpu-shares 128 \
+            --pids-limit 64 --entrypoint nice cctvslm-vision:latest -n 15 python - <<'PY'
           import os, re, time, statistics, cv2
           os.environ.setdefault("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;tcp")
           INVOICE = re.compile(r"(MJ-\d{8}-\d{4}|(?<!\d)\d{6}-\d{2})(?!\d)")
@@ -64,6 +67,7 @@ jobs:
           ok = {m: 0 for m in methods}
           invoice = {m: 0 for m in methods}
           frames = seen = 0
+          # Diproses 2 frame per detik dan frame diperkecil ke lebar maksimal 1280 seperti pemroses label.
           sizes, shape = [], None
           def decode(img):
               try:
@@ -79,7 +83,7 @@ jobs:
           while time.time() - t0 < 150:
               if not cap.grab():
                   time.sleep(0.5); continue
-              if time.time() - last < 0.25:
+              if time.time() - last < 0.5:
                   continue
               last = time.time()
               ret, frame = cap.retrieve()

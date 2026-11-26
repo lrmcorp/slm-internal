@@ -22,7 +22,7 @@ class SlmAnnouncementTest extends TestCase
         return Camera::create(['name' => 'Camera 14', 'stream_env_key' => 'CCTV_CAMERA_95_URL', 'location' => 'Meja packing']);
     }
 
-    public function test_slm_announcement_is_queued_on_channel_13_by_default(): void
+    public function test_slm_announcement_is_queued_on_channel_12_by_default(): void
     {
         Queue::fake();
         Config::set('cctv.slm_token', 'tok-ann');
@@ -31,8 +31,8 @@ class SlmAnnouncementTest extends TestCase
         $text = 'Ada 2 pesanan yang belum diproses, atas nama Bu Ani dan Toko B. Mohon segera diproses.';
 
         $this->postJson('/api/v1/slm/announce', ['text' => $text], ['X-SLM-Token' => 'tok-ann'])
-            ->assertStatus(202)->assertJson(['data' => ['camera_id' => $camera->id, 'channel' => 13]]);
-        Queue::assertPushedOn('alerts', SpeakAnnouncement::class, fn ($job) => $job->text === $text && $job->channels === [13] && $job->cameraId === $camera->id);
+            ->assertStatus(202)->assertJson(['data' => ['camera_id' => $camera->id, 'channel' => 12]]);
+        Queue::assertPushedOn('alerts', SpeakAnnouncement::class, fn ($job) => $job->text === $text && $job->channels === [12] && $job->cameraId === $camera->id);
 
         $this->postJson('/api/v1/slm/announce', ['text' => 'x', 'channel' => 5], ['X-SLM-Token' => 'tok-ann'])->assertStatus(202);
         Queue::assertPushed(SpeakAnnouncement::class, fn ($job) => $job->channels === [5]);

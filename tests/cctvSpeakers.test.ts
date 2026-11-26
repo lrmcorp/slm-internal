@@ -3,12 +3,14 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 vi.mock("@/lib/db/prisma", () => ({ prisma: {} }));
 
-const { normalizeSpeakers, DEFAULT_SPEAKERS } = await import("@/lib/cctv/speakers");
+const { normalizeSpeakers, DEFAULT_SPEAKERS, backlogSpeakerChannels } = await import("@/lib/cctv/speakers");
 
 describe("speaker CCTV untuk pengumuman", () => {
-  it("bawaan berisi kanal yang menerima suara saat diuji, kanal 13 untuk pengumuman pesanan", () => {
-    expect(DEFAULT_SPEAKERS.map((s) => s.channel)).toEqual([1, 2, 5, 6, 12, 13, 15]);
-    expect(DEFAULT_SPEAKERS.find((s) => s.channel === 13)?.name).toContain("pengumuman pesanan");
+  it("bawaan tanpa kanal 13; laporan pesanan di kanal 12 dan 15, bisa diubah lewat env", () => {
+    expect(DEFAULT_SPEAKERS.map((s) => s.channel)).toEqual([1, 2, 5, 6, 12, 15]);
+    expect(DEFAULT_SPEAKERS.find((s) => s.channel === 12)?.name).toContain("laporan pesanan");
+    expect(backlogSpeakerChannels({})).toEqual([12, 15]);
+    expect(backlogSpeakerChannels({ CCTV_ANNOUNCE_CHANNELS: "15, 15, x, 99, 2" })).toEqual([15, 2]);
   });
 
   it("merapikan nama: kanal ganda/tidak sah dibuang, nama kosong diberi nama kanal, urut per kanal", () => {
