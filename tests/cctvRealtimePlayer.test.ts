@@ -5,7 +5,8 @@ const ascii = (text: string) => Array.from(text, (char) => char.charCodeAt(0));
 
 describe("live realtime CCTV", () => {
   it("memetakan URL HLS proxy SLM ke jalur realtime, URL lain tidak", () => {
-    expect(realtimeUrlFor("/api/cctv/stream/14/hls/stream.m3u8")).toBe("/api/cctv/stream/14/realtime");
+    expect(realtimeUrlFor("/api/cctv/stream/14/hls/stream.m3u8", true)).toBe("/api/cctv/stream/14/realtime");
+    expect(realtimeUrlFor("/api/cctv/stream/14/hls/stream.m3u8", false)).toBe("/api/cctv/stream/14/realtime?codec=h264");
     expect(realtimeUrlFor("https://cctv.example.com/live/stream.m3u8")).toBeNull();
     expect(realtimeUrlFor("/api/cctv/stream/14/live")).toBeNull();
     expect(realtimeUrlFor(null)).toBeNull();

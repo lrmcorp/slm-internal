@@ -29,6 +29,9 @@ quote() { printf "'%s'" "$(printf '%s' "$1" | sed "s/'/''/g")"; }
       source=$(printf '%s' "$url" | sed -E "s#(/Streaming/Channels/[0-9]+)0[1-9]([?].*)?\$#\\1${stream}\\2#")
       echo "  ch${channel}${stream}: $(quote "$source")"
     done
+    # Sub-stream versi H.264 untuk browser yang tidak bisa memutar H.265 (mis. Chrome tanpa dukungan perangkat).
+    # ffmpeg hanya berjalan selama ada yang menonton varian ini; stream asli tidak berubah.
+    echo "  ch${channel}02h264: 'ffmpeg:ch${channel}02#video=h264#raw=-preset ultrafast -tune zerolatency -g 15 -threads 1'"
   done
 } > "$CONFIG"
 

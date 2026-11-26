@@ -84,13 +84,16 @@ class PresenceController extends Controller
      * Nginx menerima X-Accel-Redirect dan mengalirkan video langsung; PHP tidak ikut menahan sambungan.
      * Tanpa relay: 404, pemutar memakai HLS.
      */
-    public function realtime(Camera $camera)
+    public function realtime(Request $request, Camera $camera)
     {
         abort_unless(config('cctv.realtime_relay'), 404);
         $key = (string) ($camera->stream_env_key ?: 'CCTV_CAMERA_'.$camera->id.'_URL');
         $url = (string) (getenv($key) ?: ($_ENV[$key] ?? ''));
         abort_unless(preg_match('#/Streaming/Channels/([0-9]+)0[1-9](?:[?].*)?$#', $url, $m), 404);
-        $stream = 'ch'.$m[1].(config('cctv.realtime_substream') ? '02' : '01');
+        // ?codec=h264: sub-stream diubah ke H.264 oleh go2rtc untuk browser yang tidak bisa memutar H.265.
+        $stream = $request->query('codec') === 'h264'
+            ? 'ch'.$m[1].'02h264'
+            : 'ch'.$m[1].(config('cctv.realtime_substream') ? '02' : '01');
         return response('', 200, [
             'X-Accel-Redirect' => '/_go2rtc/api/stream.mp4?src='.$stream,
             'Cache-Control' => 'private, no-store',

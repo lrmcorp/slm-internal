@@ -49,11 +49,25 @@ export function realtimeSupported(): boolean {
   return Boolean(mediaSourceCtor()) && typeof ReadableStream !== "undefined";
 }
 
-/** /api/cctv/stream/14/hls/stream.m3u8 -> /api/cctv/stream/14/realtime; null bila bukan URL proxy SLM. */
-export function realtimeUrlFor(streamUrl: string | null | undefined): string | null {
+/** Browser ini bisa memutar H.265 (HEVC) lewat MSE, mis. Safari atau Chrome dengan dukungan perangkat. */
+export function hevcSupported(): boolean {
+  const Ctor = mediaSourceCtor();
+  try {
+    return Boolean(Ctor?.isTypeSupported('video/mp4; codecs="hvc1.1.6.L153.B0"'));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * /api/cctv/stream/14/hls/stream.m3u8 -> /api/cctv/stream/14/realtime; null bila bukan URL proxy SLM.
+ * DVR toko mengirim H.265: browser yang tidak bisa memutarnya meminta versi H.264 (?codec=h264).
+ */
+export function realtimeUrlFor(streamUrl: string | null | undefined, canPlayHevc: boolean = hevcSupported()): string | null {
   if (!streamUrl) return null;
   const match = /^(\/api\/cctv\/stream\/[0-9]{1,6})\/hls\/stream\.m3u8$/.exec(streamUrl);
-  return match ? `${match[1]}/realtime` : null;
+  if (!match) return null;
+  return canPlayHevc ? `${match[1]}/realtime` : `${match[1]}/realtime?codec=h264`;
 }
 
 const FIRST_DATA_TIMEOUT_MS = 10000;

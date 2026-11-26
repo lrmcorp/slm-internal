@@ -26,6 +26,14 @@ class RealtimeLiveTest extends TestCase
             ->assertHeader('X-Accel-Redirect', '/_go2rtc/api/stream.mp4?src=ch1402');
     }
 
+    public function test_h264_variant_for_browsers_without_hevc(): void
+    {
+        config(['cctv.realtime_relay' => true, 'cctv.slm_token' => 'tok-1']);
+        $camera = $this->camera();
+        $this->get("/cameras/{$camera->id}/realtime?codec=h264", ['X-SLM-Token' => 'tok-1'])
+            ->assertHeader('X-Accel-Redirect', '/_go2rtc/api/stream.mp4?src=ch1402h264');
+    }
+
     public function test_main_stream_when_substream_is_disabled_and_dashboard_login_works(): void
     {
         config(['cctv.realtime_relay' => true, 'cctv.realtime_substream' => false]);

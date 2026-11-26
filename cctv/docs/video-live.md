@@ -16,7 +16,11 @@ Sejak November 2026 stack memuat dua container kecil:
 Dashboard SLM (`/api/cctv/stream/{id}/realtime`) memutar MP4 itu lewat Media Source Extensions: gambar
 muncul ±0,3 detik setelah dibuka dan jedanya ±1 detik. Bila browser tidak mendukung codec sub-stream
 (mis. H.265 di Chrome tanpa dukungan perangkat) atau relay belum ada, pemutar otomatis memakai HLS di bawah.
-**Sub-stream DVR sebaiknya H.264** (DVR: Record → Parameters → Sub-stream → Video Encoding).
+DVR toko mengirim **H.265** (diperiksa 26 Nov 2026 lewat workflow *CCTV · Diagnosa live*). Browser yang bisa
+memutar H.265 (Safari, Chrome dengan dukungan perangkat) menerima aliran asli. Browser lain meminta
+`?codec=h264`: go2rtc mengubah sub-stream ke H.264 (`chNN02h264`, ffmpeg ultrafast, satu thread, ±50 MB RAM)
+hanya selama ditonton; gambar muncul ±2 detik setelah dibuka. Mengubah sub-stream DVR ke H.264 menghapus
+kebutuhan konversi ini.
 
 | Nama | Default | Fungsi |
 |---|---|---|

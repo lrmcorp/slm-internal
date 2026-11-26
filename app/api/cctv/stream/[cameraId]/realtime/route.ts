@@ -30,7 +30,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ came
   const controller = new AbortController();
   req.signal.addEventListener("abort", () => controller.abort());
   try {
-    const upstream = await fetch(`${base}/cameras/${encodeURIComponent(cleanId)}/realtime`, {
+    // codec=h264: sub-stream diubah ke H.264 di server CCTV untuk browser yang tidak bisa memutar H.265.
+    const codec = req.nextUrl.searchParams.get("codec") === "h264" ? "?codec=h264" : "";
+    const upstream = await fetch(`${base}/cameras/${encodeURIComponent(cleanId)}/realtime${codec}`, {
       headers: { Authorization: `Bearer ${CCTV_TOKEN}`, "X-CCTV-Token": CCTV_TOKEN, Accept: "video/mp4" },
       signal: controller.signal,
       cache: "no-store",

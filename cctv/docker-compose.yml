@@ -94,9 +94,10 @@ services:
       CCTV_CAMERA_13_URL: ${CCTV_CAMERA_13_URL:-${CCTV_RTSP_13:-}}
       CCTV_CAMERA_12_URL: ${CCTV_CAMERA_12_URL:-${CCTV_RTSP_12:-}}
       GO2RTC_LOG_LEVEL: ${GO2RTC_LOG_LEVEL:-warn}
-    mem_limit: ${CCTV_GO2RTC_MEM_LIMIT:-96m}
-    memswap_limit: ${CCTV_GO2RTC_MEM_LIMIT:-96m}
-    cpus: ${CCTV_GO2RTC_CPUS:-0.50}
+    # ±20 MB relay + ±50 MB per kamera yang ditonton dari browser tanpa H.265 (diubah ke H.264).
+    mem_limit: ${CCTV_GO2RTC_MEM_LIMIT:-256m}
+    memswap_limit: ${CCTV_GO2RTC_MEM_LIMIT:-256m}
+    cpus: ${CCTV_GO2RTC_CPUS:-1.00}
 
   # Antrian dan penjadwal dalam satu container (docker/worker.sh).
   worker:
