@@ -41,6 +41,10 @@ jobs:
             echo "== Kamera #$id realtime lewat proxy lokal (127.0.0.1:8095)"
             curl -s -o /dev/null --max-time 6 -w "$fmt" -H "X-SLM-Token: $token" "http://127.0.0.1:8095/cameras/$id/realtime" || true
           done
+          for id in 1 2 3; do
+            echo "== Kamera #$id versi H.264 (browser tanpa H.265)"
+            curl -s -o /dev/null --max-time 6 -w "$fmt" -H "X-SLM-Token: $token" "http://127.0.0.1:8095/cameras/$id/realtime?codec=h264" || true
+          done
           echo "== Kamera #1 lewat domain publik cctv.lrmslm.com (nginx host/Cloudflare)"
           curl -s -o /dev/null --max-time 6 -w "$fmt" -H "X-SLM-Token: $token" "https://cctv.lrmslm.com/cameras/1/realtime" || true
           echo "== Kamera #1 dari container SLM (jalur yang dipakai mkr.lrmslm.com)"
