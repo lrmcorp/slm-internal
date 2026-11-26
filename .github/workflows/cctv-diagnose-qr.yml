@@ -1,0 +1,115 @@
+name: CCTV · Diagnosa QR
+# Dijalankan manual. Mengambil frame kamera meja packing ±150 detik di VPS dan mencoba beberapa cara membaca QR.
+# Log repo publik: hanya angka (ukuran frame/QR, jumlah berhasil per cara). Tidak ada gambar, isi label, atau rahasia.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    environment: cctv-production
+    steps:
+      - name: Uji pembacaan QR di VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST || secrets.CCTV_VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT || secrets.CCTV_VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER || secrets.CCTV_VPS_USER }}
+          VPS_KEY: ${{ secrets.VPS_SSH_KEY || secrets.CCTV_VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS || secrets.CCTV_VPS_KNOWN_HOSTS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for variable in VPS_HOST VPS_PORT VPS_USER; do
+            printf -v "$variable" '%s' "$(printf '%s' "${!variable}" | tr -d '[:space:]')"
+          done
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$VPS_KEY" > ~/.ssh/cctv_deploy && chmod 600 ~/.ssh/cctv_deploy
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/cctv_deploy -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" bash -s <<'REMOTE'
+          set -uo pipefail
+          echo "== Stream utama kamera meja packing (ch1401) lewat relay"
+          docker exec cctvslm-vision-1 sh -c 'command -v ffprobe >/dev/null && ffprobe -v error -rtsp_transport tcp -select_streams v:0 -show_entries stream=codec_name,width,height,sample_aspect_ratio,display_aspect_ratio,r_frame_rate -of compact rtsp://go2rtc:8554/ch1401 || echo "ffprobe tidak ada di image"' 2>&1 | tail -2
+          echo "== Variabel pembacaan label (nama saja)"
+          docker exec cctvslm-vision-1 sh -c 'env | grep -E "^CCTV_(LABEL|WORK|RTSP_RELAY|PROCESS_FPS|AI_API_KEY)" | sed -E "s/^(CCTV_AI_API_KEY)=.+/\1=(ada)/"'
+          echo "== Uji baca QR ±150 detik"
+          docker exec -i cctvslm-vision-1 python - <<'PY'
+          import os, re, time, statistics, cv2
+          os.environ.setdefault("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;tcp")
+          INVOICE = re.compile(r"(MJ-\d{8}-\d{4}|(?<!\d)\d{6}-\d{2})(?!\d)")
+          cap = cv2.VideoCapture("rtsp://go2rtc:8554/ch1401", cv2.CAP_FFMPEG)
+          det = cv2.QRCodeDetector()
+          wechat = None
+          try:
+              wechat = cv2.wechat_qrcode_WeChatQRCode()
+          except Exception:
+              pass
+          methods = ["asli", "rasio_diperbaiki", "perbesar_2x", "potong_qr_3x", "potong_qr_3x_tajam", "wechat"]
+          ok = {m: 0 for m in methods}
+          invoice = {m: 0 for m in methods}
+          frames = seen = 0
+          sizes, shape = [], None
+          def decode(img):
+              try:
+                  found, values, _, _ = det.detectAndDecodeMulti(img)
+                  vals = [v for v in (values if found else []) if v]
+                  if not vals:
+                      v, _, _ = det.detectAndDecode(img)
+                      vals = [v] if v else []
+                  return vals
+              except Exception:
+                  return []
+          t0 = time.time(); last = 0
+          while time.time() - t0 < 150:
+              if not cap.grab():
+                  time.sleep(0.5); continue
+              if time.time() - last < 0.25:
+                  continue
+              last = time.time()
+              ret, frame = cap.retrieve()
+              if not ret:
+                  continue
+              frames += 1; shape = frame.shape
+              found, pts = det.detect(frame)
+              if not found or pts is None:
+                  continue
+              seen += 1
+              xs, ys = pts[:, :, 0] if pts.ndim == 3 else pts[:, 0], pts[:, :, 1] if pts.ndim == 3 else pts[:, 1]
+              w, h = float(xs.max() - xs.min()), float(ys.max() - ys.min())
+              sizes.append((w, h))
+              H, W = frame.shape[:2]
+              x0, x1 = int(max(0, xs.min() - w)), int(min(W, xs.max() + w))
+              y0, y1 = int(max(0, ys.min() - h)), int(min(H, ys.max() + h))
+              crop = frame[y0:y1, x0:x1]
+              trials = {
+                  "asli": frame,
+                  "rasio_diperbaiki": cv2.resize(frame, (W * 2, H)) if W / H < 1.2 else frame,
+                  "perbesar_2x": cv2.resize(frame, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC),
+              }
+              if crop.size:
+                  big = cv2.resize(crop, None, fx=3, fy=3, interpolation=cv2.INTER_CUBIC)
+                  trials["potong_qr_3x"] = big
+                  gray = cv2.cvtColor(big, cv2.COLOR_BGR2GRAY)
+                  sharp = cv2.addWeighted(gray, 1.8, cv2.GaussianBlur(gray, (0, 0), 3), -0.8, 0)
+                  trials["potong_qr_3x_tajam"] = cv2.createCLAHE(2.0, (8, 8)).apply(sharp)
+              for name, img in trials.items():
+                  vals = decode(img)
+                  if vals:
+                      ok[name] += 1
+                      invoice[name] += any(INVOICE.search(v) for v in vals)
+              if wechat is not None:
+                  try:
+                      vals, _ = wechat.detectAndDecode(frame)
+                      if vals:
+                          ok["wechat"] += 1
+                          invoice["wechat"] += any(INVOICE.search(v) for v in vals)
+                  except Exception:
+                      pass
+          print(f"frame diambil: {frames}, ukuran frame: {shape}, QR terlihat: {seen}, WeChat QR tersedia: {wechat is not None}")
+          if sizes:
+              print(f"ukuran QR (piksel, median): lebar {statistics.median(s[0] for s in sizes):.0f}, tinggi {statistics.median(s[1] for s in sizes):.0f}; terkecil {min(s[0] for s in sizes):.0f}x{min(s[1] for s in sizes):.0f}, terbesar {max(s[0] for s in sizes):.0f}x{max(s[1] for s in sizes):.0f}")
+          for m in methods:
+              print(f"  {m:20s}: terbaca {ok[m]:3d}, berisi invoice {invoice[m]:3d}")
+          PY
+          REMOTE
