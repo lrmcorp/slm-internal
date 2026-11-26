@@ -53,8 +53,10 @@ jobs:
           # Membaca lewat relay go2rtc, jadi tidak membuka sambungan tambahan ke DVR.
           docker run --rm -i --network cctvslm_default --memory 192m --memory-swap 192m --cpus 0.5 --cpu-shares 128 \
             --pids-limit 64 --entrypoint nice cctvslm-vision:latest -n 15 python - <<'PY'
-          import os, re, time, statistics, cv2
-          os.environ.setdefault("OPENCV_FFMPEG_CAPTURE_OPTIONS", "rtsp_transport;tcp")
+          import os, re, time, statistics, resource, cv2
+          # Hemat memori: decoder satu thread (buffer frame per thread), OpenCV satu thread.
+          os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;tcp|threads;1"
+          cv2.setNumThreads(1)
           INVOICE = re.compile(r"(MJ-\d{8}-\d{4}|(?<!\d)\d{6}-\d{2})(?!\d)")
           cap = cv2.VideoCapture("rtsp://go2rtc:8554/ch1401", cv2.CAP_FFMPEG)
           det = cv2.QRCodeDetector()
@@ -63,7 +65,7 @@ jobs:
               wechat = cv2.wechat_qrcode_WeChatQRCode()
           except Exception:
               pass
-          methods = ["asli", "rasio_diperbaiki", "perbesar_2x", "potong_qr_3x", "potong_qr_3x_tajam", "wechat"]
+          methods = ["asli", "rasio_diperbaiki", "potong_qr_3x", "potong_qr_3x_tajam", "wechat"]
           ok = {m: 0 for m in methods}
           invoice = {m: 0 for m in methods}
           frames = seen = 0
@@ -104,7 +106,6 @@ jobs:
               trials = {
                   "asli": frame,
                   "rasio_diperbaiki": cv2.resize(frame, (W * 2, H)) if W / H < 1.2 else frame,
-                  "perbesar_2x": cv2.resize(frame, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC),
               }
               if crop.size:
                   big = cv2.resize(crop, None, fx=3, fy=3, interpolation=cv2.INTER_CUBIC)
@@ -126,6 +127,7 @@ jobs:
                   except Exception:
                       pass
           print(f"frame diambil: {frames}, ukuran frame: {shape}, QR terlihat: {seen}, WeChat QR tersedia: {wechat is not None}")
+          print(f"memori puncak uji: {resource.getrusage(resource.RUSAGE_SELF).ru_maxrss // 1024} MB")
           if sizes:
               print(f"ukuran QR (piksel, median): lebar {statistics.median(s[0] for s in sizes):.0f}, tinggi {statistics.median(s[1] for s in sizes):.0f}; terkecil {min(s[0] for s in sizes):.0f}x{min(s[1] for s in sizes):.0f}, terbesar {max(s[0] for s in sizes):.0f}x{max(s[1] for s in sizes):.0f}")
           for m in methods:
