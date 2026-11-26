@@ -264,16 +264,18 @@ export async function notifyDeliveryOrderBacklog(now = new Date()) {
  * Umumkan lewat speaker CCTV (server CCTV memutar Google TTS di kanal CCTV_ANNOUNCE_CHANNEL, bawaan 13).
  * Tidak pernah melempar error; hasilnya dicatat di jawaban job.
  */
-export async function announceOnCctv(text: string): Promise<string> {
+export async function announceOnCctv(text: string, channels?: number[]): Promise<string> {
   const { CCTV_BASE_URL, CCTV_TOKEN } = await import("@/lib/cctv/client");
   const base = CCTV_BASE_URL.replace(/\/+$/, "");
   if (!base || !CCTV_TOKEN) return "CCTV belum dikonfigurasi";
-  const channel = Number(process.env.CCTV_ANNOUNCE_CHANNEL || 13);
+  const fallback = Number(process.env.CCTV_ANNOUNCE_CHANNEL || 13);
+  const picked = (channels ?? []).filter((channel) => Number.isInteger(channel) && channel > 0 && channel <= 64);
+  const target = picked.length ? picked : [Number.isInteger(fallback) && fallback > 0 ? fallback : 13];
   try {
     const response = await fetch(`${base}/api/v1/slm/announce`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json", Authorization: `Bearer ${CCTV_TOKEN}`, "X-SLM-Token": CCTV_TOKEN },
-      body: JSON.stringify({ text, channel: Number.isInteger(channel) && channel > 0 ? channel : 13 }),
+      body: JSON.stringify({ text, channel: target[0], channels: target }),
       signal: AbortSignal.timeout(15000),
     });
     if (response.ok) return "diantrekan di speaker CCTV";

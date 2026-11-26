@@ -3501,6 +3501,42 @@ paths:
           description: Server CCTV belum punya relay realtime
         "503":
           description: Kamera atau relay belum tersedia
+  /api/cctv/announce:
+    post:
+      summary: Owner mengumumkan teks bebas lewat speaker CCTV yang dipilih (Google TTS, diputar bergantian di tiap speaker).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text, channels]
+              properties:
+                text:
+                  type: string
+                  maxLength: 300
+                channels:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        "202":
+          description: Pengumuman diantrekan di server CCTV
+        "403":
+          description: Bukan Owner
+        "502":
+          description: Server CCTV menolak atau tidak terjangkau
+  /api/cctv/speakers:
+    get:
+      summary: Daftar speaker CCTV (kanal two-way audio) beserta namanya. Khusus Owner.
+      responses:
+        "200":
+          description: Daftar speaker
+    put:
+      summary: Owner mengubah nama speaker CCTV.
+      responses:
+        "200":
+          description: Nama tersimpan
   /api/cctv/evidence:
     get:
       summary: Ambil bukti foto/video CCTV berdasarkan transaksi atau packing

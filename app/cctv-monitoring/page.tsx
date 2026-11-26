@@ -10,6 +10,8 @@ import { getCurrentRole } from "@/lib/auth/session";
 import { listCctvDetectionsPaginated, getCctvStats } from "@/lib/cctv/store";
 import { CctvStatsCards } from "@/components/cctv/CctvStatsCards";
 import { CctvDetectionsTable } from "@/components/cctv/CctvDetectionsTable";
+import { CctvAnnouncePanel } from "@/components/cctv/CctvAnnouncePanel";
+import { listSpeakers } from "@/lib/cctv/speakers";
 
 export const dynamic = "force-dynamic";
 
@@ -75,6 +77,7 @@ export default async function CctvMonitoringPage({ searchParams }: Props) {
     }),
     getCctvStats(),
   ]);
+  const speakers = role === "OWNER" ? await listSpeakers() : [];
 
   const activeFilters = activeFilterLabels(params);
 
@@ -109,6 +112,8 @@ export default async function CctvMonitoringPage({ searchParams }: Props) {
 
       {/* Kartu Ringkasan & KPI */}
       <CctvStatsCards stats={stats} />
+
+      {role === "OWNER" && <CctvAnnouncePanel speakers={speakers} />}
 
       {/* Filter Panel */}
       <ResponsiveFilterPanel

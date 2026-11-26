@@ -54,7 +54,7 @@ describe("pengumuman ke speaker CCTV", () => {
     const { announceOnCctv } = await import("@/lib/push/notify");
     expect(await announceOnCctv("Ada 1 pesanan yang belum diproses.")).toBe("diantrekan di speaker CCTV");
     expect(calls[0].url).toBe("https://cctv.example.test/api/v1/slm/announce");
-    expect(JSON.parse(String(calls[0].init.body))).toEqual({ text: "Ada 1 pesanan yang belum diproses.", channel: 13 });
+    expect(JSON.parse(String(calls[0].init.body))).toEqual({ text: "Ada 1 pesanan yang belum diproses.", channel: 13, channels: [13] });
     const headers = calls[0].init.headers as Record<string, string>;
     expect(headers["X-SLM-Token"]).toBeTruthy();
     expect(headers.Authorization).toBe(`Bearer ${headers["X-SLM-Token"]}`);

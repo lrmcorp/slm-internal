@@ -32,10 +32,15 @@ class SlmAnnouncementTest extends TestCase
 
         $this->postJson('/api/v1/slm/announce', ['text' => $text], ['X-SLM-Token' => 'tok-ann'])
             ->assertStatus(202)->assertJson(['data' => ['camera_id' => $camera->id, 'channel' => 13]]);
-        Queue::assertPushedOn('alerts', SpeakAnnouncement::class, fn ($job) => $job->text === $text && $job->channel === 13 && $job->cameraId === $camera->id);
+        Queue::assertPushedOn('alerts', SpeakAnnouncement::class, fn ($job) => $job->text === $text && $job->channels === [13] && $job->cameraId === $camera->id);
 
         $this->postJson('/api/v1/slm/announce', ['text' => 'x', 'channel' => 5], ['X-SLM-Token' => 'tok-ann'])->assertStatus(202);
-        Queue::assertPushed(SpeakAnnouncement::class, fn ($job) => $job->channel === 5);
+        Queue::assertPushed(SpeakAnnouncement::class, fn ($job) => $job->channels === [5]);
+
+        $this->postJson('/api/v1/slm/announce', ['text' => 'Promo hari ini', 'channels' => [13, 2, 13, 15]], ['X-SLM-Token' => 'tok-ann'])
+            ->assertStatus(202)->assertJson(['data' => ['channels' => [13, 2, 15]]]);
+        Queue::assertPushed(SpeakAnnouncement::class, fn ($job) => $job->channels === [13, 2, 15]);
+        $this->postJson('/api/v1/slm/announce', ['text' => 'x', 'channels' => [99]], ['X-SLM-Token' => 'tok-ann'])->assertStatus(422);
     }
 
     public function test_announcement_needs_the_slm_token_and_a_speaker_address(): void
@@ -50,7 +55,7 @@ class SlmAnnouncementTest extends TestCase
         Queue::assertNothingPushed();
     }
 
-    public function test_job_plays_the_text_on_the_requested_channel_without_saving_it(): void
+    public function test_job_speaks_once_and_plays_on_each_channel_in_turn_even_if_one_fails(): void
     {
         $camera = $this->camera();
         $tts = new class extends TextToSpeech {
@@ -59,11 +64,18 @@ class SlmAnnouncementTest extends TestCase
         };
         $speaker = new class(new IsapiTalkSocket) extends CameraSpeaker {
             public array $channels = [];
-            public function play(Camera $camera, string $ulaw): void { $this->channels[] = $camera->speaker_channel; }
+            public function play(Camera $camera, string $ulaw): void
+            {
+                $this->channels[] = $camera->speaker_channel;
+                if ($camera->speaker_channel === 2) throw new \RuntimeException('kanal 2 sibuk');
+            }
         };
-        (new SpeakAnnouncement($camera->id, 'Ada 1 pesanan yang belum diproses.', 13))->handle($tts, $speaker);
+        (new SpeakAnnouncement($camera->id, 'Ada 1 pesanan yang belum diproses.', [13, 2, 15]))->handle($tts, $speaker);
         $this->assertSame(['Ada 1 pesanan yang belum diproses.'], $tts->texts);
-        $this->assertSame([13], $speaker->channels);
+        $this->assertSame([13, 2, 15], $speaker->channels);
         $this->assertNotSame(13, (int) $camera->fresh()->speaker_channel);
+
+        $this->expectExceptionMessage('gagal di semua kanal: 2');
+        (new SpeakAnnouncement($camera->id, 'x', 2))->handle($tts, $speaker);
     }
 }
