@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SpeakAnnouncement;
+use App\Services\CameraSpeaker;
 use App\Models\Camera;
 use App\Models\Incident;
 use App\Models\LabelRecord;
@@ -224,6 +226,29 @@ class SlmExternalController extends Controller
             'count' => count($events),
             'events' => $events,
         ]);
+    }
+
+    /**
+     * Pengumuman suara dari SLM, mis. "Ada 3 pesanan yang belum diproses, atas nama ...".
+     * Diputar lewat antrean (Google TTS lalu speaker kamera), jadi jawaban langsung 202.
+     */
+    public function announce(Request $request): JsonResponse
+    {
+        $data = $request->validate([
+            'text' => 'required|string|max:600',
+            'channel' => 'nullable|integer|between:1,64',
+            'camera_id' => 'nullable|integer',
+        ]);
+        $camera = Camera::find($data['camera_id'] ?? config('cctv.announce_camera_id'));
+        if (!$camera) {
+            return response()->json(['success' => false, 'message' => 'Kamera untuk pengumuman tidak ditemukan.'], 422);
+        }
+        if (!CameraSpeaker::endpoint($camera)) {
+            return response()->json(['success' => false, 'message' => CameraSpeaker::envKey($camera).' belum diisi.'], 422);
+        }
+        $channel = (int) ($data['channel'] ?? config('cctv.announce_channel'));
+        SpeakAnnouncement::dispatch($camera->id, trim($data['text']), $channel)->onQueue('alerts');
+        return response()->json(['success' => true, 'data' => ['camera_id' => $camera->id, 'channel' => $channel]], 202);
     }
 
     public function packingSummary(Request $request): JsonResponse

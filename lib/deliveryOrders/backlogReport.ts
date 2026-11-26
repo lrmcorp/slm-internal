@@ -51,3 +51,24 @@ export function backlogMessage(report: DeliveryOrderBacklog, slot: string, now =
   const oldest = report.oldest ? `. Terlama ${report.oldest.doNumber}, ${age(report.oldest.createdAt, now)}` : "";
   return { title: `${report.total} DO belum terproses · ${slot}`, body: `${parts.join(". ")}${oldest}.` };
 }
+
+function joinNames(names: string[]): string {
+  if (names.length <= 1) return names[0] ?? "";
+  if (names.length === 2) return `${names[0]} dan ${names[1]}`;
+  return `${names.slice(0, -1).join(", ")}, dan ${names[names.length - 1]}`;
+}
+
+/**
+ * Kalimat untuk speaker CCTV, mis. "Perhatian. Ada 3 pesanan yang belum diproses, atas nama Bu Ani,
+ * Toko B, dan Pak Budi. Mohon segera diproses. Terima kasih." Satu nama disebut sekali walau pesanannya
+ * lebih dari satu; lebih dari 5 nama disingkat "dan N lainnya". Null bila tidak ada yang perlu diumumkan.
+ */
+export function announcementText(report: DeliveryOrderBacklog, maxNames = 5): string | null {
+  if (!report.total) return null;
+  const all = [...report.notPacked, ...report.notShipped, ...report.partial].sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+  const names = Array.from(new Set(all.map((row) => row.customerName.trim()).filter(Boolean)));
+  const shown = names.slice(0, maxNames);
+  const rest = names.length - shown.length;
+  const who = rest > 0 ? `${shown.join(", ")}, dan ${rest} lainnya` : joinNames(shown);
+  return `Perhatian. Ada ${report.total} pesanan yang belum diproses${who ? `, atas nama ${who}` : ""}. Mohon segera diproses. Terima kasih.`;
+}

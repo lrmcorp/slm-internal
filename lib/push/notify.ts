@@ -248,12 +248,38 @@ export async function notifyProductApprovalRequest(input: { productId: string; s
 
 /** Laporan DO belum terproses (pukul 12.30 dan 15.00 WIB, Senin-Sabtu) ke Owner. */
 export async function notifyDeliveryOrderBacklog(now = new Date()) {
-  const { deliveryOrderBacklog, backlogMessage } = await import("@/lib/deliveryOrders/backlogReport");
+  const { deliveryOrderBacklog, backlogMessage, announcementText } = await import("@/lib/deliveryOrders/backlogReport");
   const report = await deliveryOrderBacklog();
+  const speech = announcementText(report);
+  const announced = speech ? await announceOnCctv(speech) : "tidak ada pesanan tertunda";
   const slot = new Intl.DateTimeFormat("id-ID", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta" }).format(now);
   const message = backlogMessage(report, slot, now);
   const result = pushConfig().enabled
     ? await sendPushToRoles(PUSH_AUDIENCE.deliveryOrderBacklog, { ...message, url: "/delivery-orders?status=belum_selesai", tag: "do-backlog" })
     : null;
-  return { total: report.total, notPacked: report.notPacked.length, notShipped: report.notShipped.length, partial: report.partial.length, sent: result?.sent ?? 0, message };
+  return { total: report.total, notPacked: report.notPacked.length, notShipped: report.notShipped.length, partial: report.partial.length, sent: result?.sent ?? 0, message, speech, announced };
+}
+
+/**
+ * Umumkan lewat speaker CCTV (server CCTV memutar Google TTS di kanal CCTV_ANNOUNCE_CHANNEL, bawaan 13).
+ * Tidak pernah melempar error; hasilnya dicatat di jawaban job.
+ */
+export async function announceOnCctv(text: string): Promise<string> {
+  const { CCTV_BASE_URL, CCTV_TOKEN } = await import("@/lib/cctv/client");
+  const base = CCTV_BASE_URL.replace(/\/+$/, "");
+  if (!base || !CCTV_TOKEN) return "CCTV belum dikonfigurasi";
+  const channel = Number(process.env.CCTV_ANNOUNCE_CHANNEL || 13);
+  try {
+    const response = await fetch(`${base}/api/v1/slm/announce`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json", Authorization: `Bearer ${CCTV_TOKEN}`, "X-SLM-Token": CCTV_TOKEN },
+      body: JSON.stringify({ text, channel: Number.isInteger(channel) && channel > 0 ? channel : 13 }),
+      signal: AbortSignal.timeout(15000),
+    });
+    if (response.ok) return "diantrekan di speaker CCTV";
+    const body = await response.json().catch(() => null) as { message?: string } | null;
+    return `CCTV menolak (HTTP ${response.status}${body?.message ? `: ${body.message}` : ""})`;
+  } catch (error) {
+    return `CCTV tidak terjangkau: ${error instanceof Error ? error.message : String(error)}`;
+  }
 }

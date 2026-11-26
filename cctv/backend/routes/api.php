@@ -51,5 +51,6 @@ Route::prefix('v1/slm')->middleware('slm.auth')->group(function () {
     Route::get('/invoices/{invoice}', [\App\Http\Controllers\Api\SlmExternalController::class, 'invoice'])->where('invoice', '.*');
     Route::get('/events', [\App\Http\Controllers\Api\SlmExternalController::class, 'events']);
     Route::get('/packing/summary', [\App\Http\Controllers\Api\SlmExternalController::class, 'packingSummary']);
+    Route::post('/announce', [\App\Http\Controllers\Api\SlmExternalController::class, 'announce']);
     Route::match(['GET', 'OPTIONS'], '/evidence/{kind}/{id}', [\App\Http\Controllers\Api\SlmExternalController::class, 'evidence']);
 });
