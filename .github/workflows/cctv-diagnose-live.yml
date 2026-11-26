@@ -63,6 +63,12 @@ jobs:
               .catch(() => {})
               .finally(() => console.log("byte pertama " + (first === null ? "-" : first + " ms") + " | " + bytes + " byte dalam 6 detik"));
           ' 2>&1 || true
+          echo "== Kejadian CCTV 30 hari (server CCTV): jenis, jumlah, terakhir"
+          docker exec cctvslm-web-1 php artisan tinker --execute='foreach (App\Models\Incident::where("occurred_at", ">=", now()->subDays(30))->selectRaw("type, count(*) as n, max(occurred_at) as last")->groupBy("type")->get() as $r) echo "$r->type: $r->n (terakhir $r->last)\n";' 2>/dev/null || true
+          echo "== Log deteksi di SLM 30 hari: eventType, matchStatus, jumlah, terakhir"
+          docker exec slm-postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -At -F " | " -c "SELECT \"eventType\", \"matchStatus\", count(*), max(\"createdAt\") FROM \"CctvDetectionLog\" WHERE \"createdAt\" > now() - interval '"'"'30 days'"'"' GROUP BY 1,2 ORDER BY 3 DESC LIMIT 15"' 2>/dev/null || true
+          echo "== Vision: status deteksi anomali (model paket)"
+          docker logs --since 72h cctvslm-vision-1 2>&1 | grep -i -E "model deteksi paket|anomali" | tail -3 || true
           echo "== go2rtc: pemakaian memori"
           docker stats --no-stream --format '{{.Name}} {{.MemUsage}}' cctvslm-go2rtc-1 cctvslm-proxy-1 2>/dev/null || true
           REMOTE
