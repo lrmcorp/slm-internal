@@ -73,6 +73,11 @@ jobs:
           docker logs --since 6h cctvslm-vision-1 2>&1 | grep -E "QR 5 menit|tersambung lagi|belum dapat diakses" | grep -v -i "rtsp://" | tail -8 || true
           echo "== Label di server CCTV 10 hari: per hari"
           docker exec cctvslm-web-1 php artisan tinker --execute='foreach (App\Models\LabelRecord::where("created_at", ">=", now()->subDays(10))->selectRaw("date(created_at) as d, count(*) as n")->groupBy("d")->orderBy("d")->get() as $r) echo "$r->d: $r->n\n";' 2>/dev/null || true
+          echo "== Laporan pesanan (timer slm-do-backlog) hari ini: status, jumlah, hasil speaker (tanpa nama)"
+          journalctl -t slm-do-backlog --since today --no-pager 2>/dev/null | grep -oE '^[A-Z][a-z]{2} [0-9 ]+ [0-9:]+|^[^ ]+ [^ ]+ [^ ]+|[0-9]{3} \{"success":[a-z]+|"total":[0-9]+|"announced":"[^"]*"' | paste -sd' ' | sed 's/ \([A-Z][a-z][a-z] \)/\n\1/g' | tail -6 || true
+          systemctl list-timers slm-do-backlog.timer --no-pager 2>/dev/null | sed -n 2p || true
+          echo "== Pemutaran pengumuman di server CCTV (6 jam)"
+          docker exec cctvslm-worker-1 sh -c 'grep -h -E "Pengumuman SLM (diputar|gagal|dilewati)" storage/logs/*.log 2>/dev/null | tail -8' || true
           echo "== go2rtc: pemakaian memori"
           docker stats --no-stream --format '{{.Name}} {{.MemUsage}}' cctvslm-go2rtc-1 cctvslm-proxy-1 2>/dev/null || true
           REMOTE
