@@ -1,0 +1,64 @@
+name: CCTV · Diagnosa live
+# Dijalankan manual. Hanya membaca: codec sub-stream DVR dan waktu tampil live realtime lewat tiap jalur
+# (proxy lokal, domain publik, dan dari container SLM). Log repo publik: tidak ada token/password yang dicetak.
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  diagnose:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: cctv-production
+    steps:
+      - name: Ukur live realtime di VPS
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST || secrets.CCTV_VPS_HOST }}
+          VPS_PORT: ${{ secrets.VPS_PORT || secrets.CCTV_VPS_PORT }}
+          VPS_USER: ${{ secrets.VPS_USER || secrets.CCTV_VPS_USER }}
+          VPS_KEY: ${{ secrets.VPS_SSH_KEY || secrets.CCTV_VPS_SSH_KEY }}
+          VPS_KNOWN_HOSTS: ${{ secrets.VPS_KNOWN_HOSTS || secrets.CCTV_VPS_KNOWN_HOSTS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          for variable in VPS_HOST VPS_PORT VPS_USER; do
+            printf -v "$variable" '%s' "$(printf '%s' "${!variable}" | tr -d '[:space:]')"
+          done
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$VPS_KEY" > ~/.ssh/cctv_deploy && chmod 600 ~/.ssh/cctv_deploy
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          ssh -i ~/.ssh/cctv_deploy -p "$VPS_PORT" "$VPS_USER@$VPS_HOST" bash -s <<'REMOTE'
+          set -uo pipefail
+          cd /opt/slm/cctv
+          token=$(grep -E '^SLM_API_TOKEN=' .env | tail -1 | cut -d= -f2- | sed "s/^[\"']//; s/[\"']\$//")
+          echo "== Codec stream lewat relay (h264 = bisa realtime di semua browser)"
+          for ch in 1402 1302 1202 1401; do
+            printf 'ch%s: ' "$ch"
+            timeout 15 docker exec cctvslm-vision-1 python -c "import live_video as l; print(l.LiveVideo('/tmp', 99)._probe('rtsp://go2rtc:8554/ch$ch'))" 2>/dev/null || echo "gagal dibaca"
+          done
+          fmt='HTTP %{http_code} | tipe %{content_type} | byte pertama %{time_starttransfer}s | %{size_download} byte dalam 6 detik\n'
+          for id in 1 2 3; do
+            echo "== Kamera #$id realtime lewat proxy lokal (127.0.0.1:8095)"
+            curl -s -o /dev/null --max-time 6 -w "$fmt" -H "X-SLM-Token: $token" "http://127.0.0.1:8095/cameras/$id/realtime" || true
+          done
+          echo "== Kamera #1 lewat domain publik cctv.lrmslm.com (nginx host/Cloudflare)"
+          curl -s -o /dev/null --max-time 6 -w "$fmt" -H "X-SLM-Token: $token" "https://cctv.lrmslm.com/cameras/1/realtime" || true
+          echo "== Kamera #1 dari container SLM (jalur yang dipakai mkr.lrmslm.com)"
+          docker exec slm-app node -e '
+            const base = (process.env.CCTV_BASE_URL || "").replace(/\/+$/, "");
+            const token = (process.env.SLM_API_TOKEN || process.env.CCTV_API_TOKEN || process.env.CCTV_INTEGRATION_TOKEN || "").trim();
+            if (!base) { console.log("CCTV_BASE_URL kosong"); process.exit(0); }
+            const t0 = Date.now(); let first = null, bytes = 0;
+            const ctrl = new AbortController(); setTimeout(() => ctrl.abort(), 6000);
+            fetch(base + "/cameras/1/realtime", { headers: { Authorization: "Bearer " + token, "X-CCTV-Token": token }, signal: ctrl.signal })
+              .then(async (r) => {
+                console.log("HTTP " + r.status + " | tipe " + r.headers.get("content-type") + " | host " + new URL(base).host);
+                const reader = r.body.getReader();
+                for (;;) { const { value, done } = await reader.read(); if (done) break; if (first === null) first = Date.now() - t0; bytes += value.length; }
+              })
+              .catch(() => {})
+              .finally(() => console.log("byte pertama " + (first === null ? "-" : first + " ms") + " | " + bytes + " byte dalam 6 detik"));
+          ' 2>&1 || true
+          echo "== go2rtc: pemakaian memori"
+          docker stats --no-stream --format '{{.Name}} {{.MemUsage}}' cctvslm-go2rtc-1 cctvslm-proxy-1 2>/dev/null || true
+          REMOTE
