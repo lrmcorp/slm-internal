@@ -1,0 +1,10 @@
+[Unit]
+Description=SLM: laporan DO belum terproses, Senin-Sabtu 12.30 dan 15.00 WIB
+
+[Timer]
+OnCalendar=Mon..Sat *-*-* 12:30:00 Asia/Jakarta
+OnCalendar=Mon..Sat *-*-* 15:00:00 Asia/Jakarta
+Persistent=false
+
+[Install]
+WantedBy=timers.target

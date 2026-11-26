@@ -3507,6 +3507,14 @@ paths:
       responses:
         "200":
           description: Daftar rekaman bukti CCTV
+  /api/jobs/send-do-backlog:
+    post:
+      summary: Cron job laporan DO belum terproses (belum dipacking / belum dikirim) ke Owner lewat notifikasi push. Dipanggil timer VPS slm-do-backlog Senin-Sabtu 12.30 dan 15.00 WIB. Butuh header x-cron-secret.
+      responses:
+        "200":
+          description: Laporan terkirim (jumlah DO dan jumlah perangkat penerima)
+        "401":
+          description: CRON_SECRET tidak valid
   /api/jobs/cleanup-cctv-storage:
     post:
       summary: Cron job untuk pembersihan rekaman CCTV kedaluwarsa

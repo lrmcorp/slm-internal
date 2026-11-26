@@ -32,4 +32,5 @@ export const PUSH_AUDIENCE = {
   warehouseShortage: ["OWNER"],
   cctvAlert: ["OWNER"],
   productApproval: ["OWNER"],
+  deliveryOrderBacklog: ["OWNER"],
 } as const;

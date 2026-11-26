@@ -54,6 +54,18 @@ jobs:
           docker compose build "$service"
           docker compose run --rm --no-deps -T "$service" npm run db:migrate:deploy
           docker compose up -d "$service"
+          # Timer laporan DO belum terproses (Senin-Sabtu 12.30 dan 15.00 WIB). Gagal memasang tidak menggagalkan deploy.
+          {
+            install -m 755 scripts/server/slm-do-backlog.sh /usr/local/bin/slm-do-backlog
+            changed=0
+            for unit in slm-do-backlog.service slm-do-backlog.timer; do
+              cmp -s "scripts/server/systemd/$unit" "/etc/systemd/system/$unit" || { install -m 644 "scripts/server/systemd/$unit" "/etc/systemd/system/$unit"; changed=1; }
+            done
+            [ "$changed" = 1 ] && systemctl daemon-reload
+            systemctl enable --now slm-do-backlog.timer >/dev/null 2>&1
+            echo "Timer laporan DO: $(systemctl show -p NextElapseUSecRealtime --value slm-do-backlog.timer)"
+            docker exec "$container" sh -c '[ -n "$CRON_SECRET" ] && echo "CRON_SECRET di slm-app: ada" || echo "CRON_SECRET di slm-app: KOSONG"'
+          } || echo "PERINGATAN: timer laporan DO belum terpasang"
           for attempt in $(seq 1 45); do
             status=$(docker exec "$container" node -e "fetch('http://127.0.0.1:'+(process.env.PORT||3000)+'/api/health').then(r=>process.stdout.write(String(r.status))).catch(()=>process.stdout.write('000'))" 2>/dev/null || true)
             [ "$status" = "200" ] && { echo "SLM sehat pada commit ${TARGET_SHA:0:7}"; exit 0; }

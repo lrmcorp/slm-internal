@@ -245,3 +245,15 @@ export async function notifyProductApprovalRequest(input: { productId: string; s
     console.error("[push] notifikasi barang baru gagal:", error instanceof Error ? error.message : error);
   }
 }
+
+/** Laporan DO belum terproses (pukul 12.30 dan 15.00 WIB, Senin-Sabtu) ke Owner. */
+export async function notifyDeliveryOrderBacklog(now = new Date()) {
+  const { deliveryOrderBacklog, backlogMessage } = await import("@/lib/deliveryOrders/backlogReport");
+  const report = await deliveryOrderBacklog();
+  const slot = new Intl.DateTimeFormat("id-ID", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta" }).format(now);
+  const message = backlogMessage(report, slot, now);
+  const result = pushConfig().enabled
+    ? await sendPushToRoles(PUSH_AUDIENCE.deliveryOrderBacklog, { ...message, url: "/delivery-orders?status=belum_selesai", tag: "do-backlog" })
+    : null;
+  return { total: report.total, notPacked: report.notPacked.length, notShipped: report.notShipped.length, partial: report.partial.length, sent: result?.sent ?? 0, message };
+}
