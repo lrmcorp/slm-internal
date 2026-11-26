@@ -48,10 +48,11 @@ jobs:
           PY
           echo "== Sumber pembacaan label 30 hari (Gemini / OpenCV), per hari"
           docker exec cctvslm-web-1 php artisan tinker --execute='foreach (App\Models\LabelRecord::where("created_at", ">=", now()->subDays(30))->selectRaw("date(created_at) as d, sum(case when raw_ocr like \"Gemini%\" then 1 else 0 end) as gemini, count(*) as n")->groupBy("d")->orderBy("d")->get() as $r) echo "$r->d: total $r->n, lewat Gemini $r->gemini\n";' 2>/dev/null || true
-          echo "== Uji baca QR ±150 detik (container sementara terpisah: 192 MB, 0,5 CPU, prioritas rendah)"
+          echo "== Uji baca QR ±150 detik (container sementara terpisah: maks 384 MB, 0,5 CPU, prioritas rendah)"
+          free -m | awk 'NR==2{print "RAM VPS tersedia: " $7 " MB"}'
           # Tidak di dalam container pemroses video: kalau uji ini kehabisan memori, hanya uji ini yang berhenti.
           # Membaca lewat relay go2rtc, jadi tidak membuka sambungan tambahan ke DVR.
-          docker run --rm -i --network cctvslm_default --memory 192m --memory-swap 192m --cpus 0.5 --cpu-shares 128 \
+          docker run --rm -i --network cctvslm_default --memory 384m --memory-swap 384m --cpus 0.5 --cpu-shares 128 \
             --pids-limit 64 --entrypoint nice cctvslm-vision:latest -n 15 python - <<'PY'
           import os, re, time, statistics, resource, cv2
           # Hemat memori: decoder satu thread (buffer frame per thread), OpenCV satu thread.
