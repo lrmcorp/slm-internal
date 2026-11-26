@@ -117,3 +117,42 @@ export async function decideProductApproval(
   await recordAudit({ entityType: "product", entityId: productId, action: "reject", beforeValue: product, afterValue: updated, reason: `Barang baru ${product.sku} ditolak${reason ? `: ${reason}` : ""}` });
   return updated;
 }
+
+export type ExternalSaleProduct = { sku: string; name: string; unit?: string | null; unitPrice: number };
+
+/**
+ * Kode barang dari nota MJ yang belum ada di Master Barang SLM dibuat sebagai barang menunggu persetujuan
+ * Owner: nonaktif, harga modal 0, harga jual = harga SLM/AJ di nota (MJ sudah menghitungnya dari harga MJ
+ * dikurangi markup). Kode yang sudah ada (termasuk yang masih menunggu) tidak diubah. Mengembalikan kode baru.
+ */
+export async function ensurePendingProductsForExternalSale(items: ExternalSaleProduct[], requestedByName: string): Promise<ExternalSaleProduct[]> {
+  const unique = new Map<string, ExternalSaleProduct>();
+  for (const item of items) {
+    const sku = item.sku.trim();
+    if (sku && !unique.has(sku.toLowerCase())) unique.set(sku.toLowerCase(), { ...item, sku });
+  }
+  if (!unique.size) return [];
+  const existing = await prisma.inventoryProduct.findMany({
+    where: { OR: Array.from(unique.values()).map((item) => ({ sku: { equals: item.sku, mode: "insensitive" as const } })) },
+    select: { sku: true }
+  });
+  for (const row of existing) unique.delete(row.sku.toLowerCase());
+  const created: ExternalSaleProduct[] = [];
+  const now = new Date();
+  for (const item of Array.from(unique.values())) {
+    try {
+      await prisma.inventoryProduct.create({
+        data: {
+          sku: item.sku, name: item.name.trim() || item.sku, unit: item.unit?.trim() || "Lusin",
+          costPrice: 0, sellingPrice: Math.max(0, Math.round(item.unitPrice)),
+          isActive: false, approvalStatus: "pending_approval", requestedByName, requestedAt: now
+        }
+      });
+      created.push(item);
+    } catch (error) {
+      // Kode yang sama dibuat bersamaan oleh permintaan lain: cukup dipakai.
+      if ((error as { code?: string })?.code !== "P2002") throw error;
+    }
+  }
+  return created;
+}

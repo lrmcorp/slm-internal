@@ -388,6 +388,37 @@ export async function retryFailedMjJournals(limit = 25) {
   return { attempted, succeeded, failed: attempted - succeeded };
 }
 
+/**
+ * Barang baru yang diinput di MJ (belum ada di Master Barang SLM) masuk antrean persetujuan Owner dengan
+ * harga SLM/AJ dari nota (harga MJ dikurangi markup), lalu Owner diberi tahu. Gagal di sini tidak
+ * menghentikan nota: barisnya tetap tersimpan sebagai barang manual.
+ */
+async function requestNewMjProducts(input: MjInvoiceInput) {
+  try {
+    const { ensurePendingProductsForExternalSale } = await import("@/lib/inventory/productApproval");
+    const items = input.items.map((item) => {
+      const record = item as Record<string, unknown>;
+      const sku = String(record.product_reference ?? record.sku ?? record.external_product_id ?? "").trim();
+      return {
+        sku,
+        name: typeof record.product_name === "string" ? record.product_name : sku,
+        unit: typeof record.unit === "string" ? record.unit : null,
+        unitPrice: Number(item.unit_price)
+      };
+    }).filter((item) => item.sku);
+    const created = await ensurePendingProductsForExternalSale(items, "MJ");
+    if (created.length) {
+      const { notifyProductApprovalRequest } = await import("@/lib/push/notify");
+      for (const product of created) {
+        const saved = await prisma.inventoryProduct.findFirst({ where: { sku: product.sku }, select: { id: true } });
+        if (saved) void notifyProductApprovalRequest({ productId: saved.id, sku: product.sku, name: product.name, requestedByName: "MJ" });
+      }
+    }
+  } catch (error) {
+    console.error("[MJ] Barang baru gagal masuk antrean persetujuan:", error instanceof Error ? error.message : error);
+  }
+}
+
 export async function createOrResumeMjInvoice(input: MjInvoiceInput, principal: MjIntegrationPrincipal) {
   const mjMode = await getMjTransactionMode();
   if (mjMode === "disabled") {
@@ -405,6 +436,7 @@ export async function createOrResumeMjInvoice(input: MjInvoiceInput, principal: 
     throw new MjIntegrationError("REFERENCE_CONFLICT", "external_reference sudah digunakan dengan payload immutable atau processing_mode berbeda.", 409, invoiceSnapshot(row));
   }
   if (!row) {
+    await requestNewMjProducts(input);
     row = await createLocalInvoice(input, principal, hash);
     void import("@/lib/push/notify").then(({ notifyNewSale }) => notifyNewSale(row!.id)).catch(() => undefined);
   }
@@ -929,6 +961,7 @@ export async function reviseMjInvoice(externalReference: string, input: MjInvoic
     if (Number(initialPayment?.amountPaid ?? 0) !== input.payment.paid_amount) throw new MjIntegrationError("VALIDATION_FAILED", "DP Tempo tidak bisa diubah lewat edit; batalkan lalu buat transaksi baru.", 409);
   }
 
+  await requestNewMjProducts(input);
   const { tipe, accountSnapshot } = await resolveMasterData(input);
   const actor = { id: "integration:mj", name: "Integration MJ", role: "OWNER" as Role };
   const reason = `Revisi invoice MJ ${row.transactionNumber ?? externalReference}`;

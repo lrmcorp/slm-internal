@@ -82,4 +82,19 @@ suite("persetujuan barang baru (postgres)", () => {
     expect(await approval.markRequestedFromSale(byOwner.id, owner)).toBe("approved");
     expect(await inMaster(sku("c"))).toBe(true);
   });
+
+  it("kode baru dari nota MJ menunggu persetujuan dengan harga AJ dari nota; kode yang sudah ada tidak diubah", async () => {
+    const created = await approval.ensurePendingProductsForExternalSale([
+      { sku: sku("mj1"), name: "Kuku MJ Baru", unit: "Pcs", unitPrice: 3000 },
+      { sku: sku("MJ1"), name: "duplikat beda huruf", unitPrice: 9999 },
+      { sku: sku("c"), name: "sudah ada", unitPrice: 1 }
+    ], "MJ");
+    expect(created.map((item) => item.sku)).toEqual([sku("mj1")]);
+    const row = await prisma.inventoryProduct.findUniqueOrThrow({ where: { sku: sku("mj1") } });
+    expect(row).toMatchObject({ name: "Kuku MJ Baru", unit: "Pcs", approvalStatus: "pending_approval", isActive: false, requestedByName: "MJ" });
+    expect(Number(row.sellingPrice)).toBe(3000);
+    expect(Number(row.costPrice)).toBe(0);
+    expect(Number((await prisma.inventoryProduct.findUniqueOrThrow({ where: { sku: sku("c") } })).sellingPrice)).toBe(12000);
+    expect(await approval.ensurePendingProductsForExternalSale([{ sku: sku("mj1"), name: "x", unitPrice: 1 }], "MJ")).toEqual([]);
+  });
 });
