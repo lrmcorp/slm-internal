@@ -33,6 +33,19 @@ jobs:
           docker exec cctvslm-vision-1 sh -c 'command -v ffprobe >/dev/null && ffprobe -v error -rtsp_transport tcp -select_streams v:0 -show_entries stream=codec_name,width,height,sample_aspect_ratio,display_aspect_ratio,r_frame_rate -of compact rtsp://go2rtc:8554/ch1401 || echo "ffprobe tidak ada di image"' 2>&1 | tail -2
           echo "== Variabel pembacaan label (nama saja)"
           docker exec cctvslm-vision-1 sh -c 'env | grep -E "^CCTV_(LABEL|WORK|RTSP_RELAY|PROCESS_FPS|AI_API_KEY)" | sed -E "s/^(CCTV_AI_API_KEY)=.+/\1=(ada)/"'
+          echo "== Cadangan Gemini: uji model dan kunci yang dipakai pembaca label"
+          docker exec -i cctvslm-vision-1 python - <<'PY'
+          import os, requests
+          key = os.getenv("CCTV_AI_API_KEY") or os.getenv("GEMINI_API_KEY") or ""
+          model = os.getenv("CCTV_AI_MODEL", "gemini-3.5-flash-lite")
+          if not key:
+              print("kunci Gemini kosong")
+          else:
+              r = requests.post(f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
+                                json={"contents": [{"parts": [{"text": "Balas OK"}]}]}, headers={"x-goog-api-key": key}, timeout=20)
+              msg = (r.json().get("error") or {}).get("message", "") if r.headers.get("content-type", "").startswith("application/json") else ""
+              print(f"model {model}: HTTP {r.status_code} {msg[:200]}")
+          PY
           echo "== Uji baca QR ±150 detik"
           docker exec -i cctvslm-vision-1 python - <<'PY'
           import os, re, time, statistics, cv2
