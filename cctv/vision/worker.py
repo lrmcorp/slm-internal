@@ -143,6 +143,13 @@ def scan_with_gemini(frame, api_key: str, model: str = None) -> dict | None:
             }
         }
         res = requests.post(url, json=payload, headers={"x-goog-api-key": api_key}, timeout=6)
+        if res.status_code != 200:
+            # Kunci/model yang ditolak dulu diam-diam menghentikan pembacaan label; sekarang tercatat (sekali per jeda).
+            try:
+                reason = (res.json().get("error") or {}).get("message", "")[:160]
+            except ValueError:
+                reason = ""
+            LOG.warning("[AI QR - Model 2 Gemini] ditolak HTTP %d (%s): %s", res.status_code, model, reason)
         if res.status_code == 200:
             data = res.json()
             text = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "")
