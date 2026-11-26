@@ -247,6 +247,8 @@ export async function listProducts(options: { keyword?: string; page?: number; p
   const keyword = options.keyword?.trim();
   const where: Prisma.InventoryProductWhereInput = {
     isActive: options.includeInactive ? undefined : true,
+    // Barang baru yang belum disetujui Owner (atau ditolak) belum termasuk Master Barang.
+    approvalStatus: options.includeInactive ? "approved" : undefined,
     ...(keyword
       ? { OR: [{ sku: { contains: keyword, mode: "insensitive" } }, { name: { contains: keyword, mode: "insensitive" } }, { barcode: { contains: keyword, mode: "insensitive" } }] }
       : {})

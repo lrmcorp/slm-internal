@@ -16,6 +16,8 @@ import { getCurrentRole } from "@/lib/auth/session";
 import { prisma } from "@/lib/db/prisma";
 import { getCbmRate, getRmbRate } from "@/lib/inventory/pricing";
 import { listLocations, listProductCategories, listProducts, listUnitUsage } from "@/lib/inventory/service";
+import { listPendingProducts } from "@/lib/inventory/productApproval";
+import { PendingProductApprovals } from "@/components/inventory/PendingProductApprovals";
 
 export const dynamic = "force-dynamic";
 
@@ -26,7 +28,8 @@ export default async function InventoryProductPage({ searchParams }: { searchPar
   const p = await searchParams;
   const canManage = can(access, "inventory.master");
   const canCosting = can(access, "inventory.costing");
-  const [locations, result, rmb, rmbProducts, units, cbm, categories, manualRates] = await Promise.all([
+  const isOwner = role === "OWNER";
+  const [locations, result, rmb, rmbProducts, units, cbm, categories, manualRates, pendingProducts] = await Promise.all([
     listLocations(),
     listProducts({ keyword: p.keyword, page: Number(p.page) || 1, pageSize: 50 }),
     getRmbRate(),
@@ -34,13 +37,15 @@ export default async function InventoryProductPage({ searchParams }: { searchPar
     listUnitUsage(),
     getCbmRate(),
     listProductCategories(),
-    listManualRates()
+    listManualRates(),
+    isOwner ? listPendingProducts().catch(() => []) : Promise.resolve([])
   ]);
   const rateOf = (currency: "SGD" | "MYR" | "THB") => manualRates.find((item) => item.currency === currency)?.rate ?? null;
   const displayRates = { RMB: rmb.rate, SGD: rateOf("SGD"), MYR: rateOf("MYR"), THB: rateOf("THB") };
   return (
     <AppShell>
       <InventoryHeader title="Master Barang" description={<>Atur isi per koli, harga RMB, modal, dan harga jual tiap barang.{canCosting && <> Barang dari supplier bisa masuk lewat <Link className="text-brand-800 underline" href="/inventory/packing-list">Import Packing List</Link>. Hitung modal cepat di <Link className="text-brand-800 underline" href="/inventory/kalkulator">Kalkulator</Link>.</>}</>} />
+      {isOwner && <PendingProductApprovals rows={pendingProducts} />}
       {canManage && <AddPanel label="Tambah Barang"><ProductCreateForm locations={locations} /></AddPanel>}
       <SettingsPanel summary={<><span className="whitespace-nowrap">Kurs RMB</span> <b className="whitespace-nowrap">{rmb.rate ? `Rp ${rmb.rate.toLocaleString("id-ID")}` : "belum diatur"}</b> · <span className="whitespace-nowrap">Tarif CBM</span> <b className="whitespace-nowrap">{cbm.rate ? `Rp ${cbm.rate.toLocaleString("id-ID")}` : "belum diatur"}</b>{manualRates.filter((item) => item.rate).map((item) => <Fragment key={item.currency}> · <span className="whitespace-nowrap">Kurs {item.currency}</span> <b className="whitespace-nowrap">Rp {item.rate!.toLocaleString("id-ID", { maximumFractionDigits: 4 })}</b></Fragment>)}</>}>
         <RmbRateForm rate={rmb.rate} updatedAt={rmb.updatedAt} updatedBy={rmb.updatedBy} rmbProducts={rmbProducts} canManage={canManage} />

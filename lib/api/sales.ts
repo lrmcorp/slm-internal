@@ -22,6 +22,8 @@ import { releaseSaleStock, stockReleaseErrorFrom } from "@/lib/api/stockReleases
 import { isLocalInventory, DEFAULT_UNIT } from "@/lib/inventory/config";
 import { buildSplitPayment } from "@/lib/sales/splitPayment";
 import { createProduct as createInventoryProduct } from "@/lib/inventory/service";
+import { markRequestedFromSale } from "@/lib/inventory/productApproval";
+import { notifyProductApprovalRequest } from "@/lib/push/notify";
 import { syncErpSalesPayment } from "@/lib/api/salesPayments";
 import { jakartaTimestampFromLocal, transactionDateKey } from "@/lib/date/jakarta";
 import {
@@ -281,11 +283,16 @@ async function resolveOrCreateLocalManualProduct(item: ErpSaleSyncItem): Promise
       category: manual.category?.trim() || undefined,
       unit: manual.unit?.trim() || DEFAULT_UNIT,
       minimumStock: 0,
-      costPrice: positiveNumber(manual.costPrice) ?? 0,
+      // Harga modal barang baru dari penjualan selalu 0; diisi nanti lewat Master Barang/Barang Masuk.
+      costPrice: 0,
       sellingPrice: positiveNumber(manual.sellingPrice) ?? positiveNumber(item.unitPrice) ?? 0,
       isActive: true
     });
-    await recordAudit({ entityType: "product", entityId: created.id, action: "create", afterValue: created, reason: `Barang baru ${sku} dibuat dari Input Penjualan` });
+    // Masuk Master Barang setelah disetujui Owner (Owner sendiri langsung disetujui).
+    const user = await getCurrentUser();
+    const approval = await markRequestedFromSale(created.id, user);
+    await recordAudit({ entityType: "product", entityId: created.id, action: "create", afterValue: { ...created, costPrice: 0, approvalStatus: approval }, reason: `Barang baru ${sku} dibuat dari Input Penjualan${approval === "pending_approval" ? " (menunggu persetujuan Owner)" : ""}` });
+    if (approval === "pending_approval") void notifyProductApprovalRequest({ productId: created.id, sku, name: created.name, requestedByName: user.name });
     return {
       success: true,
       data: { ...item, productRef: created.sku, productId: created.id, unitSnapshot: created.unit, allowNegativeStock: true, manualProduct: normalizedManual }

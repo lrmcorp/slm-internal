@@ -1337,6 +1337,13 @@ model InventoryProduct {
   consignorName String?
   isActive     Boolean  @default(true)
   notes        String?
+  /// approved | pending_approval | rejected. Barang baru dari Input Penjualan menunggu persetujuan Owner
+  /// (nonaktif, tidak tampil di Master Barang) sebelum masuk Master Barang.
+  approvalStatus      String    @default("approved")
+  requestedByName     String?
+  requestedAt         DateTime?
+  approvalDecidedBy   String?
+  approvalDecidedAt   DateTime?
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
@@ -1346,6 +1353,7 @@ model InventoryProduct {
 
   @@index([name])
   @@index([barcode])
+  @@index([approvalStatus])
 }
 
 model InventoryBalance {

@@ -784,6 +784,37 @@ paths:
       security: [{ localSessionCookie: [] }, { mjBearer: [] }]
       requestBody: { required: true, content: { application/json: { schema: { type: object, required: [fromUnit, toUnit], properties: { fromUnit: { type: string }, toUnit: { type: string }, category: { type: string } } } } } }
       responses: { "200": { description: "{ updated, fromUnit, toUnit, category }" } }
+  /api/inventory/products/{id}/approval:
+    post:
+      summary: Owner menyetujui atau menolak barang baru dari Input Penjualan. Disetujui masuk Master Barang (aktif, harga modal 0, harga jual dari penjualan atau sellingPrice); ditolak tetap nonaktif.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action]
+              properties:
+                action:
+                  type: string
+                  enum: [approve, reject]
+                sellingPrice:
+                  type: number
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: Keputusan tersimpan
+        "403":
+          description: Bukan Owner
+        "409":
+          description: Barang sudah diputuskan sebelumnya
   /api/inventory/products/{id}:
     get:
       tags: [Inventory]

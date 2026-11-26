@@ -2759,25 +2759,18 @@ function ManualProductFields({
   if (localCatalog) {
     return (
       <div className="mt-2 rounded-lg border border-amber-200 bg-amber-50 p-3">
-        <div className="grid grid-cols-2 gap-2 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1.2fr)]">
+        <div className="grid grid-cols-2 gap-2 md:grid-cols-[minmax(0,2fr)_minmax(0,1fr)_minmax(0,1.2fr)]">
           <Field label="Nama barang" className="col-span-2 md:col-span-1">
             <Input placeholder="Nama barang baru" {...register(`items.${index}.manualProduct.name`)} />
           </Field>
           <Field label="Satuan">
             <Input placeholder="Lusin" {...register(`items.${index}.manualProduct.unit`)} />
           </Field>
-          <Field label="Harga modal">
-            <MoneyInput
-              value={values[index]?.manualProduct?.costPrice}
-              min={0}
-              onValueChange={(value) => setValue(`items.${index}.manualProduct.costPrice`, value, { shouldDirty: true, shouldValidate: true })}
-            />
-          </Field>
-          <Field label="Kategori (opsional)" className="col-span-2 md:col-span-1">
+          <Field label="Kategori (opsional)">
             <Input placeholder="mis. Kuku Palsu" {...register(`items.${index}.manualProduct.category`)} />
           </Field>
           {locations.length > 0 && (
-            <Field label="Potong stok dari" className="col-span-2 md:col-span-4">
+            <Field label="Potong stok dari" className="col-span-2 md:col-span-3">
               <Select
                 value={values[index]?.warehouseId || ""}
                 onChange={(event) => {
@@ -2793,7 +2786,7 @@ function ManualProductFields({
           )}
         </div>
         <p className="mt-2 text-xs text-amber-900">
-          Disimpan ke Master Barang SLM saat penjualan disimpan. Satuan kosong = Lusin. Stok barang baru akan minus sampai dicatat di Barang Masuk atau Stock Opname.
+          Masuk Master Barang setelah disetujui Owner, dengan harga jual dari baris ini dan harga modal Rp0. Penjualan tetap bisa disimpan sekarang. Satuan kosong = Lusin. Stok barang baru akan minus sampai dicatat di Barang Masuk atau Stock Opname.
         </p>
       </div>
     );

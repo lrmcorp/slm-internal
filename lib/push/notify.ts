@@ -230,3 +230,18 @@ export async function notifyCctvAlert(alert: { eventId?: string | null; title?: 
     console.error("[push] notifikasi CCTV gagal:", error instanceof Error ? error.message : error);
   }
 }
+
+/** "Barang baru menunggu persetujuan", isi: "<kode> - <nama> (dari penjualan <sales>)". Tidak pernah melempar error. */
+export async function notifyProductApprovalRequest(input: { productId: string; sku: string; name: string; requestedByName: string }) {
+  if (!pushConfig().enabled) return;
+  try {
+    await sendPushToRoles(PUSH_AUDIENCE.productApproval, {
+      title: "Barang baru menunggu persetujuan",
+      body: `${input.sku} - ${input.name} (dari penjualan ${input.requestedByName})`,
+      url: "/inventory/produk#persetujuan-barang",
+      tag: `product-approval-${input.productId}`,
+    });
+  } catch (error) {
+    console.error("[push] notifikasi barang baru gagal:", error instanceof Error ? error.message : error);
+  }
+}
