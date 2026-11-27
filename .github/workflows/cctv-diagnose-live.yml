@@ -78,6 +78,11 @@ jobs:
           systemctl list-timers slm-do-backlog.timer --no-pager 2>/dev/null | sed -n 2p || true
           echo "== Pemutaran pengumuman di server CCTV (6 jam)"
           docker exec cctvslm-worker-1 sh -c 'grep -h -E "Pengumuman SLM (diputar|gagal|dilewati)" storage/logs/*.log 2>/dev/null | tail -8' || true
+          echo "== Deteksi orang keluar batas toko (24 jam): baris log dan kejadian"
+          docker logs --since 24h cctvslm-vision-1 2>&1 | grep -i -E "keluar batas|person.?path|jalur orang" | tail -5 || true
+          docker exec cctvslm-web-1 php artisan tinker --execute='echo "kejadian deteksi orang: ".App\Models\Incident::where("occurred_at", ">=", now()->subDay())->where("metadata", "like", "%\"detector\":\"person\"%")->count()."\n";' 2>/dev/null || true
+          echo "== Zona per kamera (jenis saja) dan status"
+          docker exec cctvslm-web-1 php artisan tinker --execute='foreach (App\Models\Camera::orderBy("id")->get() as $c) echo "kamera #$c->id: status $c->status, zona ".implode(",", array_map(fn ($z) => $z["type"] ?? "?", $c->zones ?? []))."\n";' 2>/dev/null || true
           echo "== go2rtc: pemakaian memori"
           docker stats --no-stream --format '{{.Name}} {{.MemUsage}}' cctvslm-go2rtc-1 cctvslm-proxy-1 2>/dev/null || true
           REMOTE
