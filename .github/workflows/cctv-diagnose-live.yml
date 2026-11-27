@@ -90,6 +90,9 @@ jobs:
           docker ps --format '{{.Names}} | {{.Image}} | {{.RunningFor}}' 2>/dev/null | grep -i mj || true
           for d in /opt/mj /opt/MJ /opt/slm/mj /root/mj /srv/mj; do [ -d "$d/.git" ] && echo "$d: $(git -C "$d" log -1 --format='%h %cd' --date=iso 2>/dev/null)"; done
           ls /var/lib/mj-deploy 2>/dev/null || true
+          echo "== MJ: pengaturan rute penjualan (nilai non-rahasia)"
+          for v in INVENTORY_SOURCE SALES_ERP_TYPE_CODES ANIKA_ERP_TRANSACTION_SYNC_ENABLED SLM_SYNC_ENABLED; do echo "$v=$(docker exec mj-app printenv "$v" 2>/dev/null || echo '(tidak diset)')"; done
+          docker exec mj-postgres sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB" -At -F "=" -c "SELECT key, value FROM \"AppSetting\" WHERE key IN ('"'"'anika_erp_transaction_sync_enabled'"'"', '"'"'slm_transaction_sync_enabled'"'"')"' 2>/dev/null || true
           echo "== go2rtc: pemakaian memori"
           docker stats --no-stream --format '{{.Name}} {{.MemUsage}}' cctvslm-go2rtc-1 cctvslm-proxy-1 2>/dev/null || true
           REMOTE
