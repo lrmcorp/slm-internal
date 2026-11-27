@@ -83,10 +83,13 @@ jobs:
           docker exec cctvslm-web-1 php artisan tinker --execute='echo "kejadian deteksi orang: ".App\Models\Incident::where("occurred_at", ">=", now()->subDay())->where("metadata", "like", "%\"detector\":\"person\"%")->count()."\n";' 2>/dev/null || true
           echo "== Zona per kamera (jenis saja) dan status"
           docker exec cctvslm-web-1 php artisan tinker --execute='foreach (App\Models\Camera::orderBy("id")->get() as $c) echo "kamera #$c->id: status $c->status, zona ".implode(",", array_map(fn ($z) => $z["type"] ?? "?", $c->zones ?? []))."\n";' 2>/dev/null || true
-          echo "== MJ: commit yang sudah terpasang (timer mj-deploy)"
-          cat /var/lib/mj-deploy/* 2>/dev/null | grep -oE '\b[0-9a-f]{7,40}\b' | head -2 | cut -c1-7 || true
-          systemctl list-timers mj-deploy.timer --no-pager 2>/dev/null | sed -n 2p || true
-          journalctl -u mj-deploy.service --since "-2h" --no-pager 2>/dev/null | grep -E "deploy|Deploy|✅|❌" | tail -3 || true
+          echo "== Konfirmasi hasil pengumuman ke SLM (log CCTV)"
+          docker exec cctvslm-worker-1 sh -c 'grep -h -E "Hasil pengumuman|tidak dilaporkan" storage/logs/*.log 2>/dev/null | tail -4' || true
+          echo "== MJ: timer/container dan commit terpasang (baca saja)"
+          systemctl list-timers --all --no-pager 2>/dev/null | grep -i -E "mj|deploy" || echo "timer MJ tidak ditemukan"
+          docker ps --format '{{.Names}} | {{.Image}} | {{.RunningFor}}' 2>/dev/null | grep -i mj || true
+          for d in /opt/mj /opt/MJ /opt/slm/mj /root/mj /srv/mj; do [ -d "$d/.git" ] && echo "$d: $(git -C "$d" log -1 --format='%h %cd' --date=iso 2>/dev/null)"; done
+          ls /var/lib/mj-deploy 2>/dev/null || true
           echo "== go2rtc: pemakaian memori"
           docker stats --no-stream --format '{{.Name}} {{.MemUsage}}' cctvslm-go2rtc-1 cctvslm-proxy-1 2>/dev/null || true
           REMOTE
