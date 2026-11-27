@@ -38,13 +38,8 @@ jobs:
               live = sum(1 for p in (info.get('producers') or []) if p.get('medias') or p.get('receivers'))
               print(f'{name}: sumber aktif {live}, pembaca {len(info.get(\"consumers\") or [])}')
           " 2>&1 | tail -20 || true
-          # Stream kamera label yang sedang dibaca pemroses video (nama relay saja, mis. ch1401).
-          QR_STREAM=$(docker exec cctvslm-vision-1 python -c "
-          import json, urllib.request
-          data = json.load(urllib.request.urlopen('http://go2rtc:1984/api/streams', timeout=5))
-          used = [n for n, i in sorted(data.items()) if (i or {}).get('consumers') and not n.endswith('h264')]
-          print((used or ['ch1401'])[0])
-          " 2>/dev/null || echo ch1401)
+          # Stream utama kamera label (kamera #1 = kanal 14), sama dengan yang dibaca pemroses video.
+          QR_STREAM=ch1401
           echo "stream untuk uji QR: $QR_STREAM"
           echo "== Stream kamera meja packing ($QR_STREAM) lewat relay"
           docker exec cctvslm-vision-1 sh -c 'command -v ffprobe >/dev/null && ffprobe -v error -rtsp_transport tcp -select_streams v:0 -show_entries stream=codec_name,width,height,sample_aspect_ratio,display_aspect_ratio,r_frame_rate -of compact rtsp://go2rtc:8554/'"$QR_STREAM"' || echo "ffprobe tidak ada di image"' 2>&1 | tail -2
