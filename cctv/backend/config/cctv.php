@@ -8,6 +8,7 @@ return [
     'slm_sync_path' => env('SLM_SYNC_PATH'),
     'slm_sync_upload_photo' => (bool) env('SLM_SYNC_UPLOAD_PHOTO', false),
     'slm_events_path' => env('SLM_EVENTS_PATH', '/api/cctv/events'),
+    'slm_announcement_result_path' => env('SLM_ANNOUNCEMENT_RESULT_PATH', '/api/cctv/announcements/result'),
     'slm_webhook_enabled' => (bool) env('SLM_WEBHOOK_ENABLED', true),
     'slm_token' => env('SLM_API_TOKEN'),
     'slm_auto_sync' => (bool) env('SLM_AUTO_SYNC', true),

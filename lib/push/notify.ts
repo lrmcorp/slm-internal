@@ -252,7 +252,7 @@ export async function notifyDeliveryOrderBacklog(now = new Date()) {
   const report = await deliveryOrderBacklog();
   const speech = announcementText(report);
   const { backlogSpeakerChannels } = await import("@/lib/cctv/speakers");
-  const announced = speech ? await announceOnCctv(speech, backlogSpeakerChannels()) : "tidak ada pesanan tertunda";
+  const announced = speech ? await announceOnCctv(speech, backlogSpeakerChannels(), "do-backlog") : "tidak ada pesanan tertunda";
   const slot = new Intl.DateTimeFormat("id-ID", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta" }).format(now);
   const message = backlogMessage(report, slot, now);
   const result = pushConfig().enabled
@@ -262,10 +262,29 @@ export async function notifyDeliveryOrderBacklog(now = new Date()) {
 }
 
 /**
+ * Konfirmasi ke Owner setelah speaker CCTV selesai memutar pengumuman (server CCTV melapor balik).
+ * Tidak pernah melempar error; mengembalikan jumlah perangkat yang menerima.
+ */
+export async function notifyAnnouncementResult(result: import("@/lib/cctv/announcementResult").AnnouncementResult, now = new Date()): Promise<number> {
+  if (!pushConfig().enabled) return 0;
+  try {
+    const { announcementResultMessage } = await import("@/lib/cctv/announcementResult");
+    const { listSpeakers } = await import("@/lib/cctv/speakers");
+    const speakers = await listSpeakers().catch(() => []);
+    const slot = new Intl.DateTimeFormat("id-ID", { hour: "2-digit", minute: "2-digit", timeZone: "Asia/Jakarta" }).format(now);
+    const message = announcementResultMessage(result, speakers, slot);
+    const sent = await sendPushToRoles(PUSH_AUDIENCE.deliveryOrderBacklog, { ...message, url: "/delivery-orders?status=belum_selesai", tag: `cctv-announce-${result.report}` });
+    return sent.sent;
+  } catch {
+    return 0;
+  }
+}
+
+/**
  * Umumkan lewat speaker CCTV (server CCTV memutar Google TTS di kanal yang diminta, bawaan CCTV_ANNOUNCE_CHANNEL atau 12).
  * Tidak pernah melempar error; hasilnya dicatat di jawaban job.
  */
-export async function announceOnCctv(text: string, channels?: number[]): Promise<string> {
+export async function announceOnCctv(text: string, channels?: number[], report?: string): Promise<string> {
   const { CCTV_BASE_URL, CCTV_TOKEN } = await import("@/lib/cctv/client");
   const base = CCTV_BASE_URL.replace(/\/+$/, "");
   if (!base || !CCTV_TOKEN) return "CCTV belum dikonfigurasi";
@@ -276,7 +295,7 @@ export async function announceOnCctv(text: string, channels?: number[]): Promise
     const response = await fetch(`${base}/api/v1/slm/announce`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json", Authorization: `Bearer ${CCTV_TOKEN}`, "X-SLM-Token": CCTV_TOKEN },
-      body: JSON.stringify({ text, channel: target[0], channels: target }),
+      body: JSON.stringify({ text, channel: target[0], channels: target, ...(report ? { report } : {}) }),
       signal: AbortSignal.timeout(15000),
     });
     if (response.ok) return "diantrekan di speaker CCTV";

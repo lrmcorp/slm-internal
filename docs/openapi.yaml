@@ -3526,6 +3526,38 @@ paths:
           description: Bukan Owner
         "502":
           description: Server CCTV menolak atau tidak terjangkau
+  /api/cctv/announcements/result:
+    post:
+      summary: Server CCTV melaporkan hasil pemutaran pengumuman (mis. laporan pesanan 12.30/15.00); Owner mendapat push notification. Token sama dengan /api/cctv/events.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [report]
+              properties:
+                report:
+                  type: string
+                  example: do-backlog
+                played_channels:
+                  type: array
+                  items:
+                    type: integer
+                failed_channels:
+                  type: array
+                  items:
+                    type: integer
+                error:
+                  type: string
+                  nullable: true
+      responses:
+        "200":
+          description: Notifikasi dikirim
+        "401":
+          description: Token CCTV salah
+        "422":
+          description: report kosong atau tidak valid
   /api/cctv/speakers:
     get:
       summary: Daftar speaker CCTV (kanal two-way audio) beserta namanya. Khusus Owner.

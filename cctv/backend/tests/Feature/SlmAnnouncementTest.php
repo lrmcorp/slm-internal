@@ -10,6 +10,8 @@ use App\Services\TextToSpeech;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Http;
+use App\Jobs\ReportAnnouncementToSlm;
 use Tests\TestCase;
 
 class SlmAnnouncementTest extends TestCase
@@ -77,5 +79,53 @@ class SlmAnnouncementTest extends TestCase
 
         $this->expectExceptionMessage('gagal di semua kanal: 2');
         (new SpeakAnnouncement($camera->id, 'x', 2))->handle($tts, $speaker);
+    }
+    public function test_report_flag_is_passed_to_the_job_and_validated(): void
+    {
+        Queue::fake();
+        Config::set('cctv.slm_token', 'tok-ann');
+        $camera = $this->camera();
+        Config::set('cctv.announce_camera_id', $camera->id);
+        $this->postJson('/api/v1/slm/announce', ['text' => 'Ada 1 pesanan', 'channels' => [12, 15], 'report' => 'do-backlog'], ['X-SLM-Token' => 'tok-ann'])->assertStatus(202);
+        Queue::assertPushed(SpeakAnnouncement::class, fn ($job) => $job->report === 'do-backlog' && $job->channels === [12, 15]);
+        $this->postJson('/api/v1/slm/announce', ['text' => 'x', 'report' => 'Bukan Valid!'], ['X-SLM-Token' => 'tok-ann'])->assertStatus(422);
+    }
+
+    public function test_playback_result_is_reported_once_only_for_reported_announcements(): void
+    {
+        Queue::fake();
+        $camera = $this->camera();
+        $tts = new class extends TextToSpeech {
+            public function ulaw(string $text): string { return str_repeat("\x7F", 800); }
+        };
+        $speaker = new class(new IsapiTalkSocket) extends CameraSpeaker {
+            public function play(Camera $camera, string $ulaw): void
+            {
+                if ($camera->speaker_channel === 15) throw new \RuntimeException('kanal 15 sibuk');
+            }
+        };
+        (new SpeakAnnouncement($camera->id, 'teks', [12, 15], 'do-backlog'))->handle($tts, $speaker);
+        Queue::assertPushedOn('alerts', ReportAnnouncementToSlm::class, fn ($job) => $job->report === 'do-backlog' && $job->played === [12] && $job->failed === [15]);
+
+        (new SpeakAnnouncement($camera->id, 'teks', [12]))->handle($tts, $speaker);
+        Queue::assertPushed(ReportAnnouncementToSlm::class, 1);
+
+        // Gagal di semua kanal: tidak dilaporkan dari handle(), baru dari failed() setelah percobaan terakhir.
+        $job = new SpeakAnnouncement($camera->id, 'teks', [15], 'do-backlog');
+        try { $job->handle($tts, $speaker); } catch (\RuntimeException) {}
+        Queue::assertPushed(ReportAnnouncementToSlm::class, 1);
+        $job->failed(new \RuntimeException('x'));
+        Queue::assertPushed(ReportAnnouncementToSlm::class, fn ($job) => $job->played === [] && $job->failed === [15] && $job->error === 'RuntimeException');
+    }
+
+    public function test_result_is_posted_to_slm_with_the_cctv_token_and_without_the_text(): void
+    {
+        Http::fake(['*' => Http::response(['success' => true])]);
+        Config::set('cctv.slm_base_url', 'https://slm.test');
+        Config::set('cctv.slm_token', 'tok-ann');
+        (new ReportAnnouncementToSlm('do-backlog', [12, 15], []))->handle();
+        Http::assertSent(fn ($request) => $request->url() === 'https://slm.test/api/cctv/announcements/result'
+            && $request->header('X-CCTV-Token') === ['tok-ann']
+            && $request['report'] === 'do-backlog' && $request['played_channels'] === [12, 15] && !isset($request['text']));
     }
 }

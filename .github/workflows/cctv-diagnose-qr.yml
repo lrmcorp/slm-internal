@@ -48,6 +48,31 @@ jobs:
           echo "stream untuk uji QR: $QR_STREAM"
           echo "== Stream kamera meja packing ($QR_STREAM) lewat relay"
           docker exec cctvslm-vision-1 sh -c 'command -v ffprobe >/dev/null && ffprobe -v error -rtsp_transport tcp -select_streams v:0 -show_entries stream=codec_name,width,height,sample_aspect_ratio,display_aspect_ratio,r_frame_rate -of compact rtsp://go2rtc:8554/'"$QR_STREAM"' || echo "ffprobe tidak ada di image"' 2>&1 | tail -2
+          echo "== Resolusi yang benar-benar diterima server per stream (1 frame per stream, container sementara)"
+          docker run --rm -i --network cctvslm_default --memory 256m --memory-swap 256m --cpus 0.5 --pids-limit 64 \
+            --entrypoint nice cctvslm-vision:latest -n 15 python - <<'PY' 2>&1 | grep -v -E "^\[(hevc|rtsp)" || true
+          import os, time, cv2
+          os.environ["OPENCV_FFMPEG_CAPTURE_OPTIONS"] = "rtsp_transport;tcp|threads;1"
+          for name in ["ch1401", "ch1402", "ch1301", "ch1302", "ch1201", "ch1202"]:
+              cap = cv2.VideoCapture(f"rtsp://go2rtc:8554/{name}", cv2.CAP_FFMPEG)
+              ok, frame, t0 = False, None, time.time()
+              while time.time() - t0 < 8 and not ok:
+                  ok, frame = cap.read()
+              cap.release()
+              print(f"{name}: " + (f"{frame.shape[1]}x{frame.shape[0]}" if ok else "tidak ada frame"))
+          PY
+          echo "== Pengaturan resolusi di DVR (ISAPI, lewat alamat speaker; hanya codec/resolusi/fps)"
+          docker exec cctvslm-web-1 php artisan tinker --execute='
+            $camera = App\Models\Camera::find(1); $e = $camera ? App\Services\CameraSpeaker::endpoint($camera) : null;
+            if (!$e) { echo "alamat DVR tidak tersedia\n"; return; }
+            foreach (["1401", "1402", "1301", "1201"] as $id) {
+              try {
+                $r = Illuminate\Support\Facades\Http::timeout(8)->withDigestAuth($e["user"], $e["pass"])->get($e["base"]."/ISAPI/Streaming/channels/".$id);
+                if (!$r->successful()) { echo "$id: HTTP ".$r->status()."\n"; continue; }
+                $x = @simplexml_load_string($r->body()); $v = $x ? $x->Video : null;
+                echo $id.": ".($v ? $v->videoCodecType." ".$v->videoResolutionWidth."x".$v->videoResolutionHeight." fps ".((int) $v->maxFrameRate / 100) : "format tidak dikenal")."\n";
+              } catch (Throwable $t) { echo "$id: ".class_basename($t)."\n"; }
+            }' 2>/dev/null || true
           echo "== Variabel pembacaan label (nama saja)"
           docker exec cctvslm-vision-1 sh -c 'env | grep -E "^CCTV_(LABEL|WORK|RTSP_RELAY|PROCESS_FPS|AI_API_KEY)" | sed -E "s/^(CCTV_AI_API_KEY)=.+/\1=(ada)/"'
           echo "== Cadangan Gemini: uji model dan kunci yang dipakai pembaca label"

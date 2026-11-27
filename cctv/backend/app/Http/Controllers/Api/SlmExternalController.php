@@ -240,6 +240,8 @@ class SlmExternalController extends Controller
             'channels' => 'nullable|array|min:1|max:16',
             'channels.*' => 'integer|between:1,64',
             'camera_id' => 'nullable|integer',
+            // Bila diisi (mis. "do-backlog"), hasil pemutaran dilaporkan balik ke SLM untuk notifikasi Owner.
+            'report' => ['nullable', 'string', 'max:40', 'regex:/^[a-z0-9-]+$/'],
         ]);
         $camera = Camera::find($data['camera_id'] ?? config('cctv.announce_camera_id'));
         if (!$camera) {
@@ -249,7 +251,7 @@ class SlmExternalController extends Controller
             return response()->json(['success' => false, 'message' => CameraSpeaker::envKey($camera).' belum diisi.'], 422);
         }
         $channels = array_values(array_unique(array_map('intval', $data['channels'] ?? [$data['channel'] ?? config('cctv.announce_channel')])));
-        SpeakAnnouncement::dispatch($camera->id, trim($data['text']), $channels)->onQueue('alerts');
+        SpeakAnnouncement::dispatch($camera->id, trim($data['text']), $channels, $data['report'] ?? null)->onQueue('alerts');
         return response()->json(['success' => true, 'data' => ['camera_id' => $camera->id, 'channel' => $channels[0], 'channels' => $channels]], 202);
     }
 

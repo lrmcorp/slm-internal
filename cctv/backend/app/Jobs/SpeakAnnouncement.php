@@ -27,7 +27,7 @@ class SpeakAnnouncement implements ShouldQueue
     public array $channels;
 
     /** @param int|list<int> $channels */
-    public function __construct(public int $cameraId, public string $text, int|array $channels)
+    public function __construct(public int $cameraId, public string $text, int|array $channels, public ?string $report = null)
     {
         $this->channels = array_values(array_unique(array_map('intval', (array) $channels)));
     }
@@ -53,7 +53,22 @@ class SpeakAnnouncement implements ShouldQueue
             }
         }
         if ($failed && count($failed) === count($this->channels)) {
+            // Laporan gagal dikirim oleh failed() setelah percobaan terakhir, supaya tidak dobel saat dicoba ulang.
             throw new RuntimeException('Pengumuman gagal di semua kanal: '.implode(', ', $failed));
+        }
+        $this->reportResult(array_values(array_diff($this->channels, $failed)), $failed);
+    }
+
+    public function failed(?\Throwable $e = null): void
+    {
+        $this->reportResult([], $this->channels, $e ? class_basename($e) : null);
+    }
+
+    /** @param list<int> $played @param list<int> $failed */
+    private function reportResult(array $played, array $failed, ?string $error = null): void
+    {
+        if ($this->report) {
+            ReportAnnouncementToSlm::dispatch($this->report, $played, $failed, $error)->onQueue('alerts');
         }
     }
 }
