@@ -1071,6 +1071,19 @@ async function updateSalesRecordInner(id: string, input: PenjualanInput): Promis
     dueDate = computedSaleDate;
   }
   const normalizedInput: PenjualanInput = { ...input, transactionAt, deliveryAt, saleDate: computedSaleDate, dueDate };
+  // Barang baru yang ditambahkan saat mengedit atau memfinalkan draft dibuat juga (menunggu persetujuan Owner),
+  // sama seperti saat penjualan pertama kali disimpan.
+  if (normalizedInput.items.some((item) => item.productInputMode === "manual")) {
+    const { resolveManualProductsForSaleItems } = await import("@/lib/api/sales");
+    const prepared = await resolveManualProductsForSaleItems(normalizedInput.items as Parameters<typeof resolveManualProductsForSaleItems>[0]);
+    if (!prepared.success) throw Object.assign(new Error(prepared.message), { code: prepared.code });
+    normalizedInput.items = prepared.data as PenjualanInput["items"];
+  }
+  if (!isKeepingDraft) {
+    const { missingMasterProductMessage } = await import("@/lib/api/sales");
+    const missing = await missingMasterProductMessage(normalizedInput.items as Parameters<typeof missingMasterProductMessage>[0]);
+    if (missing) throw Object.assign(new Error(missing), { code: "VALIDATION_ERROR" });
+  }
   const total = saleTotal(normalizedInput);
   const tipe = await findTipe(normalizedInput.tipeId || before.tipeId);
   const split = normalizedInput.paymentMethod === "Split"

@@ -347,7 +347,26 @@ async function resolveOrCreateManualProduct(item: ErpSaleSyncItem): Promise<ApiR
   };
 }
 
-async function resolveManualProductsForSaleItems(items: ErpSaleSyncItem[]): Promise<ApiResponse<ErpSaleSyncItem[]>> {
+/**
+ * Mode Master Barang SLM: baris yang dipilih dari daftar tetapi kodenya tidak ada di Master Barang
+ * (mis. dari draft lama) ditolak dengan petunjuk, bukan error "tidak ditemukan di master inventory".
+ */
+export async function missingMasterProductMessage(items: ErpSaleSyncItem[]): Promise<string | null> {
+  if (!isLocalInventory()) return null;
+  const refs = Array.from(new Set(items.filter((item) => item.productInputMode !== "manual" && item.productRef?.trim()).map((item) => item.productRef.trim())));
+  if (!refs.length) return null;
+  // Pemeriksaan bantu saja: bila gagal membaca, pemotongan stok tetap memeriksa sendiri.
+  const found = await Promise.resolve()
+    .then(() => prisma.inventoryProduct.findMany({ where: { OR: refs.map((sku) => ({ sku: { equals: sku, mode: "insensitive" as const } })) }, select: { sku: true } }))
+    .catch(() => null);
+  if (!found) return null;
+  const known = new Set(found.map((row) => row.sku.toLowerCase()));
+  const missing = refs.filter((sku) => !known.has(sku.toLowerCase()));
+  if (!missing.length) return null;
+  return `Barang ${missing.join(", ")} belum ada di Master Barang. Di baris barang itu tekan "Jadikan barang baru", isi nama barangnya, lalu simpan lagi. Barang baru menunggu persetujuan Owner.`;
+}
+
+export async function resolveManualProductsForSaleItems(items: ErpSaleSyncItem[]): Promise<ApiResponse<ErpSaleSyncItem[]>> {
   const normalized = normalizeManualSaleItems(items);
   const resolved: ErpSaleSyncItem[] = [];
   for (const item of normalized) {
@@ -844,6 +863,10 @@ export async function createSale(input: PenjualanInput): Promise<ApiResponse<unk
     const preparedManualItems = await resolveManualProductsForSaleItems(normalizedItems);
     if (!preparedManualItems.success) return preparedManualItems;
     const effectiveItems = preparedManualItems.data;
+    if (!isDraft) {
+      const missing = await missingMasterProductMessage(effectiveItems);
+      if (missing) return failure(missing, "VALIDATION_ERROR");
+    }
     const transactionAt = jakartaTimestampFromLocal(input.transactionAt || `${input.saleDate}T00:00`);
     const saleDate = transactionDateKey(transactionAt);
     const deliveryAt = input.deliveryAt ? jakartaTimestampFromLocal(input.deliveryAt) : undefined;

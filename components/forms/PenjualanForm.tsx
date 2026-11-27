@@ -2706,7 +2706,13 @@ function ProductSelectionInfo({
         <span className="font-semibold text-amber-800">· Stok kosong, tetap bisa dijual (dipotong dari Ruko, masuk Laporan Consignment)</span>
       ) : stockExceeded && <span className="font-semibold text-amber-800">· Qty melebihi stok lokasi, sisanya masuk Laporan Consignment</span>}
       {stockState.status === "failed" && <span className="font-semibold text-amber-800">· Stok tidak terverifikasi</span>}
-      {option.warnings.length > 0 && <span className="font-semibold text-amber-800">· Data barang belum lengkap</span>}
+      {option.product.id.startsWith("saved-") && !targetsErp ? (
+        // Kode dari draft/nota lama yang tidak ada di Master Barang: jadikan barang baru (menunggu persetujuan Owner).
+        <span className="font-semibold text-amber-800">
+          · Belum ada di Master Barang ·{" "}
+          <button type="button" className="min-h-9 underline" onClick={onSwitchManual}>Jadikan barang baru</button>
+        </span>
+      ) : option.warnings.length > 0 && <span className="font-semibold text-amber-800">· Data barang belum lengkap</span>}
       {(targetsErp || stockOptions.length > 1) && (
         <select
           aria-label="Potong stok dari"
