@@ -31,6 +31,9 @@ jobs:
           set -uo pipefail
           cd /opt/slm/cctv
           token=$(grep -E '^SLM_API_TOKEN=' .env | tail -1 | cut -d= -f2- | sed "s/^[\"']//; s/[\"']\$//")
+          echo "== Jaringan VPS ke PC hype (Tailscale): ping 20x"
+          (ping -c 20 -i 0.3 -q 100.118.114.23 2>/dev/null || docker exec cctvslm-go2rtc-1 ping -c 20 -q 100.118.114.23 2>/dev/null) | tail -2 || echo "ping tidak tersedia"
+          command -v tailscale >/dev/null && timeout 20 tailscale ping -c 5 100.118.114.23 2>/dev/null | tail -3 || true
           echo "== Codec stream lewat relay (h264 = bisa realtime di semua browser)"
           for ch in 1402 1302 1202 1401; do
             printf 'ch%s: ' "$ch"
@@ -45,6 +48,8 @@ jobs:
             echo "== Kamera #$id versi H.264 (browser tanpa H.265)"
             curl -s -o /dev/null --max-time 6 -w "$fmt" -H "X-SLM-Token: $token" "http://127.0.0.1:8095/cameras/$id/realtime?codec=h264" || true
           done
+          echo "== Kamera #1 realtime 15 detik (kelancaran: byte per detik)"
+          curl -s -o /dev/null --max-time 15 -w "byte pertama %{time_starttransfer}s | %{size_download} byte dalam 15 detik | rata-rata %{speed_download} byte/detik\n" -H "X-SLM-Token: $token" "http://127.0.0.1:8095/cameras/1/realtime" || true
           echo "== Kamera #1 lewat domain publik cctv.lrmslm.com (nginx host/Cloudflare)"
           curl -s -o /dev/null --max-time 6 -w "$fmt" -H "X-SLM-Token: $token" "https://cctv.lrmslm.com/cameras/1/realtime" || true
           echo "== Kamera #1 dari container SLM (jalur yang dipakai mkr.lrmslm.com)"
